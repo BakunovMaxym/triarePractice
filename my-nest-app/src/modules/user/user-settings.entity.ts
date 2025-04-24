@@ -16,9 +16,6 @@ export class UserSettingsEntity extends AbstractEntity<
   @Column({ default: false })
   isEmailVerified?: boolean;
 
-  @Column({ default: false })
-  isPhoneVerified?: boolean;
-
   @Column({ type: 'uuid' })
   userId?: string;
 

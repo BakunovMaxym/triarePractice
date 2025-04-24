@@ -28,7 +28,6 @@ import { supportedLanguageCount } from '../constants/language-code.ts';
 import type { Constructor } from '../types';
 import { ApiEnumProperty, ApiUUIDProperty } from './property.decorators.ts';
 import {
-  PhoneNumberSerializer,
   ToArray,
   ToBoolean,
   ToLowerCase,
@@ -37,7 +36,6 @@ import {
 import {
   IsNullable,
   IsPassword,
-  IsPhoneNumber,
   IsTmpKey as IsTemporaryKey,
   IsUndefinable,
 } from './validator.decorators.ts';
@@ -404,33 +402,6 @@ export function EmailFieldOptional(
   return applyDecorators(
     IsUndefinable(),
     EmailField({ required: false, ...options }),
-  );
-}
-
-export function PhoneField(
-  options: Omit<ApiPropertyOptions, 'type'> & IFieldOptions = {},
-): PropertyDecorator {
-  const decorators = [IsPhoneNumber(), PhoneNumberSerializer()];
-
-  if (options.nullable) {
-    decorators.push(IsNullable());
-  } else {
-    decorators.push(NotEquals(null));
-  }
-
-  if (options.swagger !== false) {
-    decorators.push(ApiProperty({ type: String, ...(options as ApiPropertyOptions) }));
-  }
-
-  return applyDecorators(...decorators);
-}
-
-export function PhoneFieldOptional(
-  options: Omit<ApiPropertyOptions, 'type' | 'required'> & IFieldOptions = {},
-): PropertyDecorator {
-  return applyDecorators(
-    IsUndefinable(),
-    PhoneField({ required: false, ...options }),
   );
 }
 
