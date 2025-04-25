@@ -21,8 +21,6 @@ import { UserModule } from './modules/user/user.module.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 import { CourseModule } from './modules/course/course.module.ts';
-import { CourseModule } from './modules/course/course.module.ts';
-import { CourseModule } from './modules/course/course.module.ts';
 
 @Module({
   imports: [

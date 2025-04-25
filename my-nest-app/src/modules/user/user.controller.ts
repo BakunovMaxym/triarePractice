@@ -28,8 +28,8 @@ export class UserController {
     private readonly translationService: TranslationService,
   ) {}
 
-  @Get('admin')
-  @Auth([RoleType.USER])
+  @Get('teacher')
+  @Auth([RoleType.TEACHER])
   @HttpCode(HttpStatus.OK)
   @UseLanguageInterceptor()
   async admin(@AuthUser() user: UserEntity) {
@@ -43,7 +43,7 @@ export class UserController {
   }
 
   @Get()
-  @Auth([RoleType.USER])
+  @Auth([RoleType.STUDENT])
   @HttpCode(HttpStatus.OK)
   @ApiPageResponse({
     description: 'Get users list',
@@ -57,11 +57,11 @@ export class UserController {
   }
 
   @Get(':id')
-  @Auth([RoleType.USER])
+  @Auth([RoleType.STUDENT])
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Get users list',
+    description: 'Get students list',
     type: UserDto,
   })
   getUser(@UUIDParam('id') userId: Uuid): Promise<UserDto> {

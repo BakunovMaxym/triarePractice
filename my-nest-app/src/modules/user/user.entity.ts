@@ -1,12 +1,12 @@
-import { Column, Entity, OneToMany, OneToOne, VirtualColumn } from 'typeorm';
+import { Column, Entity /*, OneToMany, OneToOne, VirtualColumn */ } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { UseDto } from '../../decorators/use-dto.decorator.ts';
-import { PostEntity } from '../post/post.entity.ts';
+// import { PostEntity } from '../post/post.entity.ts';
 import type { UserDtoOptions } from './dtos/user.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
-import { UserSettingsEntity } from './user-settings.entity.ts';
+// import { UserSettingsEntity } from './user-settings.entity.ts';
 
 @Entity({ name: 'users' })
 @UseDto(UserDto)

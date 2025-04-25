@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { plainToClass } from 'class-transformer';
+// import { plainToClass } from 'class-transformer';
 import type { FindOptionsWhere } from 'typeorm';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
@@ -41,9 +41,8 @@ export class UserService {
   findByUsernameOrEmail(
     options: Partial<{ username: string; email: string }>,
   ): Promise<UserEntity | null> {
-    const queryBuilder = this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect<UserEntity, 'user'>('user.settings', 'settings');
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    // .leftJoinAndSelect<UserEntity, 'user'>('user.settings', 'settings');
 
     if (options.email) {
       queryBuilder.orWhere('user.email = :email', {
@@ -61,28 +60,22 @@ export class UserService {
   }
 
   @Transactional()
-  async createUser(
-    userRegisterDto: UserRegisterDto,
-    file?: Reference<IFile>,
-  ): Promise<UserEntity> {
+  async createUser(userRegisterDto: UserRegisterDto): Promise<UserEntity> {
     const user = this.userRepository.create(userRegisterDto);
+    console.log(user)
 
-    if (file && !this.validatorService.isImage(file.mimetype)) {
-      throw new FileNotImageException();
-    }
-
-    if (file) {
-      user.avatar = await this.awsS3Service.uploadImage(file);
-    }
+    // if (file) {
+    //   user.avatar = await this.awsS3Service.uploadImage(file);
+    // }
 
     await this.userRepository.save(user);
 
-    user.settings = await this.createSettings(
-      user.id,
-      plainToClass(CreateSettingsDto, {
-        isEmailVerified: false,
-      }),
-    );
+    // user.settings = await this.createSettings(
+    //   user.id,
+    //   plainToClass(CreateSettingsDto, {
+    //     isEmailVerified: false,
+    //   }),
+    // );
 
     return user;
   }

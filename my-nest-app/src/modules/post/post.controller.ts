@@ -35,7 +35,7 @@ export class PostController {
   constructor(private postService: PostService) {}
 
   @Post()
-  @Auth([RoleType.USER])
+  @Auth([RoleType.STUDENT])
   @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({ type: PostDto })
   async createPost(
@@ -51,7 +51,7 @@ export class PostController {
   }
 
   @Get()
-  @Auth([RoleType.USER])
+  @Auth([RoleType.STUDENT])
   @UseLanguageInterceptor()
   @ApiPageResponse({ type: PostDto })
   async getPosts(
