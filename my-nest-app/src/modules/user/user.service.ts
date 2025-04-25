@@ -7,12 +7,12 @@ import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
 import type { PageDto } from '../../common/dto/page.dto.ts';
-import { FileNotImageException } from '../../exceptions/file-not-image.exception.ts';
+// import { FileNotImageException } from '../../exceptions/file-not-image.exception.ts';
 import { UserNotFoundException } from '../../exceptions/user-not-found.exception.ts';
-import type { IFile } from '../../interfaces/IFile.ts';
-import { AwsS3Service } from '../../shared/services/aws-s3.service.ts';
-import { ValidatorService } from '../../shared/services/validator.service.ts';
-import type { Reference } from '../../types.ts';
+// import type { IFile } from '../../interfaces/IFile.ts';
+// import { AwsS3Service } from '../../shared/services/aws-s3.service.ts';
+// import { ValidatorService } from '../../shared/services/validator.service.ts';
+// import type { Reference } from '../../types.ts';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
 import { CreateSettingsCommand } from './commands/create-settings.command.ts';
 import { CreateSettingsDto } from './dtos/create-settings.dto.ts';
@@ -26,8 +26,8 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private validatorService: ValidatorService,
-    private awsS3Service: AwsS3Service,
+    // private validatorService: ValidatorService,
+    // private awsS3Service: AwsS3Service,
     private commandBus: CommandBus,
   ) {}
 

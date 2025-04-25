@@ -21,11 +21,8 @@ import { UserModule } from './modules/user/user.module.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 import { CourseModule } from './modules/course/course.module.ts';
-<<<<<<< HEAD
-=======
-import { CategoryModule } from './modules/category/category.module';
 
->>>>>>> 43d89dedee93708e100ed8625a5264e7f3c7f7f7
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [

@@ -4,13 +4,13 @@ import { AbstractEntity } from '../../common/abstract.entity.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { UseDto } from '../../decorators/use-dto.decorator.ts';
 // import { PostEntity } from '../post/post.entity.ts';
-import type { UserDtoOptions } from './dtos/user.dto.ts';
+// import type { UserDtoOptions } from './dtos/user.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
 // import { UserSettingsEntity } from './user-settings.entity.ts';
 
 @Entity({ name: 'users' })
 @UseDto(UserDto)
-export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
+export class UserEntity extends AbstractEntity<UserDto> {
   @Column({ nullable: true, type: 'varchar' })
   firstName!: string | null;
 

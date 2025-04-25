@@ -1,34 +1,40 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { ApiOkResponse } from '@nestjs/swagger';
+import { CourseDto } from './dto/CourseDto';
 
 @Controller('course')
 export class CourseController {
-  constructor(private readonly courseService: CourseService) {}
+    constructor(private readonly courseService: CourseService) { }
 
-  @Post()
-  create(@Body() createCourseDto: CreateCourseDto) {
-    return this.courseService.create(createCourseDto);
-  }
+    @Post()
+    @HttpCode(HttpStatus.OK)
+    @ApiOkResponse({ type: CourseDto, description: "Course created" })
+    async create(@Body() createCourseDto: CreateCourseDto): Promise<CourseDto> {
 
-  @Get()
-  findAll() {
-    return this.courseService.findAll();
-  }
+        const createdCourse = await this.courseService.create(createCourseDto);
+        return createdCourse.toDto();
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.courseService.findOne(+id);
-  }
+    //   @Get()
+    //   findAll() {
+    //     return this.courseService.findAll();
+    //   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
-    return this.courseService.update(+id, updateCourseDto);
-  }
+    //   @Get(':id')
+    //   findOne(@Param('id') id: string) {
+    //     return this.courseService.findOne(+id);
+    //   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.courseService.remove(+id);
-  }
+    //   @Patch(':id')
+    //   update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
+    //     return this.courseService.update(+id, updateCourseDto);
+    //   }
+
+    //   @Delete(':id')
+    //   remove(@Param('id') id: string) {
+    //     return this.courseService.remove(+id);
+    //   }
 }

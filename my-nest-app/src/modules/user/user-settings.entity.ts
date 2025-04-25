@@ -3,15 +3,15 @@ import { Column, Entity /*, JoinColumn, OneToOne */ } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
 import { UseDto } from '../../decorators/use-dto.decorator.ts';
-import type { UserDtoOptions } from './dtos/user.dto.ts';
+// import type { UserDtoOptions } from './dtos/user.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
 // import { UserEntity } from './user.entity.ts';
 
 @Entity({ name: 'user_settings' })
 @UseDto(UserDto)
 export class UserSettingsEntity extends AbstractEntity<
-  UserDto,
-  UserDtoOptions
+  UserDto
+  // UserDtoOptions
 > {
   @Column({ default: false })
   isEmailVerified?: boolean;

@@ -8,7 +8,7 @@ import {
 } from '../../../decorators/field.decorators.ts';
 import type { UserEntity } from '../user.entity.ts';
 
-export type UserDtoOptions = Partial<{ isActive: boolean }>;
+// export type UserDtoOptions = Partial<{ isActive: boolean }>;
 
 export class UserDto extends AbstractDto {
   @StringFieldOptional({ nullable: true })
