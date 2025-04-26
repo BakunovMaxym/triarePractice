@@ -6,7 +6,6 @@ import type { ThrottlerOptions } from '@nestjs/throttler';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import parse from 'parse-duration';
 
-import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
 
 @Injectable()
@@ -100,7 +99,6 @@ export class ApiConfigService {
       username: this.getString('DB_USERNAME'),
       password: this.getString('DB_PASSWORD'),
       database: this.getString('DB_DATABASE'),
-      subscribers: [UserSubscriber],
       migrationsRun: true,
       logging: this.getBoolean('ENABLE_ORM_LOGS'),
       namingStrategy: new SnakeNamingStrategy(),
