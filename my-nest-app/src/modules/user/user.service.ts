@@ -29,7 +29,7 @@ export class UserService {
     // private validatorService: ValidatorService,
     // private awsS3Service: AwsS3Service,
     private commandBus: CommandBus,
-  ) {}
+  ) { }
 
   /**
    * Find single user
@@ -62,23 +62,12 @@ export class UserService {
   @Transactional()
   async createUser(userRegisterDto: UserRegisterDto): Promise<UserEntity> {
     const user = this.userRepository.create(userRegisterDto);
-    console.log(user)
-
-    // if (file) {
-    //   user.avatar = await this.awsS3Service.uploadImage(file);
-    // }
-
     await this.userRepository.save(user);
-
-    // user.settings = await this.createSettings(
-    //   user.id,
-    //   plainToClass(CreateSettingsDto, {
-    //     isEmailVerified: false,
-    //   }),
-    // );
 
     return user;
   }
+
+  
 
   async getUsers(
     pageOptionsDto: UsersPageOptionsDto,

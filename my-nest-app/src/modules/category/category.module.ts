@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
+
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { CategoryEntity } from './entities/category.entity';
 
 @Module({

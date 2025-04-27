@@ -1,4 +1,5 @@
-import { Column, Entity /*, OneToMany, OneToOne, VirtualColumn */ } from 'typeorm';
+import { Column, Entity, /*, OneToMany, OneToOne, VirtualColumn */ 
+OneToMany} from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
 import { RoleType } from '../../constants/role-type.ts';
@@ -6,6 +7,7 @@ import { UseDto } from '../../decorators/use-dto.decorator.ts';
 // import { PostEntity } from '../post/post.entity.ts';
 // import type { UserDtoOptions } from './dtos/user.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
+import { CourseEntity } from 'modules/course/entities/course.entity.ts';
 // import { UserSettingsEntity } from './user-settings.entity.ts';
 
 @Entity({ name: 'users' })
@@ -26,15 +28,12 @@ export class UserEntity extends AbstractEntity<UserDto> {
   @Column({ nullable: true, type: 'varchar' })
   password!: string | null;
 
-  // @VirtualColumn({
-  //   query: (alias) =>
-  //     `SELECT CONCAT(${alias}.first_name, ' ', ${alias}.last_name)`,
-  // })
-  // fullName!: string;
+  @OneToMany(() => CourseEntity, (courseEntity) => courseEntity.owner)
+  ownCourses?: CourseEntity[];
 
-  // @OneToOne(() => UserSettingsEntity, (userSettings) => userSettings.user)
-  // settings?: UserSettingsEntity;
+  @OneToMany(() => CourseEntity, (courseEntity) => courseEntity.teachers)
+  teachCourses?: CourseEntity[];
 
-  // @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
-  // posts?: PostEntity[];
+  @OneToMany(() => CourseEntity, (courseEntity) => courseEntity.students)
+  studentCourses?: CourseEntity[];
 }
