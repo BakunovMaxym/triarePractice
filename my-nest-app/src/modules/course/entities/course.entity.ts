@@ -1,36 +1,67 @@
 import { UseDto } from "../../../decorators/use-dto.decorator";
 // import { UseDto } from "../../../decorators/";
-import { Column, Entity, ManyToMany, ManyToOne } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, type Relation } from "typeorm";
 import { CourseDto } from "../dto/CourseDto";
 import { UserEntity } from "../../user/user.entity";
 import { CategoryEntity } from "../../category/entities/category.entity";
 import { AbstractEntity } from "../../../common/abstract.entity";
 
-@Entity({name: "courses"})
+@Entity({ name: "courses" })
 @UseDto(CourseDto)
 export class CourseEntity extends AbstractEntity<CourseDto> {
-    @Column({nullable: false, type: "varchar"})
+    @Column({ nullable: false, type: "varchar" })
     name!: string;
 
-    @ManyToOne(() => UserEntity, (userEntity) => userEntity.id)
-    owner?: UserEntity;
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'owner_id' })
+    owner!: Relation<UserEntity>;
 
-    @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
-    students?: UserEntity[];
+    @ManyToMany(() => UserEntity, { onDelete: 'CASCADE' })
+    @JoinTable({
+        name: 'courses_students',
+        joinColumn: {
+            name: 'course_id',
+            referencedColumnName: 'id',
+        },
+        inverseJoinColumn: {
+            name: 'student_id',
+            referencedColumnName: 'id',
+        },
+    })
+    students!: Relation<UserEntity[]>;
 
-    @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
-    teachers?: UserEntity[];
+    @ManyToMany(() => UserEntity, { onDelete: 'CASCADE' })
+    @JoinTable({
+        name: 'courses_teachers',
+        joinColumn: {
+            name: 'course_id',
+            referencedColumnName: 'id',
+        },
+        inverseJoinColumn: {
+            name: 'teacher_id',
+            referencedColumnName: 'id',
+        },
+    })
+    teachers!: Relation<UserEntity[]>;
+
+
+    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
+    // students?: UserEntity[];
+
+    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
+    // teachers?: UserEntity[];
 
     // @OneToMany(() => TaskEntity, (taskEntity) => taskEntity.id)
     // tasks?: TaskEntity[];
 
-    @ManyToOne(() => CategoryEntity, (categoryEntity) => categoryEntity.name)
-    category?: CategoryEntity;
+    @ManyToOne(() => CategoryEntity, (categoryEntity) => categoryEntity.courses)
+    @JoinColumn()
+    category?: Relation<CategoryEntity>;
 
     // @ManyToOne(() => SubCategoryEntity, (subCategoryEntity) => subCategoryEntity.name)
     // subCategory?: SubCategoryEntity;
 
-    
+
 }
 
 

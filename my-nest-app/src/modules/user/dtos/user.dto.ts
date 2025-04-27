@@ -1,14 +1,12 @@
 import { AbstractDto } from '../../../common/dto/abstract.dto.ts';
 import { RoleType } from '../../../constants/role-type.ts';
 import {
-  // BooleanFieldOptional,
-  EmailFieldOptional,
-  EnumFieldOptional,
   StringFieldOptional,
+  EnumFieldOptional,
+  EmailFieldOptional,
 } from '../../../decorators/field.decorators.ts';
 import type { UserEntity } from '../user.entity.ts';
-
-// export type UserDtoOptions = Partial<{ isActive: boolean }>;
+import { CourseDto } from '../../../modules/course/dto/CourseDto';
 
 export class UserDto extends AbstractDto {
   @StringFieldOptional({ nullable: true })
@@ -17,24 +15,28 @@ export class UserDto extends AbstractDto {
   @StringFieldOptional({ nullable: true })
   lastName?: string | null;
 
-  // @StringFieldOptional({ nullable: true })
-  // username!: string;
-
   @EnumFieldOptional(() => RoleType)
   role?: RoleType;
 
   @EmailFieldOptional({ nullable: true })
   email?: string | null;
 
-  // @BooleanFieldOptional()
-  // isActive?: boolean;
+  ownCourses?: CourseDto[];
 
-  constructor(user: UserEntity /*, options?: UserDtoOptions*/) {
+  teachCourses?: CourseDto[];
+
+  studentCourses?: CourseDto[];
+
+  constructor(user: UserEntity) {
     super(user);
+
     this.firstName = user.firstName;
     this.lastName = user.lastName;
     this.role = user.role;
     this.email = user.email;
-    // this.isActive = options?.isActive;
+
+    this.ownCourses = user.ownCourses?.map((course) => course.toDto());
+    this.teachCourses = user.teachCourses?.map((course) => course.toDto());
+    this.studentCourses = user.studentCourses?.map((course) => course.toDto());
   }
 }

@@ -1,4 +1,4 @@
-import { IsString, Length } from "class-validator/types/decorator/decorators";
+import { IsString, Length } from "class-validator";
 
 export class CreateCategoryDto {
     @IsString()

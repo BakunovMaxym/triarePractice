@@ -1,7 +1,8 @@
+import { RoleType } from '../../../constants/role-type.ts';
 import {
   EmailField,
+  EnumFieldOptional,
   PasswordField,
-  // PhoneFieldOptional,
   StringField,
 } from '../../../decorators/field.decorators.ts';
 
@@ -17,4 +18,7 @@ export class UserRegisterDto {
 
   @PasswordField({ minLength: 6 })
   readonly password!: string;
+
+  @EnumFieldOptional(() => RoleType)
+  role?: RoleType;
 }
