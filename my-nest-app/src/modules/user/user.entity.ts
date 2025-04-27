@@ -7,7 +7,7 @@ import { UseDto } from '../../decorators/use-dto.decorator.ts';
 // import { PostEntity } from '../post/post.entity.ts';
 // import type { UserDtoOptions } from './dtos/user.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
-import { CourseEntity } from 'modules/course/entities/course.entity.ts';
+import { CourseEntity } from '../../modules/course/entities/course.entity.ts';
 // import { UserSettingsEntity } from './user-settings.entity.ts';
 
 @Entity({ name: 'users' })

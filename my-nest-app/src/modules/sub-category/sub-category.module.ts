@@ -11,4 +11,4 @@ import { SubCategoryEntity } from './entities/sub-category.entity';
   providers: [SubCategoryService],
   exports: [SubCategoryService],
 })
-export class CategoryModule {}
+export class SubCategoryModule {}
