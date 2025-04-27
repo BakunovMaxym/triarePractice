@@ -5,6 +5,7 @@ import {
   StringField,
 } from '../../../decorators/field.decorators.ts';
 import type { ColectionEntity } from '../colection.entity.ts';
+import type { PropertyCardEntity } from 'modules/property-cards/entities/property-card.entity.ts';
 
 
 
@@ -16,13 +17,13 @@ export class ColectionDto extends AbstractDto {
   @ClassField(() => SetingsEntity)
   setings!: SetingsEntity;
 
-  // @ClassField(() => PropertyCardEntity)
-  // propertyCards!: PropertyCardEntity[];
+  //@ClassField(() => PropertyCardEntity)
+  propertyCards!: PropertyCardEntity[];
 
   constructor(colection: ColectionEntity) {
     super(colection);
     this.name = colection.name;
     this.setings = colection.setings;
-    // this.propertyCards = colection.propertyCards;
+    this.propertyCards = colection.propertyCards;
   }
 }

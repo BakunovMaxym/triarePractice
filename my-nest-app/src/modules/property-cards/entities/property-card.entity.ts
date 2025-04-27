@@ -3,6 +3,7 @@ import { Column, Entity, ManyToOne, type Relation } from "typeorm";
 import { PropertyCardDto } from "../dto/property-card.dto";
 import { AbstractEntity } from "../../../common/abstract.entity";
 import { ColectionEntity } from "../../../modules/colections/colection.entity";
+import { PropertyType } from "../PropertyType";
 
 @Entity({ name: 'property_cards' })
 @UseDto(PropertyCardDto)
@@ -14,8 +15,8 @@ export class PropertyCardEntity extends AbstractEntity<PropertyCardDto>{
     @Column({nullable: false , type: 'varchar'})
     name!: string;
 
-    @Column({nullable: false, type: 'varchar'})
-    type!: string;
+    @Column({nullable: false, type: 'enum', enum: PropertyType, default: PropertyType.STANDART})
+    type!: PropertyType;
 
     @Column({nullable:false , type: 'integer'})
     price!: number;

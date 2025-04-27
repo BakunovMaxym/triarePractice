@@ -1,14 +1,9 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
-import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {  ApiCreatedResponse, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SetingsDto } from './dtos/setings.dto';
 import { SetingsService } from './setings.service';
-import type { CreateSetingsDto } from './dtos/createSetings.dto';
+import { CreateSetingsDto } from './dtos/createSetings.dto';
 
-
-export const parameterUuid = (key = 'id') =>
-    `:${key}(*)`;
-  
-  export const parameterId = (key = 'id') => `:${key}([0-9]+)`;
 
 
 @Controller('settings')
@@ -20,8 +15,8 @@ export class SetingsController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    async get(): Promise<any> {
-        return { message: 'Setings controller is working!' };
+    async get(): Promise<SetingsDto[]> {
+        return this.setingsService.getSetings();
     }
 
     @Get(":id")
@@ -31,7 +26,9 @@ export class SetingsController {
         description: 'Get users list',
         type: SetingsDto,
     })
+    @ApiParam({name:"id", type: String})
     getUser(@Param('id') userId: Uuid): Promise<SetingsDto> {
+        console.log(userId);
         return this.setingsService.findOne(userId);
     }
 

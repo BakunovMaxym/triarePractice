@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Body,  Param } from '@nestjs/common';
 import  { PropertyCardsService } from './property-cards.service';
 import { CreatePropertyCardDto } from './dto/create-property-card.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam,  ApiTags } from '@nestjs/swagger';
 
 @Controller('property-cards')
 @ApiTags('property-cards')
 export class PropertyCardsController {
   constructor(private readonly propertyCardsService: PropertyCardsService) {}
 
-  @Post()
+  @Post()  
   create(@Body() createPropertyCardDto: CreatePropertyCardDto) {
     return this.propertyCardsService.create(createPropertyCardDto);
   }
@@ -19,6 +19,8 @@ export class PropertyCardsController {
   }
 
   @Get(':id')
+  @ApiParam({name: "id", type: String})
+  
   findOne(@Param('id') id: Uuid) {
     return this.propertyCardsService.findOne(id);
   }

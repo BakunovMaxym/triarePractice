@@ -5,17 +5,15 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Query,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiParam,  ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
 import { ApiPageResponse } from '../../decorators/api-page-response.decorator.ts';
 import { UUIDParam } from '../../decorators/http.decorators.ts';
 import { ColectionDto } from './dtos/colection.dto.ts';
-import type { UsersPageOptionsDto } from 'modules/user/dtos/users-page-options.dto.ts';
 import { ColectionService } from './colection.service.ts';
-import type { CreateColectionDto } from './dtos/createColection.dto.ts';
+import { CreateColectionDto } from './dtos/createColection.dto.ts';
 
 
 @Controller('colections')
@@ -33,11 +31,8 @@ export class ColectionController {
     description: 'Get users list',
     type: PageDto,
   })
-  getUsers(
-    @Query()
-    pageOptionsDto: UsersPageOptionsDto,
-  ): Promise<PageDto<ColectionDto>> {
-    return this.colectionService.getColections(pageOptionsDto);
+  getUsers(): Promise<ColectionDto[]> {
+    return this.colectionService.getColections();
   }
 
   @Get(':id')
@@ -47,6 +42,7 @@ export class ColectionController {
     description: 'Get users list',
     type: ColectionDto,
   })
+  @ApiParam({name: "id", type: String})
   getUser(@UUIDParam('id') userId: Uuid): Promise<ColectionDto> {
     return this.colectionService.getColection(userId);
   }

@@ -1,4 +1,6 @@
+import { ApiProperty } from "@nestjs/swagger";
 import {  NumberField, NumberFieldOptional, StringField, UUIDField } from "../../../decorators/field.decorators";
+import  { PropertyType } from "../PropertyType";
 
 export class CreatePropertyCardDto {
         @UUIDField()
@@ -7,8 +9,8 @@ export class CreatePropertyCardDto {
         @StringField()
         name!: string;
     
-        @StringField()
-        type!: string;
+        @ApiProperty({ enum: PropertyType })
+        type!: PropertyType;
     
         @NumberField()
         price!: number;

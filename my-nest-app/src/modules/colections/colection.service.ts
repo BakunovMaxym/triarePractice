@@ -2,9 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ColectionEntity } from './colection.entity';
-import type { ColectionsPageOptionsDto } from './dtos/colections-page-options.dto';
 import type { ColectionDto } from './dtos/colection.dto';
-import type { PageDto } from 'common/dto/page.dto';
 import type { CreateColectionDto } from './dtos/createColection.dto';
 import { SetingsService } from '../../modules/setings/setings.service';
 
@@ -16,19 +14,28 @@ export class ColectionService {
         private setingsService: SetingsService,
     ) { }
 
-    async getColections(pageOptionsDto: ColectionsPageOptionsDto,): Promise<PageDto<ColectionDto>> {
-        const queryBuilder = this.colectionRepository.createQueryBuilder('colection');
-        const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
+    async getColections(): Promise<ColectionDto[]> {
+        return this.colectionRepository.find({
+            relations:{
+                setings: true,
+                propertyCards: true,
+            }
+        }).then((colections) => colections.map((colection) => colection.toDto()));
 
-        return items.toPageDto(pageMetaDto);
     }
 
     async getColection(ColectionId: Uuid): Promise<ColectionDto> {
-        const queryBuilder = this.colectionRepository.createQueryBuilder('colection');
+        
 
-        queryBuilder.where('colection.id = :ColectionId', { ColectionId });
-
-        const colectionEntity = await queryBuilder.getOne();
+        const colectionEntity = await this.colectionRepository.findOne({
+            relations:{
+                setings: true,
+                propertyCards: true,
+            },
+            where: {
+                id: ColectionId,
+            },
+        });
 
         if (!colectionEntity) {
             throw new NotFoundException();

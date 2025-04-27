@@ -13,6 +13,10 @@ export class SetingsService {
         private setingsRepository: Repository<SetingsEntity>,
     ) { }
 
+    async getSetings(): Promise<SetingsDto[]> {
+        return this.setingsRepository.find().then((setings) => setings.map((setings) => setings.toDto()));
+    }
+
     async findOne(setingsId: Uuid): Promise<SetingsEntity> {
 
         const queryBuilder = this.setingsRepository.createQueryBuilder('settings');

@@ -1,6 +1,7 @@
 import { AbstractDto } from "../../../common/dto/abstract.dto";
 import { NumberField, NumberFieldOptional, StringField } from "../../../decorators/field.decorators";
 import type { PropertyCardEntity } from "../entities/property-card.entity";
+import type { PropertyType } from "../PropertyType";
 
 export class PropertyCardDto extends AbstractDto {
 
@@ -9,7 +10,7 @@ export class PropertyCardDto extends AbstractDto {
     name!: string;
 
     @StringField()
-    type!: string;
+    type!: PropertyType;
 
     @NumberField()
     price!: number;
