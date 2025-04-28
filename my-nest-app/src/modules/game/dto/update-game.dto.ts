@@ -1,5 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateGameDto } from './create-game.dto';
+import { UUIDField } from '../../../decorators/field.decorators';
 
-export class UpdateGameDto extends PartialType(CreateGameDto) {
+export class UpdateGameDto  {
+    @UUIDField()
+        id!: Uuid;
 }

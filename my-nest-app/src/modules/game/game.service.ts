@@ -16,7 +16,7 @@ export class GameService {
     return `This action returns a #${id} game`;
   }
 
-  update(id: number, updateGameDto: UpdateGameDto) {
+  update(id: Uuid, updateGameDto: UpdateGameDto) {
     return `This action updates a #${id} game`;
   }
 
