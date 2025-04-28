@@ -29,9 +29,7 @@ export class AuthController {
       userRegisterDto,
     );
 
-    return createdUser.toDto({
-      isActive: true,
-    });
+    return createdUser.toDto();
   }
 
  

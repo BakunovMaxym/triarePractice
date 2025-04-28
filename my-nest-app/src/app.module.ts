@@ -22,6 +22,8 @@ import { SharedModule } from './shared/shared.module.ts';
 import { SetingsModule } from './modules/setings/setings.module';
 import { ColectionModule } from './modules/colections/colection.module.ts';
 import { PropertyCardsModule } from './modules/property-cards/property-cards.module.ts';
+import { GameModule } from './modules/game/game.module';
+import { PropertyModule } from './modules/property/property.module';
 
 @Module({
   imports: [
@@ -80,6 +82,8 @@ import { PropertyCardsModule } from './modules/property-cards/property-cards.mod
     SetingsModule,
     PropertyCardsModule,
     ColectionModule,
+    GameModule,
+    PropertyModule,
 
   ],
   providers: [],

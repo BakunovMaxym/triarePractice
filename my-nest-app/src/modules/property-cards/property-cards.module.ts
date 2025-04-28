@@ -9,5 +9,6 @@ import { PropertyCardEntity } from './entities/property-card.entity';
   controllers: [ PropertyCardsController, ],
   providers: [PropertyCardsService],
   imports: [ColectionModule, TypeOrmModule.forFeature([PropertyCardEntity])],
+  exports: [PropertyCardsService],
 })
 export class PropertyCardsModule {}
