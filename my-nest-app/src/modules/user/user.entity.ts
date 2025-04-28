@@ -15,7 +15,7 @@ export class UserEntity extends AbstractEntity<UserDto> {
   money!: number ;
 
   @OneToMany(()=> PropertyEntity, (property) => property.owner)
-  propertys!: Relation<PropertyEntity[]>;
+  properties!: Relation<PropertyEntity[]>;
 
   @ManyToOne(() => GameEntity, (game) => game.users)
   game!: Relation<GameEntity>;

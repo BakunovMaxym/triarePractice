@@ -33,7 +33,6 @@ export class PropertyCardDto extends AbstractDto {
     @NumberFieldOptional()
     rentWithTwoHouse!: number;
 
-
     @NumberFieldOptional()
     rentWithThreeHouse!: number;
 

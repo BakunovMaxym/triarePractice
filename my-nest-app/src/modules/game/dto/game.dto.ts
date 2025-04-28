@@ -1,15 +1,15 @@
 import { AbstractDto } from "../../../common/dto/abstract.dto";
-import type { UserEntity } from "../../../modules/user/user.entity";
 import type { GameEntity } from "../entities/game.entity";
-import type { PropertyEntity } from "../../../modules/property/entities/property.entity";
-import type { ColectionEntity } from "../../../modules/colections/colection.entity";
+import type { UserDto } from "../../../modules/user/dtos/user.dto";
+import type { PropertyDto } from "../../../modules/property/dto/property.dto";
+import type { ColectionDto } from "../../../modules/colections/dtos/colection.dto";
 
 
 export class GameDto extends AbstractDto{
    
-    users!: UserEntity[];
-    propertys!: PropertyEntity[];
-    colection!: ColectionEntity;
+    users!: UserDto[];
+    propertys!: PropertyDto[];
+    colection!: ColectionDto;
 
     constructor(game: GameEntity) {
         super(game);

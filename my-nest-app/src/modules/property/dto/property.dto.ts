@@ -1,25 +1,24 @@
-import { PropertyCardEntity } from "../../property-cards/entities/property-card.entity";
-import {  type Relation } from "typeorm";
 import { PropertyStatyses } from "../ProprtyStatyses";
-import { UserEntity } from "../../user/user.entity";
 import { AbstractDto } from "../../../common/dto/abstract.dto";
 import { EnumField, NumberField } from "../../../decorators/field.decorators";
-import type { GameEntity } from "../../../modules/game/entities/game.entity";
+import type { UserDto } from "../../../modules/user/dtos/user.dto";
+import type { GameDto } from "../../../modules/game/dto/game.dto";
+import type { PropertyCardDto } from "../../../modules/property-cards/dto/property-card.dto";
 
 export class PropertyDto extends AbstractDto {
 
     
-    property!: Relation<PropertyCardEntity>;
+    property!: PropertyCardDto;
 
     @EnumField(() => PropertyStatyses)
     propertyType!: PropertyStatyses;
 
-    owner!: UserEntity;
+    owner!: UserDto;
 
     @NumberField()
     upgradeCount!: number;
 
-    game!: GameEntity;
+    game!: GameDto;
 
 
 }
