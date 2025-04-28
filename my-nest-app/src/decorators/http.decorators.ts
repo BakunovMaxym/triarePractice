@@ -17,7 +17,7 @@ import { Roles } from './roles.decorator.ts';
 import type { RoleType } from '../constants/role-type.ts';
 
 export function Auth(
-  roles: RoleType[] = [],
+  roles: string[],
   options?: Partial<{ public: boolean }>,
 ): MethodDecorator {
   const isPublicRoute = options?.public;

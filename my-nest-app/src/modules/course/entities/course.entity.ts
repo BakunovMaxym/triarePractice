@@ -16,7 +16,7 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
     @JoinColumn({ name: 'owner_id' })
     owner!: Relation<UserEntity>;
 
-    @ManyToMany(() => UserEntity, { onDelete: 'CASCADE' })
+    @ManyToMany(() => UserEntity, (userEntity) => userEntity.studentCourses, { onDelete: 'CASCADE' })
     @JoinTable({
         name: 'courses_students',
         joinColumn: {
@@ -28,9 +28,9 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
             referencedColumnName: 'id',
         },
     })
-    students!: Relation<UserEntity[]>;
+    students!: UserEntity[];
 
-    @ManyToMany(() => UserEntity, { onDelete: 'CASCADE' })
+    @ManyToMany(() => UserEntity, (userEntity) => userEntity.teachCourses, { onDelete: 'CASCADE' })
     @JoinTable({
         name: 'courses_teachers',
         joinColumn: {
@@ -42,7 +42,7 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
             referencedColumnName: 'id',
         },
     })
-    teachers!: Relation<UserEntity[]>;
+    teachers!: UserEntity[];
 
 
     // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)

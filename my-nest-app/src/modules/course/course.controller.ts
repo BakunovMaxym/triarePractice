@@ -38,7 +38,7 @@ export class CourseController {
     //   }
 
     @Patch(':id')
-    @ApiParam({name: "id", type: String})
+    @ApiParam({ name: "id", type: String })
     @Auth([RoleType.TEACHER, RoleType.STUDENT])
     @ApiOkResponse({ type: CourseDto, description: "Course updated" })
     async update(
@@ -50,6 +50,19 @@ export class CourseController {
         return updatedCourse.toDto();
     }
 
+
+    @Post(':id/at/:tId')
+    @ApiParam({ name: "id", type: String })
+    @ApiParam({ name: "tId", type: String })
+    @ApiOkResponse({ type: CourseDto, description: "" })
+    async addTeacher(
+        @Param("id") id: Uuid,
+        @Param("tId") tId: Uuid,
+        // @Body() updateCourseDto: UpdateCourseDto,
+    ): Promise<CourseDto> {
+        const addedTeacherCourse = await this.courseService.addTeacher(id, tId);
+        return addedTeacherCourse;
+    }
     //   @Delete(':id')
     //   remove(@Param('id') id: string) {
     //     return this.courseService.remove(+id);

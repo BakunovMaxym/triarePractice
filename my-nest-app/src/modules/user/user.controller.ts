@@ -3,10 +3,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Query,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
 import { RoleType } from '../../constants/role-type.ts';
@@ -26,7 +27,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private readonly translationService: TranslationService,
-  ) {}
+  ) { }
 
   @Get('teacher')
   @Auth([RoleType.TEACHER])
@@ -42,29 +43,12 @@ export class UserController {
     };
   }
 
-  @Get()
-  @Auth([RoleType.STUDENT])
+  @Get(":id")
+  @ApiParam({ name: "id", type: String })
   @HttpCode(HttpStatus.OK)
-  @ApiPageResponse({
-    description: 'Get users list',
-    type: PageDto,
-  })
-  getUsers(
-    @Query(new ValidationPipe({ transform: true }))
-    pageOptionsDto: UsersPageOptionsDto,
-  ): Promise<PageDto<UserDto>> {
-    return this.userService.getUsers(pageOptionsDto);
+  @ApiOkResponse({ type: UserDto, description: "" })
+  getUser(@Param("id") id: Uuid): Promise<UserDto> {
+    return this.userService.getUser(id);
   }
 
-  @Get(':id')
-  @Auth([RoleType.STUDENT])
-  @HttpCode(HttpStatus.OK)
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Get students list',
-    type: UserDto,
-  })
-  getUser(@UUIDParam('id') userId: Uuid): Promise<UserDto> {
-    return this.userService.getUser(userId);
-  }
 }

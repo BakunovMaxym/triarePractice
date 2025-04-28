@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 // import { plainToClass } from 'class-transformer';
@@ -20,6 +20,7 @@ import type { UserDto } from './dtos/user.dto.ts';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
 import type { UserSettingsEntity } from './user-settings.entity.ts';
+import { NotFound } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class UserService {
@@ -67,30 +68,47 @@ export class UserService {
     return user;
   }
 
-  
 
-  async getUsers(
-    pageOptionsDto: UsersPageOptionsDto,
-  ): Promise<PageDto<UserDto>> {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
-    const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
 
-    return items.toPageDto(pageMetaDto);
-  }
+  async getUser(id: Uuid): Promise<UserDto> {
+    const user = this.userRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.teachCourses', 'teachCourse')
+      .leftJoinAndSelect('teachCourse.owner', 'courseOwner')
+      .leftJoinAndSelect('teachCourse.students', 'courseStudents')
+      .leftJoinAndSelect('teachCourse.teachers', 'courseTeachers')
+      .select([
+        'user.id',
+        'user.email',
+        'user.firstName',
+        'user.lastName',
+        'teachCourse.id',
+        'teachCourse.name',
+        'courseOwner.id', 'courseOwner.firstName', 'courseOwner.lastName',
+        'courseStudents.id', 'courseStudents.firstName', 'courseStudents.lastName',
+        'courseTeachers.id', 'courseTeachers.firstName', 'courseTeachers.lastName',
+      ])
+      .where("user.id = :id", { id })
+      .getOne().then((user) => user?.toDto());
 
-  async getUser(userId: Uuid): Promise<UserDto> {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
-
-    queryBuilder.where('user.id = :userId', { userId });
-
-    const userEntity = await queryBuilder.getOne();
-
-    if (!userEntity) {
-      throw new UserNotFoundException();
+    if (!user) {
+      throw NotFoundException
     }
-
-    return userEntity.toDto();
+    return user;
   }
+
+  // async getUser(userId: Uuid): Promise<UserDto> {
+  //   const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+  //   queryBuilder.where('user.id = :userId', { userId });
+
+  //   const userEntity = await queryBuilder.getOne();
+
+  //   if (!userEntity) {
+  //     throw new UserNotFoundException();
+  //   }
+
+  //   return userEntity.toDto();
+  // }
 
   createSettings(
     userId: Uuid,
