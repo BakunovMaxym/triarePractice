@@ -23,29 +23,29 @@ export class CategoryController {
         return this.categoryService.findAll();
     }
 
-    @Get(':id')
+    @Get(':name')
     @HttpCode(HttpStatus.OK)
     async findOne(
-        @Param('id', ParseIntPipe) id: Uuid,
+        @Param('name', ParseIntPipe) name: string,
     ): Promise<CategoryEntity> {
-        return this.categoryService.findOne(id);
+        return this.categoryService.findOne(name);
     }
 
-    @Patch(':id')
+    @Patch(':name')
     @UsePipes(new ValidationPipe({ whitelist: true }))
     @HttpCode(HttpStatus.OK)
     async update(
-        @Param('id', ParseIntPipe) id: Uuid,
+        @Param('name', ParseIntPipe) name: string,
         @Body() updateCategoryDto: UpdateCategoryDto,
     ): Promise<CategoryEntity> {
-        return this.categoryService.update(id, updateCategoryDto);
+        return this.categoryService.update(name, updateCategoryDto);
     }
 
-    @Delete(':id')
+    @Delete(':name')
     @HttpCode(HttpStatus.NO_CONTENT)
     async remove(
-        @Param('id', ParseIntPipe) id: Uuid,
+        @Param('name', ParseIntPipe) name: string,
     ): Promise<void> {
-        await this.categoryService.remove(id);
+        await this.categoryService.remove(name);
     }
 }

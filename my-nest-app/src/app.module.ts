@@ -23,7 +23,7 @@ import { SharedModule } from './shared/shared.module.ts';
 import { CourseModule } from './modules/course/course.module.ts';
 
 import { CategoryModule } from './modules/category/category.module';
-
+import { SubCategoryModule } from './modules/sub-category/sub-category.module';
 @Module({
   imports: [
     AuthModule,
@@ -81,6 +81,7 @@ import { CategoryModule } from './modules/category/category.module';
     HealthCheckerModule,
     CourseModule,
     CategoryModule,
+    SubCategoryModule,
   ],
   providers: [],
 })
