@@ -6,6 +6,7 @@ import { UserEntity } from "../../user/user.entity";
 import { CategoryEntity } from "../../category/entities/category.entity";
 import { AbstractEntity } from "../../../common/abstract.entity";
 import { TaskEntity } from "../../tasks/entities/task.entity";
+import { SubCategoryEntity } from "../../../modules/sub-category/entities/sub-category.entity";
 
 @Entity({ name: "courses" })
 @UseDto(CourseDto)
