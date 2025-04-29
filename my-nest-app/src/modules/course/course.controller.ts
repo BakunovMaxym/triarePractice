@@ -1,15 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CourseDto } from './dto/CourseDto';
 import { Auth } from '../../decorators/http.decorators';
 import { RoleType } from '../../constants/role-type';
 import { AuthUser } from '../../decorators/auth-user.decorator';
 import type { UserEntity } from 'modules/user/user.entity';
 import { CourseInfoDto } from './dto/CurseInfoDto';
-import { DeleteUserFromCourse } from './dto/DeleteUserFromCourse';
+import { FilterDto } from './dto/FilterDto';
 
 @ApiTags("courses")
 @ApiBearerAuth()
@@ -29,10 +29,18 @@ export class CourseController {
         return createdCourse.toDto();
     }
 
-    //   @Get()
-    //   findAll() {
-    //     return this.courseService.findAll();
-    //   }
+    @Get()
+    @HttpCode(HttpStatus.OK)
+    @Auth([])
+    // @ApiQuery({ type: FilterDto })
+    findAllWithFilters(
+        @Query() filter: FilterDto,
+        @AuthUser() user: UserEntity
+    ): { ownerCourses: CourseDto[], teacherCourses: CourseDto[], studentCourses: CourseDto[] } {
+        const courses = this.courseService.findAllWithFilters(user.id, filter);
+        // return courses.map((course) => course.toDto());
+        return courses;
+    }
 
     //   @Get(':id')
     //   findOne(@Param('id') id: string) {
@@ -53,7 +61,7 @@ export class CourseController {
     }
 
 
-    @Post(':id/at')
+    @Post(':id/at/')
     @ApiParam({ name: "id", type: String })
     @Auth([RoleType.TEACHER])
     @ApiOkResponse({ type: CourseInfoDto, description: "" })
@@ -79,22 +87,32 @@ export class CourseController {
         return addedStudentCourse;
     }
 
-    @Delete(":id/dt")
+    @Delete(":id/dt/:tId")
     @ApiParam({ name: "id", type: String })
+    @ApiParam({ name: "tId", type: String })
     @Auth([RoleType.TEACHER])
-    @ApiBody({ type: DeleteUserFromCourse })
     @ApiOkResponse({ description: "Teacher successfully deleted" })
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteTeacher(
         @Param("id") id: Uuid,
-        @Body() tId: DeleteUserFromCourse,
+        @Param("tId") tId: Uuid,
         @AuthUser() caller: UserEntity
     ): Promise<HttpStatus> {
         const isTeacherDeleted = await this.courseService.deleteTeacher(id, caller.id, tId);
         return isTeacherDeleted ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST;
     }
-    //   @Delete(':id')
-    //   remove(@Param('id') id: string) {
-    //     return this.courseService.remove(+id);
-    //   }
+
+    @Delete(":id/ds/:tId")
+    @ApiParam({ name: "id", type: String })
+    @ApiParam({ name: "sId", type: String })
+    @ApiOkResponse({ description: "Student successfully deleted" })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteStudent(
+        @Param("id") id: Uuid,
+        @Param("sId") sId: Uuid,
+        @AuthUser() caller: UserEntity
+    ): Promise<HttpStatus> {
+        const isStudentDeleted = await this.courseService.deleteStudent(id, caller.id, sId);
+        return isStudentDeleted ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST;
+    }
 }

@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { UserEntity } from '../../user/user.entity';
-import { CommentEntity } from '../../comments/entities/comment.entity';
-import { UserTasksEntity } from '../../user-tasks/entities/user-tasks.entity';
-import { CourseEntity } from 'modules/course/entities/course.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne, type Relation } from 'typeorm';
+// import { UserEntity } from '../../user/user.entity';
+// import { CommentEntity } from '../../comments/entities/comment.entity';
+// import { UserTasksEntity } from '../../user-tasks/entities/user-tasks.entity';
+import { CourseEntity } from '../../../modules/course/entities/course.entity';
 
 @Entity('tasks')
 export class TaskEntity {
@@ -21,12 +21,12 @@ export class TaskEntity {
   @Column()
   owner!: string;
 
-@ManyToOne(() => CourseEntity, (course) => course.tasks, { eager: true })
-course!: CourseEntity;
+  @ManyToOne(() => CourseEntity, (course) => course.tasks, { eager: true })
+  course!: Relation<CourseEntity>;
 
-  @OneToMany(() => CommentEntity, (comment) => comment.task)
-  comments!: CommentEntity[];
+  // @OneToMany(() => CommentEntity, (comment) => comment.task)
+  // comments!: CommentEntity[];
 
-  @OneToOne(() => UserTasksEntity, (userTask) => userTask.task)
-  userTasks!: UserTasksEntity[];
+  // @OneToOne(() => UserTasksEntity, (userTask) => userTask.task)
+  // userTasks!: UserTasksEntity[];
 }

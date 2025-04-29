@@ -30,6 +30,10 @@ import { TaskModule } from './modules/tasks/tasks.module';
     AuthModule,
     UserModule,
     PostModule,
+    CourseModule,
+    CategoryModule,
+    SubCategoryModule,
+    TaskModule,
     ClsModule.forRoot({
       global: true,
       middleware: {
@@ -87,4 +91,4 @@ import { TaskModule } from './modules/tasks/tasks.module';
   ],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

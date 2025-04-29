@@ -16,7 +16,7 @@ import { UserNotFoundException } from '../../exceptions/user-not-found.exception
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
 import { CreateSettingsCommand } from './commands/create-settings.command.ts';
 import { CreateSettingsDto } from './dtos/create-settings.dto.ts';
-import type { UserDto } from './dtos/user.dto.ts';
+import { UserDto } from './dtos/user.dto.ts';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
 import type { UserSettingsEntity } from './user-settings.entity.ts';
@@ -71,7 +71,7 @@ export class UserService {
 
 
   async getUser(id: Uuid): Promise<UserDto> {
-    const user = this.userRepository.createQueryBuilder('user')
+    const user = await this.userRepository.createQueryBuilder('user')
       .leftJoinAndSelect('user.teachCourses', 'teachCourse')
       .leftJoinAndSelect('teachCourse.owner', 'courseOwner')
       .leftJoinAndSelect('teachCourse.students', 'courseStudents')
@@ -88,7 +88,10 @@ export class UserService {
         'courseTeachers.id', 'courseTeachers.firstName', 'courseTeachers.lastName',
       ])
       .where("user.id = :id", { id })
-      .getOne().then((user) => user?.toDto());
+      .getOne()
+    if (user) {
+      user.toDto(UserDto)
+    }
 
     if (!user) {
       throw NotFoundException

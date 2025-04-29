@@ -10,7 +10,7 @@ import { ContextProvider } from '../../providers/context.provider.ts';
 
 @Injectable()
 export class TranslationService {
-  constructor(private readonly i18n: I18nService) {}
+  constructor(private readonly i18n: I18nService) { }
 
   translate(key: string, options?: TranslateOptions): Promise<string> {
     return this.i18n.translate(key, {
@@ -25,7 +25,9 @@ export class TranslationService {
         if (_.isString(value)) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const translateDec: ITranslationDecoratorInterface | undefined =
-            Reflect.getMetadata(STATIC_TRANSLATION_DECORATOR_KEY, dto, key);
+            key && dto && typeof dto === 'object' && Reflect.hasMetadata(STATIC_TRANSLATION_DECORATOR_KEY, dto, key)
+              ? Reflect.getMetadata(STATIC_TRANSLATION_DECORATOR_KEY, dto, key)
+              : undefined;
 
           if (translateDec) {
             return this.translate(
