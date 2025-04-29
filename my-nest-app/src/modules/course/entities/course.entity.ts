@@ -1,11 +1,11 @@
 import { UseDto } from "../../../decorators/use-dto.decorator";
 // import { UseDto } from "../../../decorators/";
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, type Relation } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, type Relation, OneToMany } from "typeorm";
 import { CourseDto } from "../dto/CourseDto";
 import { UserEntity } from "../../user/user.entity";
 import { CategoryEntity } from "../../category/entities/category.entity";
 import { AbstractEntity } from "../../../common/abstract.entity";
-import { SubCategoryEntity } from "modules/sub-category/entities/sub-category.entity";
+import { TaskEntity } from "../../tasks/entities/task.entity";
 
 @Entity({ name: "courses" })
 @UseDto(CourseDto)
@@ -44,6 +44,16 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
         },
     })
     teachers!: UserEntity[];
+
+
+    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
+    // students?: UserEntity[];
+
+    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
+    // teachers?: UserEntity[];
+
+    @OneToMany(() => TaskEntity, (taskEntity) => taskEntity.id)
+    tasks?: TaskEntity[];
 
     @ManyToOne(() => CategoryEntity, (categoryEntity) => categoryEntity.courses)
     @JoinColumn()

@@ -24,6 +24,7 @@ import { CourseModule } from './modules/course/course.module.ts';
 
 import { CategoryModule } from './modules/category/category.module';
 import { SubCategoryModule } from './modules/sub-category/sub-category.module';
+import { TaskModule } from './modules/tasks/tasks.module';
 @Module({
   imports: [
     AuthModule,
@@ -82,6 +83,7 @@ import { SubCategoryModule } from './modules/sub-category/sub-category.module';
     CourseModule,
     CategoryModule,
     SubCategoryModule,
+    TaskModule,
   ],
   providers: [],
 })
