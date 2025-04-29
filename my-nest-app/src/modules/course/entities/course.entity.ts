@@ -5,6 +5,7 @@ import { CourseDto } from "../dto/CourseDto";
 import { UserEntity } from "../../user/user.entity";
 import { CategoryEntity } from "../../category/entities/category.entity";
 import { AbstractEntity } from "../../../common/abstract.entity";
+import { SubCategoryEntity } from "modules/sub-category/entities/sub-category.entity";
 
 @Entity({ name: "courses" })
 @UseDto(CourseDto)
@@ -44,22 +45,13 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
     })
     teachers!: UserEntity[];
 
-
-    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
-    // students?: UserEntity[];
-
-    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
-    // teachers?: UserEntity[];
-
-    // @OneToMany(() => TaskEntity, (taskEntity) => taskEntity.id)
-    // tasks?: TaskEntity[];
-
     @ManyToOne(() => CategoryEntity, (categoryEntity) => categoryEntity.courses)
     @JoinColumn()
     category?: Relation<CategoryEntity>;
 
-    // @ManyToOne(() => SubCategoryEntity, (subCategoryEntity) => subCategoryEntity.name)
-    // subCategory?: SubCategoryEntity;
+    @ManyToOne(() => SubCategoryEntity, (subCategoryEntity) => subCategoryEntity.name)
+    @JoinColumn()
+    subCategory?: Relation<SubCategoryEntity>;
 
 
 }

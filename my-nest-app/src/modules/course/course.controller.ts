@@ -2,12 +2,14 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { ApiBearerAuth, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CourseDto } from './dto/CourseDto';
 import { Auth } from '../../decorators/http.decorators';
 import { RoleType } from '../../constants/role-type';
 import { AuthUser } from '../../decorators/auth-user.decorator';
 import type { UserEntity } from 'modules/user/user.entity';
+import { CourseInfoDto } from './dto/CurseInfoDto';
+import { DeleteUserFromCourse } from './dto/DeleteUserFromCourse';
 
 @ApiTags("courses")
 @ApiBearerAuth()
@@ -51,17 +53,45 @@ export class CourseController {
     }
 
 
-    @Post(':id/at/:tId')
+    @Post(':id/at')
     @ApiParam({ name: "id", type: String })
-    @ApiParam({ name: "tId", type: String })
-    @ApiOkResponse({ type: CourseDto, description: "" })
+    @Auth([RoleType.TEACHER])
+    @ApiOkResponse({ type: CourseInfoDto, description: "" })
     async addTeacher(
         @Param("id") id: Uuid,
-        @Param("tId") tId: Uuid,
-        // @Body() updateCourseDto: UpdateCourseDto,
-    ): Promise<CourseDto> {
-        const addedTeacherCourse = await this.courseService.addTeacher(id, tId);
+        @AuthUser() teacher: UserEntity
+
+    ): Promise<CourseInfoDto> {
+        const addedTeacherCourse = await this.courseService.addTeacher(id, teacher.id);
         return addedTeacherCourse;
+    }
+
+
+    @Post(':id/as')
+    @ApiParam({ name: "id", type: String })
+    @Auth([RoleType.TEACHER, RoleType.STUDENT])
+    @ApiOkResponse({ type: CourseInfoDto, description: "" })
+    async addStudent(
+        @Param("id") id: Uuid,
+        @AuthUser() student: UserEntity
+    ): Promise<CourseInfoDto> {
+        const addedStudentCourse = await this.courseService.addStudent(id, student.id);
+        return addedStudentCourse;
+    }
+
+    @Delete(":id/dt")
+    @ApiParam({ name: "id", type: String })
+    @Auth([RoleType.TEACHER])
+    @ApiBody({ type: DeleteUserFromCourse })
+    @ApiOkResponse({ description: "Teacher successfully deleted" })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteTeacher(
+        @Param("id") id: Uuid,
+        @Body() tId: DeleteUserFromCourse,
+        @AuthUser() caller: UserEntity
+    ): Promise<HttpStatus> {
+        const isTeacherDeleted = await this.courseService.deleteTeacher(id, caller.id, tId);
+        return isTeacherDeleted ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST;
     }
     //   @Delete(':id')
     //   remove(@Param('id') id: string) {

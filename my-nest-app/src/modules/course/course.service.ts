@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Transactional } from 'typeorm-transactional';
@@ -7,6 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, type Repository } from 'typeorm';
 import { UserEntity } from '../../modules/user/user.entity';
 import { CategoryEntity } from '../../modules/category/entities/category.entity';
+import { CourseInfoDto } from './dto/CurseInfoDto';
+import { error } from 'console';
+import type { DeleteUserFromCourse } from './dto/DeleteUserFromCourse';
 // import { UserEntity } from 'modules/user/user.entity';
 
 @Injectable()
@@ -111,20 +114,20 @@ export class CourseService {
         return course;
     }
 
-    async addTeacher(courseId: Uuid, teacherId: Uuid) {
-
+    async addTeacher(courseId: Uuid, teacherId: Uuid): Promise<CourseInfoDto> {
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
-            relations: ["owner", "teachers", "students", "category"]
-        })
+            relations: ["owner", "teachers", "students", "category"],
+        });
 
         if (!course) {
-            throw new NotFoundException("Course with this id doesnt exist")
+            throw new NotFoundException("Course with this id doesn't exist");
         }
-        const newTeacher = await this.userRepository.findOne({ where: { id: teacherId } })
+
+        const newTeacher = await this.userRepository.findOne({ where: { id: teacherId } });
 
         if (!newTeacher) {
-            throw new NotFoundException("Teacher with this id doesnt exist")
+            throw new NotFoundException("Teacher with this id doesn't exist");
         }
 
         if (course.teachers.some(teacher => teacher.id === teacherId)) {
@@ -133,26 +136,68 @@ export class CourseService {
 
         course.teachers.push(newTeacher);
 
-        await this.courseRepository.save(course);
+        const savedCourse = await this.courseRepository.save(course);
 
-        const updatedCourse = await this.courseRepository.createQueryBuilder("course")
-            .leftJoinAndSelect("course.owner", "owner")
-            .leftJoinAndSelect("course.teachers", "teachers")
-            .leftJoinAndSelect("course.students", "students")
-            .leftJoinAndSelect("course.category", "category")
-            .where("course.id = :id", { id: course.id })
-            .select([
-                "course.id",
-                "course.name",
-                "owner.id", "owner.firstName", "owner.lastName",
-                "teachers.id", "teachers.firstName", "teachers.lastName",
-                "students.id", "students.firstName", "students.lastName",
-                "category.name",
-                "course.createdAt",
-                "course.createdAt"
-            ])
-            .getOne()
-        return updatedCourse;
+        return new CourseInfoDto(savedCourse);
     }
 
+    async addStudent(courseId: Uuid, studentId: Uuid): Promise<CourseInfoDto> {
+        const course = await this.courseRepository.findOne({
+            where: { id: courseId },
+            relations: ["owner", "teachers", "students", "category"],
+        });
+
+        if (!course) {
+            throw new NotFoundException("Course with this id doesn't exist");
+        }
+
+        const newStudent = await this.userRepository.findOne({ where: { id: studentId } });
+
+        if (!newStudent) {
+            throw new NotFoundException("Student with this id doesn't exist");
+        }
+
+        if (course.students.some(student => student.id === studentId)) {
+            throw new ConflictException("The user is already a student");
+        }
+
+        course.students.push(newStudent);
+
+        const savedCourse = await this.courseRepository.save(course);
+
+        return new CourseInfoDto(savedCourse);
+    }
+
+    async deleteTeacher(courseId: Uuid, callerId: Uuid, teacher: DeleteUserFromCourse) {
+        const course = await this.courseRepository.findOne({
+            where: { id: courseId },
+            relations: ["owner", "teachers", "students", "category"],
+        });
+
+        if (!course) {
+            throw new NotFoundException("Course with this id doesn't exist");
+        }
+
+        const isOwnerOrTeacher =
+            course.owner.id === callerId ||
+            course.teachers.some(t => t.id === callerId);
+
+        if (!isOwnerOrTeacher) {
+            throw new ForbiddenException("You cannot remove teachers from this course");
+        }
+
+        const reqTeacher = teacher.userId || callerId;
+
+        const teacherExists = course.teachers.some(t => t.id === reqTeacher);
+
+        if (!teacherExists) {
+            throw new NotFoundException("Teacher not found in this course");
+        }
+    
+        course.teachers = course.teachers.filter(t => t.id !== reqTeacher);
+    
+
+        await this.courseRepository.save(course);
+        return true;
+    }
 }

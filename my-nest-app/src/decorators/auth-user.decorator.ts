@@ -6,8 +6,8 @@ export function AuthUser() {
     const request = context.switchToHttp().getRequest();
 
     const user = request.user;
-    console.log(user.id)
-    console.log(typeof(user.id))
+    // console.log(user.id)
+    // console.log(typeof(user.id))
 
     if (user?.[Symbol.for('isPublic')]) {
       return;
