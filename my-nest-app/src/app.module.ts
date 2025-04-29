@@ -25,6 +25,8 @@ import { CourseModule } from './modules/course/course.module.ts';
 import { CategoryModule } from './modules/category/category.module';
 import { SubCategoryModule } from './modules/sub-category/sub-category.module';
 import { TaskModule } from './modules/tasks/tasks.module';
+import { CommentModule } from './modules/comment/comment.module.ts';
+import { UserTasksModule } from './modules/user-tasks/user-tasks.module';
 @Module({
   imports: [
     AuthModule,
@@ -88,6 +90,9 @@ import { TaskModule } from './modules/tasks/tasks.module';
     CategoryModule,
     SubCategoryModule,
     TaskModule,
+    CommentModule,
+    CommentModule,
+    UserTasksModule,
   ],
   providers: [],
 })

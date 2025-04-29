@@ -32,7 +32,8 @@ export class TaskService {
       name: createTaskDto.name,
       content: createTaskDto.content,
       state: createTaskDto.state,
-      owner: owner.id,
+      owner: owner,
+      comments: [],
     });
     return this.taskRepository.save(task);
   }
