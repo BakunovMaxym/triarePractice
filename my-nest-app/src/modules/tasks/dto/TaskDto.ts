@@ -1,8 +1,9 @@
 import { IsArray, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { StringField, UUIDField } from '../../../decorators/field.decorators';
+import { StringField } from '../../../decorators/field.decorators';
+import type { UserNameDto } from 'modules/user/dtos/UserNameDto';
 
-export class CreateTaskDto {
+export class TaskDto {
   @ApiProperty({
     description: 'Unique name of the task',
     example: 'task-1',
@@ -26,10 +27,9 @@ export class CreateTaskDto {
 
   @ApiProperty({
     description: 'Owner of the task',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    example: 'Name of the owner',
   })
-  @UUIDField()
-  ownerId!: Uuid;
+  owner!: UserNameDto;
   static OPEN: unknown;
 
   @ApiProperty({
