@@ -10,6 +10,7 @@ import { AuthUser } from '../../decorators/auth-user.decorator';
 import type { UserEntity } from 'modules/user/user.entity';
 import { CourseInfoDto } from './dto/CurseInfoDto';
 import { FilterDto } from './dto/FilterDto';
+import type { SingleCourseInfoDto } from './dto/SingleCourseInfoDto';
 
 @ApiTags("courses")
 @ApiBearerAuth()
@@ -36,16 +37,23 @@ export class CourseController {
     findAllWithFilters(
         @Query() filter: FilterDto,
         @AuthUser() user: UserEntity
-    ): { ownerCourses: CourseDto[], teacherCourses: CourseDto[], studentCourses: CourseDto[] } {
+    ): { ownerCourses: CourseInfoDto[], teacherCourses: CourseInfoDto[], studentCourses: CourseInfoDto[] } {
         const courses = this.courseService.findAllWithFilters(user.id, filter);
         // return courses.map((course) => course.toDto());
         return courses;
     }
 
-    //   @Get(':id')
-    //   findOne(@Param('id') id: string) {
-    //     return this.courseService.findOne(+id);
-    //   }
+    @Get(":id")
+    @ApiParam({ name: "id", type: String })
+    @HttpCode(HttpStatus.OK)
+    @Auth([])
+    findById(
+        @Param('id') id: Uuid,
+        @AuthUser() user: UserEntity
+    ): SingleCourseInfoDto {
+        const course = this.courseService.findById(user.id, id);
+        return course;
+    }
 
     @Patch(':id')
     @ApiParam({ name: "id", type: String })

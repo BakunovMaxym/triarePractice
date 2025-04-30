@@ -5,6 +5,9 @@ export class FilterDto {
     @UUIDFieldOptional()
     ownerId?: Uuid;
 
+    @StringFieldOptional()
+    name?: string;
+
     @UUIDFieldOptional()
     teacherId?: Uuid;
 

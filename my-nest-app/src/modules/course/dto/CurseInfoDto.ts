@@ -16,9 +16,6 @@ export class CourseInfoDto {
   @ApiProperty({ type: [UserNameDto], description: 'Список викладачів курсу' })
   teachers: UserNameDto[];
 
-  @ApiProperty({ type: [UserNameDto], description: 'Список студентів курсу' })
-  students: UserNameDto[];
-
   @StringField({ description: 'Назва категорії курсу' })
   categoryName: string;
 
@@ -35,13 +32,8 @@ export class CourseInfoDto {
     this.teachers = Array.isArray(course.teachers)
       ? course.teachers.map((t: any) => new UserNameDto(t))
       : [];
-    this.students = Array.isArray(course.students)
-      ? course.students.map((s: any) => new UserNameDto(s))
-      : [];
     this.categoryName = course.category?.name;
     this.subCategoryName = course.subCategory?.name;
     this.createdAt = course.createdAt;
-
-
   }
 }

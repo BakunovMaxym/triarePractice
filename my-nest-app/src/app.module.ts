@@ -27,8 +27,14 @@ import { SubCategoryModule } from './modules/sub-category/sub-category.module';
 import { TaskModule } from './modules/tasks/tasks.module';
 import { CommentModule } from './modules/comment/comment.module.ts';
 import { UserTasksModule } from './modules/user-tasks/user-tasks.module';
+import { CacheModule } from '@nestjs/cache-manager';
 @Module({
   imports: [
+    CacheModule.register({
+      ttl: 60000,
+      max: 200,
+      isGlobal: true,
+    }),
     AuthModule,
     UserModule,
     PostModule,

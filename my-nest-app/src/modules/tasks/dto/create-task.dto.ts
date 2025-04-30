@@ -46,4 +46,13 @@ export class CreateTaskDto {
   @IsArray()
   @IsString({ each: true })
   comments!: string[];
+
+  constructor(task: any) {
+    this.name = task.name;
+    this.content = task.content;
+    this.state = task.state;
+    this.ownerId = task.ownerId;
+    this.course = task.course;
+    this.comments = task.comments;
+  }
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Transactional } from 'typeorm-transactional';
@@ -10,11 +10,15 @@ import { CategoryEntity } from '../../modules/category/entities/category.entity'
 import { CourseInfoDto } from './dto/CurseInfoDto';
 import type { FilterDto } from './dto/FilterDto';
 import { SubCategoryEntity } from '../../modules/sub-category/entities/sub-category.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+import { SingleCourseInfoDto } from './dto/SingleCourseInfoDto';
 // import { UserEntity } from 'modules/user/user.entity';
 
 @Injectable()
 export class CourseService {
     constructor(
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
         @InjectRepository(CourseEntity)
         private courseRepository: Repository<CourseEntity>,
         @InjectRepository(UserEntity)
@@ -31,17 +35,17 @@ export class CourseService {
         const owner = await this.userRepository.findOne({ where: { id: userId } });
 
         if (!owner) {
-            throw new Error("User not found");
+            throw new NotFoundException("Користувача не знайдено");
         }
 
         const category = await this.categoryRepository.findOne({ where: { name: createCourseDto.category } });
         if (!category) {
-            throw new Error('Category not found');
+            throw new NotFoundException('Категорію не знайдено');
         }
 
         const subCategory = await this.subCategoryRepository.findOne({ where: { name: createCourseDto.subCategory } });
         if (!subCategory) {
-            throw new Error('SubCategory not found');
+            throw new NotFoundException('Підкатегорію не знайдено');
         }
 
         const course = this.courseRepository.create({
@@ -61,30 +65,30 @@ export class CourseService {
         teacherCourses: CourseInfoDto[];
         studentCourses: CourseInfoDto[];
     }> {
-        // If category filter is provided, verify the category exists
+        const cacheKey = `courses:${userId}:${JSON.stringify(filter)}`;
+
+        const cached = await this.cacheManager.get(cacheKey);
+        if (cached) return cached;
+
         if (filter.category) {
             const category = await this.categoryRepository.findOne({
                 where: { name: filter.category },
             });
             if (!category) {
-                // Return empty result if category not found
                 return { ownerCourses: [], teacherCourses: [], studentCourses: [] };
             }
         }
 
-        // If subCategory filter is provided, verify it exists (and matches the category if given)
         if (filter.subCategory) {
             const subCategory = await this.subCategoryRepository.findOne({
                 where: { name: filter.subCategory },
-                // relations: ['category'],
             });
             if (!subCategory) {
-                // Return empty result if subCategory not found or doesn't match the category
                 return { ownerCourses: [], teacherCourses: [], studentCourses: [] };
             }
         }
 
-        // Build query for courses where the user is the **owner**
+        // owner
         const ownerQB = this.courseRepository
             .createQueryBuilder('course')
             .leftJoinAndSelect('course.owner', 'owner')
@@ -94,9 +98,11 @@ export class CourseService {
             .leftJoinAndSelect('course.subCategory', 'subCategory')
             .where('owner.id = :userId', { userId });
 
-        // Apply filters to owner query if provided
         if (filter.ownerId) {
             ownerQB.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
+        }
+        if (filter.name) {
+            ownerQB.andWhere('course.name = :name', { name: filter.name });
         }
         if (filter.teacherId) {
             ownerQB.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
@@ -108,7 +114,7 @@ export class CourseService {
             ownerQB.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
         }
 
-        // Build query for courses where the user is a **teacher**
+        // teacher
         const teacherQB = this.courseRepository
             .createQueryBuilder('course')
             .leftJoinAndSelect('course.owner', 'owner')
@@ -118,9 +124,11 @@ export class CourseService {
             .leftJoinAndSelect('course.subCategory', 'subCategory')
             .where('teacher.id = :userId', { userId });
 
-        // Apply filters to teacher query if provided
         if (filter.ownerId) {
             teacherQB.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
+        }
+        if (filter.name) {
+            ownerQB.andWhere('course.name = :name', { name: filter.name });
         }
         if (filter.teacherId) {
             teacherQB.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
@@ -132,7 +140,7 @@ export class CourseService {
             teacherQB.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
         }
 
-        // Build query for courses where the user is a **student**
+        // student
         const studentQB = this.courseRepository
             .createQueryBuilder('course')
             .leftJoinAndSelect('course.owner', 'owner')
@@ -142,9 +150,11 @@ export class CourseService {
             .leftJoinAndSelect('course.subCategory', 'subCategory')
             .where('student.id = :userId', { userId });
 
-        // Apply filters to student query if provided
         if (filter.ownerId) {
             studentQB.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
+        }
+        if (filter.name) {
+            ownerQB.andWhere('course.name = :name', { name: filter.name });
         }
         if (filter.teacherId) {
             studentQB.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
@@ -156,19 +166,22 @@ export class CourseService {
             studentQB.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
         }
 
-        // Execute all three queries in parallel
         const [ownerCourses, teacherCourses, studentCourses] = await Promise.all([
             ownerQB.getMany(),
             teacherQB.getMany(),
             studentQB.getMany(),
         ]);
 
-        // Map each course entity to CourseInfoDto (assuming a suitable constructor or mapper)
         const ownerCourseDtos = ownerCourses.map(course => new CourseInfoDto(course));
         const teacherCourseDtos = teacherCourses.map(course => new CourseInfoDto(course));
         const studentCourseDtos = studentCourses.map(course => new CourseInfoDto(course));
 
-        // Return the result object with three arrays of CourseInfoDto
+        await this.cacheManager.set(cacheKey, {
+            ownerCourses: ownerCourseDtos,
+            teacherCourses: teacherCourseDtos,
+            studentCourses: studentCourseDtos,
+        });
+
         return {
             ownerCourses: ownerCourseDtos,
             teacherCourses: teacherCourseDtos,
@@ -177,6 +190,28 @@ export class CourseService {
     }
 
 
+    async findById(userId: Uuid, courseid: Uuid): Promise<SingleCourseInfoDto> {
+
+        const courseQuery = this.courseRepository
+            .createQueryBuilder('course')
+            .leftJoinAndSelect('course.owner', 'owner')
+            .leftJoinAndSelect('course.teachers', 'teacher')
+            .leftJoinAndSelect('course.students', 'student')
+            .leftJoinAndSelect('course.category', 'category')
+            .leftJoinAndSelect('course.subCategory', 'subCategory')
+            .where('course.id = :courseid', { courseid })
+            .andWhere('owner.id = :userId', { userId })
+            .orWhere('teacher.id = :userId', { userId })
+            .orWhere('student.id = :userId', { userId })
+
+
+        const course = await courseQuery.getOne()
+
+        if (!course) {
+            throw new NotFoundException("Не вдалося знайти ваш курс")
+        }
+        return new SingleCourseInfoDto(course)
+    }
 
 
     async update(id: Uuid, userId: Uuid, updateCourseDto: UpdateCourseDto): Promise<CourseEntity> {
@@ -187,115 +222,78 @@ export class CourseService {
         })
 
         if (!course) {
-            throw new Error("Course not found");
+            throw new Error("Курс не знайдено");
         }
 
         const user = await this.userRepository.findOne({ where: { id: userId } })
 
         if (!user) {
-            throw new Error("User not found");
+            throw new Error("Користувача не знайдено");
         }
 
         const isOwner = course.owner.id === userId;
 
         if (!isOwner) {
-            throw new ForbiddenException("Only owner has permission")
+            throw new ForbiddenException("Тільки власник має дозвіл")
         }
 
         Object.assign(course, updateCourseDto)
         await this.courseRepository.save(course)
-
-        // if(updateCourseDto.name !== undefined){
-
-        // }
-
-        // if(updateCourseDto.ownerId !== undefined){
-        //     if(isOwner){
-        //         const newOwner = await this.userRepository.findOne({ where: { id: updateCourseDto.ownerId as Uuid}})
-        //         if (!newOwner) {
-        //             throw new Error("New owner not found");
-        //         }
-        //         course.owner = newOwner;
-        //     } else {
-        //         throw new ForbiddenException("Only owner can change ownership")
-        //     }
-        // }
-
-        if (updateCourseDto.teacherIds !== undefined) {
-            const newTeachers = await this.userRepository.find({
-                where: {
-                    id: In(updateCourseDto.teacherIds as Uuid[])
-                }
-            });
-            course.teachers.push(...newTeachers);
-        }
-
-        if (updateCourseDto.studentIds !== undefined) {
-            const newStudents = await this.userRepository.find({
-                where: {
-                    id: In(updateCourseDto.studentIds as Uuid[])
-                }
-            });
-            course.students.push(...newStudents);
-        }
-
-        await this.courseRepository.save(course)
-
         return course;
     }
 
-    async addTeacher(courseId: Uuid, teacherId: Uuid): Promise<CourseInfoDto> {
+    async addTeacher(courseId: Uuid, teacherId: Uuid): Promise<SingleCourseInfoDto> {
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
             relations: ["owner", "teachers", "students", "category"],
         });
 
         if (!course) {
-            throw new NotFoundException("Course with this id doesn't exist");
+            throw new NotFoundException("Курс не знайдено");
         }
 
         const newTeacher = await this.userRepository.findOne({ where: { id: teacherId } });
 
         if (!newTeacher) {
-            throw new NotFoundException("Teacher with this id doesn't exist");
+            throw new NotFoundException("Вчителя не знайдено");
         }
 
         if (course.teachers.some(teacher => teacher.id === teacherId)) {
-            throw new ConflictException("The user is already a teacher");
+            throw new ConflictException("Користувач вже у списку вчителів");
         }
 
         course.teachers.push(newTeacher);
 
         const savedCourse = await this.courseRepository.save(course);
 
-        return new CourseInfoDto(savedCourse);
+        return new SingleCourseInfoDto(savedCourse);
     }
 
-    async addStudent(courseId: Uuid, studentId: Uuid): Promise<CourseInfoDto> {
+    async addStudent(courseId: Uuid, studentId: Uuid): Promise<SingleCourseInfoDto> {
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
             relations: ["owner", "teachers", "students", "category"],
         });
 
         if (!course) {
-            throw new NotFoundException("Course with this id doesn't exist");
+            throw new NotFoundException("Курс не знайдено");
         }
 
         const newStudent = await this.userRepository.findOne({ where: { id: studentId } });
 
         if (!newStudent) {
-            throw new NotFoundException("Student with this id doesn't exist");
+            throw new NotFoundException("Студента не знайдено");
         }
 
         if (course.students.some(student => student.id === studentId)) {
-            throw new ConflictException("The user is already a student");
+            throw new ConflictException("Користувач вже у списку студентів");
         }
 
         course.students.push(newStudent);
 
         const savedCourse = await this.courseRepository.save(course);
 
-        return new CourseInfoDto(savedCourse);
+        return new SingleCourseInfoDto(savedCourse);
     }
 
     async deleteTeacher(courseId: Uuid, callerId: Uuid, teacher: Uuid) {
@@ -305,7 +303,7 @@ export class CourseService {
         });
 
         if (!course) {
-            throw new NotFoundException("Course with this id doesn't exist");
+            throw new NotFoundException("Курс не знайдено");
         }
 
         const isOwnerOrTeacher =
@@ -313,13 +311,13 @@ export class CourseService {
             callerId === teacher && course.teachers.some(t => t.id === callerId);
 
         if (!isOwnerOrTeacher) {
-            throw new ForbiddenException("You cannot remove teachers from this course");
+            throw new ForbiddenException("Ви не маєте прав на видалення викладача з цього курсу");
         }
 
         const teacherExists = course.teachers.some(t => { return t.id === teacher });
 
         if (!teacherExists) {
-            throw new NotFoundException("Teacher not found in this course");
+            throw new NotFoundException("Вчителя в курсі не знайдено");
         }
 
         course.teachers = course.teachers.filter(t => t.id !== teacher);
@@ -336,7 +334,7 @@ export class CourseService {
         });
 
         if (!course) {
-            throw new NotFoundException("Course with this id doesn't exist");
+            throw new NotFoundException("Курс не знайдено");
         }
 
         const isOwnerOrStudent =
@@ -359,4 +357,5 @@ export class CourseService {
         await this.courseRepository.save(course);
         return true;
     }
+
 }
