@@ -99,6 +99,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     CommentModule,
     CommentModule,
     UserTasksModule,
+    FolderModule,
   ],
   providers: [],
 })
