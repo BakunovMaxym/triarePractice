@@ -25,7 +25,7 @@ import { TaskEntity } from './entities/task.entity';
 @ApiTags('tasks')
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly taskService: TaskService) {}
+  constructor(private readonly taskService: TaskService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new task' })

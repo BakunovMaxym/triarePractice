@@ -1,6 +1,6 @@
 import { UseDto } from "../../../decorators/use-dto.decorator";
 // import { UseDto } from "../../../decorators/";
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, type Relation, OneToMany } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, type Relation, OneToMany, AfterUpdate, BeforeInsert, BeforeUpdate } from "typeorm";
 import { CourseDto } from "../dto/CourseDto";
 import { UserEntity } from "../../user/user.entity";
 import { CategoryEntity } from "../../category/entities/category.entity";
@@ -64,6 +64,19 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
     @JoinColumn()
     subCategory?: Relation<SubCategoryEntity>;
 
+    @Column({ type: "integer", default: 0 })
+    studentsCount!: number;
+
+    @Column({ type: "integer", default: 0 })
+    teachersCount!: number;
+
+    // @
+    @BeforeUpdate()
+    updateCount() {
+        console.log("updateCount")
+        this.studentsCount = this.students?.length;
+        this.teachersCount = this.teachers?.length;
+    }
 }
 
 

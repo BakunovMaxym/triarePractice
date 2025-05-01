@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query, UseInterceptors, Inject } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -15,6 +15,7 @@ import type { SingleCourseInfoDto } from './dto/SingleCourseInfoDto';
 @ApiTags("courses")
 @ApiBearerAuth()
 @Controller('course')
+// @UseInterceptors(CacheInterceptor)
 export class CourseController {
     constructor(private readonly courseService: CourseService) { }
 
@@ -34,10 +35,10 @@ export class CourseController {
     @HttpCode(HttpStatus.OK)
     @Auth([])
     // @ApiQuery({ type: FilterDto })
-    findAllWithFilters(
+    async findAllWithFilters(
         @Query() filter: FilterDto,
         @AuthUser() user: UserEntity
-    ): { ownerCourses: CourseInfoDto[], teacherCourses: CourseInfoDto[], studentCourses: CourseInfoDto[] } {
+    ): Promise<{ ownerCourses: CourseInfoDto[]; teacherCourses: CourseInfoDto[]; studentCourses: CourseInfoDto[]; }> {
         const courses = this.courseService.findAllWithFilters(user.id, filter);
         // return courses.map((course) => course.toDto());
         return courses;

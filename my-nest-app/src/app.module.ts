@@ -28,13 +28,12 @@ import { TaskModule } from './modules/tasks/tasks.module';
 import { CommentModule } from './modules/comment/comment.module.ts';
 import { UserTasksModule } from './modules/user-tasks/user-tasks.module';
 import { CacheModule } from '@nestjs/cache-manager';
+// @ts-ignore
+const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
+
 @Module({
   imports: [
-    CacheModule.register({
-      ttl: 60000,
-      max: 200,
-      isGlobal: true,
-    }),
+
     AuthModule,
     UserModule,
     PostModule,
@@ -48,6 +47,7 @@ import { CacheModule } from '@nestjs/cache-manager';
         mount: true,
       },
     }),
+
     ThrottlerModule.forRootAsync({
       imports: [SharedModule],
       useFactory: (configService: ApiConfigService) => ({
@@ -59,6 +59,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
     TypeOrmModule.forRootAsync({
       imports: [SharedModule],
       useFactory: (configService: ApiConfigService) =>
@@ -92,6 +93,15 @@ import { CacheModule } from '@nestjs/cache-manager';
       inject: [ApiConfigService],
     }),
     HealthCheckerModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        store: redisStore, // Do NOT call it here
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+        prefix: 'fefefe:',
+      }),
+    }),
     CourseModule,
     CategoryModule,
     SubCategoryModule,
@@ -99,7 +109,8 @@ import { CacheModule } from '@nestjs/cache-manager';
     CommentModule,
     CommentModule,
     UserTasksModule,
-    FolderModule,
+    // FolderModule,
+
   ],
   providers: [],
 })

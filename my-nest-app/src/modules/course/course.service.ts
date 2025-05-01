@@ -261,7 +261,7 @@ export class CourseService {
         if (course.teachers.some(teacher => teacher.id === teacherId)) {
             throw new ConflictException("Користувач вже у списку вчителів");
         }
-
+        course.teachersCount = -69;
         course.teachers.push(newTeacher);
 
         const savedCourse = await this.courseRepository.save(course);
