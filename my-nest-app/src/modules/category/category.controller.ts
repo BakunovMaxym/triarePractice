@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, UsePipes, ValidationPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UsePipes, ValidationPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -44,7 +44,7 @@ export class CategoryController {
     @Delete(':name')
     @HttpCode(HttpStatus.NO_CONTENT)
     async remove(
-        @Param('name', ParseIntPipe) name: string,
+        @Param('name') name: string,
     ): Promise<void> {
         await this.categoryService.remove(name);
     }
