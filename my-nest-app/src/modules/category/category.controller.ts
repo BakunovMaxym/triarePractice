@@ -26,7 +26,7 @@ export class CategoryController {
     @Get(':name')
     @HttpCode(HttpStatus.OK)
     async findOne(
-        @Param('name', ParseIntPipe) name: string,
+        @Param('name') name: string,
     ): Promise<CategoryEntity> {
         return this.categoryService.findOne(name);
     }
@@ -35,7 +35,7 @@ export class CategoryController {
     @UsePipes(new ValidationPipe({ whitelist: true }))
     @HttpCode(HttpStatus.OK)
     async update(
-        @Param('name', ParseIntPipe) name: string,
+        @Param('name') name: string,
         @Body() updateCategoryDto: UpdateCategoryDto,
     ): Promise<CategoryEntity> {
         return this.categoryService.update(name, updateCategoryDto);

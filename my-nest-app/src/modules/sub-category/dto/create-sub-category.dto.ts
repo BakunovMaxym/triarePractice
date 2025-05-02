@@ -1,8 +1,7 @@
-import { IsString, Length } from "class-validator";
+import { StringField } from "../../../decorators/field.decorators";
 
 export class CreateSubCategoryDto {
-    @IsString()
-    @Length(2, 50)
+    @StringField({minLength: 2, maxLength: 50})
     name: string;
 
     constructor(name: string) {

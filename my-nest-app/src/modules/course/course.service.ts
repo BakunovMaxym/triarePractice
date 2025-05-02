@@ -29,6 +29,16 @@ export class CourseService {
         private subCategoryRepository: Repository<SubCategoryEntity>,
     ) { }
 
+    async deleteCache(userId: Uuid){
+        const keys: string[] = await this.cacheManager.store.keys(`courses:${userId}:*`);
+
+        if (keys.length > 0) {
+            for (const key of keys) {
+                await this.cacheManager.store.del(key);
+            }
+        }
+    }
+
     @Transactional()
     async create(userId: Uuid, createCourseDto: CreateCourseDto): Promise<CourseEntity> {
 
@@ -191,6 +201,10 @@ export class CourseService {
 
 
     async findById(userId: Uuid, courseid: Uuid): Promise<SingleCourseInfoDto> {
+        const cacheKey = `courses:${userId}:${courseid}`;
+
+        const cached = await this.cacheManager.get(cacheKey);
+        if (cached) return cached;
 
         const courseQuery = this.courseRepository
             .createQueryBuilder('course')
@@ -208,13 +222,17 @@ export class CourseService {
         const course = await courseQuery.getOne()
 
         if (!course) {
-            throw new NotFoundException("Не вдалося знайти ваш курс")
+            throw new NotFoundException("Не вдалось знайти ваш курс")
         }
+
+        await this.cacheManager.set(cacheKey, course);
+
         return new SingleCourseInfoDto(course)
     }
 
 
     async update(id: Uuid, userId: Uuid, updateCourseDto: UpdateCourseDto): Promise<CourseEntity> {
+        await this.deleteCache(userId)
 
         const course = await this.courseRepository.findOne({
             where: { id: id },
@@ -232,7 +250,6 @@ export class CourseService {
         }
 
         const isOwner = course.owner.id === userId;
-
         if (!isOwner) {
             throw new ForbiddenException("Тільки власник має дозвіл")
         }
@@ -243,6 +260,8 @@ export class CourseService {
     }
 
     async addTeacher(courseId: Uuid, teacherId: Uuid): Promise<SingleCourseInfoDto> {
+        await this.deleteCache(teacherId)
+
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
             relations: ["owner", "teachers", "students", "category"],
@@ -261,8 +280,8 @@ export class CourseService {
         if (course.teachers.some(teacher => teacher.id === teacherId)) {
             throw new ConflictException("Користувач вже у списку вчителів");
         }
-        course.teachersCount = -69;
         course.teachers.push(newTeacher);
+        course.updatedAt = new Date()
 
         const savedCourse = await this.courseRepository.save(course);
 
@@ -270,6 +289,8 @@ export class CourseService {
     }
 
     async addStudent(courseId: Uuid, studentId: Uuid): Promise<SingleCourseInfoDto> {
+        await this.deleteCache(studentId)
+
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
             relations: ["owner", "teachers", "students", "category"],
@@ -297,6 +318,9 @@ export class CourseService {
     }
 
     async deleteTeacher(courseId: Uuid, callerId: Uuid, teacher: Uuid) {
+        await this.deleteCache(callerId)
+        await this.deleteCache(teacher)
+
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
             relations: ["owner", "teachers", "students", "category"],
@@ -328,6 +352,9 @@ export class CourseService {
     }
 
     async deleteStudent(courseId: Uuid, callerId: Uuid, student: Uuid) {
+        await this.deleteCache(callerId)
+        await this.deleteCache(student)
+
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
             relations: ["owner", "teachers", "students", "category"],

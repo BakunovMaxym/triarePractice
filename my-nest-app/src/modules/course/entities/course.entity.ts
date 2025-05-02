@@ -70,12 +70,13 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
     @Column({ type: "integer", default: 0 })
     teachersCount!: number;
 
-    // @
+    @BeforeInsert()
     @BeforeUpdate()
-    updateCount() {
-        console.log("updateCount")
-        this.studentsCount = this.students?.length;
-        this.teachersCount = this.teachers?.length;
+    normalizeName() {
+        const fLetter = this.name.slice(0, 1).toUpperCase();
+        const remainLetters = this.name.slice(1).toLowerCase();
+
+        this.name = fLetter + remainLetters;
     }
 }
 
