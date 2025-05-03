@@ -22,6 +22,7 @@ export class UserService {
   async createUser(
     userRegisterDto: UserRegisterDto,
   ): Promise<UserEntity> {
+    console.log('userRegisterDto', userRegisterDto);
     const user = this.userRepository.create(userRegisterDto);
     await this.userRepository.save(user);
     return user;
@@ -32,11 +33,16 @@ export class UserService {
   }
 
   async getUser(userId: Uuid): Promise<UserDto> {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    
 
-    queryBuilder.where('user.id = :userId', { userId });
-
-    const userEntity = await queryBuilder.getOne();
+    const userEntity = await this.userRepository.findOne({
+      where: {
+        id: userId
+      },
+      relations: {
+        game: true
+      }
+    });
 
     if (!userEntity) {
       throw new UserNotFoundException();

@@ -1,9 +1,10 @@
 import { StringField, UUIDField } from "../../../decorators/field.decorators";
 
-export class CreateGameDto {
+export class joinGameDto{
     @StringField()
     username!: string;
-    
+
     @UUIDField()
-    colectionId!: Uuid;
+    gameId!: Uuid;
+
 }

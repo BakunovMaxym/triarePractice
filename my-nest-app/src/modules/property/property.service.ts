@@ -27,6 +27,17 @@ export class PropertyService {
     return this.propertyRepository.save(property).then((property) => property.toDto());
   }
 
+  async createManyFromColectiion(colectionId: Uuid) {
+
+    const propertyCard: PropertyCardDto[] = await this.propertyCardService.findByColectionId(colectionId);
+    
+    const properties: PropertyDto[] = propertyCard.map((propertyCard) => {
+      return this.propertyRepository.create({property : propertyCard});
+    });
+    
+    return this.propertyRepository.save(properties).then((propertys) => propertys.map((property) => property.toDto()));
+  }
+
   findAll() : Promise<PropertyDto[]> {
     return this.propertyRepository.find({relations:{
       property: true,

@@ -24,6 +24,12 @@ import { ColectionModule } from './modules/colections/colection.module.ts';
 import { PropertyCardsModule } from './modules/property-cards/property-cards.module.ts';
 import { GameModule } from './modules/game/game.module';
 import { PropertyModule } from './modules/property/property.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { JwtModule } from '@nestjs/jwt';
+// @ts-ignore
+const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
+
+
 
 @Module({
   imports: [
@@ -78,12 +84,22 @@ import { PropertyModule } from './modules/property/property.module';
       imports: [SharedModule],
       inject: [ApiConfigService],
     }),
+    
     HealthCheckerModule,
     SetingsModule,
     PropertyCardsModule,
     ColectionModule,
     GameModule,
     PropertyModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        store: redisStore, // Do NOT call it here
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+        prefix: 'fefefe:',
+      }),
+    }),
 
   ],
   providers: [],

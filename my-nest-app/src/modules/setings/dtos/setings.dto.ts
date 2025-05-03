@@ -14,5 +14,8 @@ export class SetingsDto extends AbstractDto {
     
         @BooleanField({ nullable: false})
         auction !: boolean;
+
+        @NumberField({ nullable: false })
+        starterMoney!: number;
     
 }

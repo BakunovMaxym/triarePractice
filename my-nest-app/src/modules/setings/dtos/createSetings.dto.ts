@@ -13,5 +13,8 @@ export class CreateSetingsDto {
     
         @BooleanField({ nullable: false})
         auction !: boolean;
+
+        @NumberField({ nullable: false })
+        starterMoney!: number;
     
 }

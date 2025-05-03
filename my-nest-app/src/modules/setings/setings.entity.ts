@@ -17,4 +17,7 @@ export class SetingsEntity extends AbstractEntity<SetingsDto> {
 
     @Column({ nullable: false, type: 'boolean' })
     auction !: boolean;
+
+    @Column({nullable: false, type: 'integer', default: 0})
+    starterMoney!: number;
 }

@@ -9,8 +9,12 @@ import { ColectionEntity } from "../../../modules/colections/colection.entity";
 @Entity({ name: 'games' })
 @UseDto(GameDto)
 export class GameEntity  extends AbstractEntity<GameDto> {
+
+   
+
+
     @OneToMany(() => UserEntity, (user) => user.game)
-    users!: Relation<UserEntity[]>;
+    users!: UserEntity[];
 
     @OneToMany(() => PropertyEntity, (property) => property.game)
     propertys!: Relation<PropertyEntity[]>;

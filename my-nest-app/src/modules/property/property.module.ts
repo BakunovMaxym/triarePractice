@@ -7,5 +7,6 @@ import { PropertyCardsModule } from '../../modules/property-cards/property-cards
 @Module({
   providers: [PropertyService],
   imports: [PropertyCardsModule, TypeOrmModule.forFeature([PropertyEntity])],
+  exports: [PropertyService],
 })
 export class PropertyModule {}

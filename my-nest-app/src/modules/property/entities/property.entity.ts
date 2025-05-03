@@ -18,12 +18,12 @@ export class PropertyEntity extends AbstractEntity<PropertyDto> {
     propertyType!: PropertyStatyses;
 
     @ManyToOne(() => UserEntity, (user) => user.id, { nullable: true })
-    owner!: Relation<UserEntity>;
+    owner!: Relation<UserEntity> | null;
 
     @ManyToOne(() => GameEntity, (game) => game.propertys)
     game!: Relation<GameEntity>;
 
-    @Column({ nullable: false, type: 'integer' })
+    @Column({ nullable: false, type: 'integer' , default: 0})
     upgradeCount!: number;
 
 }

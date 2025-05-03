@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class AddGameAndPropertyReletions1745837777173 implements MigrationInterface {
     name = 'AddGameAndPropertyReletions1745837777173'

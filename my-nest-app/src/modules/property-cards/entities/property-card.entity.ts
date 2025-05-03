@@ -1,5 +1,5 @@
 import { UseDto } from "../../../decorators/use-dto.decorator";
-import { Column, Entity, ManyToOne, type Relation } from "typeorm";
+import {Column, Entity, ManyToOne, type Relation } from "typeorm";
 import { PropertyCardDto } from "../dto/property-card.dto";
 import { AbstractEntity } from "../../../common/abstract.entity";
 import { ColectionEntity } from "../../../modules/colections/colection.entity";
@@ -8,6 +8,19 @@ import { PropertyType } from "../PropertyType";
 @Entity({ name: 'property_cards' })
 @UseDto(PropertyCardDto)
 export class PropertyCardEntity extends AbstractEntity<PropertyCardDto>{
+    // @BeforeInsert()
+    // @BeforeUpdate()
+    // async clearCache() {
+    //     try {
+    //         const connection = getConnection();
+    //         if (connection && connection.queryResultCache) {
+    //             await connection.queryResultCache.remove(['propertyCardsFindAll']);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error clearing cache before update:', error);
+    //     }
+    // }
+    
 
     @ManyToOne (() => ColectionEntity, (colection) => colection.propertyCards)
     colection!: Relation<ColectionEntity>;

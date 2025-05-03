@@ -4,6 +4,7 @@ import { UseDto } from '../../decorators/use-dto.decorator.ts';
 import { UserDto } from './dtos/user.dto.ts';
 import { PropertyEntity } from '../../modules/property/entities/property.entity.ts';
 import { GameEntity } from '../../modules/game/entities/game.entity.ts';
+import { RoleType } from '../../constants/role-type.ts';
 
 @Entity({ name: 'users' })
 @UseDto(UserDto)
@@ -19,5 +20,9 @@ export class UserEntity extends AbstractEntity<UserDto> {
 
   @ManyToOne(() => GameEntity, (game) => game.users)
   game!: Relation<GameEntity>;
+
+  @Column({ nullable:false, type: 'enum', enum: RoleType, default: RoleType.USER })
+  role!: RoleType
+
 
 }
