@@ -22,8 +22,12 @@ export class GameService {
     });
 
     game.propertys = game.propertys.map((property) => {
-      if (property.owner?.id = playerId){
-        property.owner = null;
+      if(!property.owner){
+      return property
+
+      }
+      if (property.owner.id === playerId) {
+        property.owner = null; 
       }
 
       return property

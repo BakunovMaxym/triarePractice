@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 
@@ -8,9 +8,10 @@ export class WsAuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const client = context.switchToWs().getClient();
-    const token = client.handshake?.headers?.auth;
+    const token = client.handshake?.auth.token;
 
     if (!token) {
+      console.log("no tokeno")
       throw new WsException('Missing authentication token');
     }
     try {
@@ -20,6 +21,7 @@ export class WsAuthGuard implements CanActivate {
 
       return true;
     } catch {
+      console.log("no bueno")
 
       throw new WsException('Invalid or expired token');
     }

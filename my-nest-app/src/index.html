@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Тестування Socket.IO гри</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin-bottom: 20px; }
+        label { display: block; margin: 5px 0; }
+        button { margin-top: 10px; }
+        #logs { border: 1px solid #ccc; padding: 10px; max-height: 300px; overflow-y: scroll; }
+    </style>
+</head>
+<body>
+<h1>Socket.IO Тестер Гри</h1>
+
+<div class="section">
+    <h2>Підключення</h2>
+    <label>
+        Сервер URL:
+        <input type="text" id="serverUrl" value="http://localhost:3000">
+    </label>
+    <button id="connectBtn">Підключитися</button>
+</div>
+
+<div class="section">
+    <h2>Створити гру</h2>
+    <label>Ім'я користувача: <input type="text" id="createUsername"></label>
+    <label>ID колекції: <input type="text" id="colectionId"></label>
+    <button id="createGameBtn">Створити гру</button>
+</div>
+
+<div class="section">
+    <h2>Приєднатися до гри</h2>
+    <label>Ім'я користувача: <input type="text" id="joinUsername"></label>
+    <label>ID гри: <input type="text" id="joinGameId"></label>
+    <button id="joinGameBtn">Приєднатися</button>
+</div>
+
+<div class="section">
+    <h2>Інше</h2>
+    <label>ID гравця для кіка: <input type="text" id="kickPlayerId"></label>
+    <button id="kickBtn">Кікнути гравця</button>
+    <button id="leaveBtn">Вийти з гри</button>
+</div>
+
+<div class="section">
+    <h2>Логи</h2>
+    <div id="logs"></div>
+</div>
+
+<script>
+    let socket;
+    let latestToken = null;
+    let hasReconnectedWithToken = false;
+    function log(message) {
+        const logs = document.getElementById('logs');
+        const entry = document.createElement('div');
+        entry.textContent = message;
+        logs.appendChild(entry);
+        logs.scrollTop = logs.scrollHeight;
+    }
+
+    document.getElementById('connectBtn').addEventListener('click', () => {
+        const serverUrl = document.getElementById('serverUrl').value;
+        socket = io(serverUrl, { transports: ['websocket'] });
+
+        socket.on('connect', () => log('Підключено до сервера'));
+        socket.on('disconnect', () => log('Відключено від сервера'));
+
+        socket.on('roomJoined', data => {
+            log('roomJoined: ' + JSON.stringify(data));
+            if (data.token && data.token.accessToken) {
+                latestToken = data.token.accessToken;
+            }
+            if (!hasReconnectedWithToken) {
+            log('👉 Setting auth with token: ' + latestToken);
+            hasReconnectedWithToken = true;
+            socket.auth = { token: latestToken };  // Wrap in an object!
+            socket.disconnect().connect();
+            log('🔄 Reconnecting with token...');
+        }
+        });
+        socket.on('gameCreated', data => log('gameCreated: ' + JSON.stringify(data)));
+        socket.on('userJoined', data => log('userJoined: ' + JSON.stringify(data)));
+        socket.on('userLeft', data => log('userLeft: ' + JSON.stringify(data)));
+        socket.on('Kicked', data => log('Kicked: ' + data));
+        socket.on('Leave', data => log('Leave: ' + data));
+        socket.on('error', data => log('Error: ' + data));
+    });
+
+    document.getElementById('createGameBtn').addEventListener('click', () => {
+        const username = document.getElementById('createUsername').value;
+        const colectionId = document.getElementById('colectionId').value;
+        const payload = { username, colectionId };
+        socket.emit('createGame', payload);
+        log('Sent createGame: ' + JSON.stringify(payload));
+    });
+
+    document.getElementById('joinGameBtn').addEventListener('click', () => {
+        const username = document.getElementById('joinUsername').value;
+        const gameId = document.getElementById('joinGameId').value;
+        const payload = { username, gameId };
+        socket.emit('joinGame', payload);
+        log('Sent joinGame: ' + JSON.stringify(payload));
+    });
+
+    document.getElementById('kickBtn').addEventListener('click', () => {
+        const playerId = document.getElementById('kickPlayerId').value;
+        const payload = { playerId };
+        socket.emit('kickFromGame', payload);
+        log('Sent kickFromGame: ' + JSON.stringify(payload));
+    });
+
+    document.getElementById('leaveBtn').addEventListener('click', () => {
+        socket.emit('leaveGame');
+        log('📤 Sent leaveGame');
+    });
+</script>
+
+</body>
+</html>

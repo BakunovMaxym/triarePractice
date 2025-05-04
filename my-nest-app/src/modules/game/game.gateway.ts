@@ -14,6 +14,7 @@ import { AuthUser } from '../../decorators/auth-user.decorator';
 import { UseGuards } from '@nestjs/common';
 import { WsAuthGuard } from './ws-auth.guard';
 import type { KickDto } from './dto/kick.dto';
+import { Console } from 'node:console';
 
 @WebSocketGateway()
 export class GameGateway {
@@ -87,6 +88,7 @@ export class GameGateway {
   @UseGuards(WsAuthGuard)
   @SubscribeMessage('leaveGame')
   async LeaveGame( @ConnectedSocket() socket: Socket, @AuthUser() user: UserDto) {
+    console.log("leavegame")
     const gameId = [...socket.rooms][1];
     if(user.role !== RoleType.HOST) {
       socket.emit('error', 'You are not allowed to kick users from the game');

@@ -25,7 +25,6 @@ import { PropertyCardsModule } from './modules/property-cards/property-cards.mod
 import { GameModule } from './modules/game/game.module';
 import { PropertyModule } from './modules/property/property.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { JwtModule } from '@nestjs/jwt';
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
 
