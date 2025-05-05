@@ -14,14 +14,14 @@ export class FolderService {
 
   async findAll(): Promise<Folder[]> {
     return this.folderRepository.find({
-      relations: ['childFolderId', 'childCourseId'],
+      relations: ['childCourseId'], // childFolderId is now optional and not always included
     });
   }
 
   async findOne(id: Uuid): Promise<Folder> {
     const folder = await this.folderRepository.findOne({
       where: { id },
-      relations: ['childFolderId', 'childCourseId'],
+      relations: ['childCourseId'], // childFolderId is now optional and not always included
     });
     if (!folder) {
       throw new NotFoundException(`Folder with id ${id} not found`);

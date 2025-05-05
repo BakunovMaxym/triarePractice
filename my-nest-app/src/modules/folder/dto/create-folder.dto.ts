@@ -1,8 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { AbstractDto } from "../../../common/dto/abstract.dto";
-import { StringField, UUIDField } from "../../../decorators/field.decorators";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { StringField, UUIDField, UUIDFieldOptional } from "../../../decorators/field.decorators";
 
-export class CreateFolderDto extends AbstractDto {
+export class CreateFolderDto {
 
     @ApiProperty({
         description: 'Name for the folder',
@@ -11,11 +10,8 @@ export class CreateFolderDto extends AbstractDto {
     @StringField()
     name!: string;
 
-    @ApiProperty({
-        description: 'id of child floder',
-        example: '550e8400-e29b-41d4-a716-446655440000',
-    })
-    @UUIDField()
+    
+    @UUIDFieldOptional({nullable: true})
     childFolderId?: Uuid;
 
     @ApiProperty({

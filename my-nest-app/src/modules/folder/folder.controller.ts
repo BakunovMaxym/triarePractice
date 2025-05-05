@@ -16,15 +16,6 @@ export class FolderController {
     return this.folderService.findOne(id);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update folder by ID' })
-  @ApiParam({ name: 'id', description: 'Folder ID', type: 'number' })
-  @ApiBody({ type: UpdateFolderDto, description: 'Folder update data' })
-  @ApiResponse({ status: 200, description: 'Folder updated successfully' })
-  update(@Param('id') id: Uuid, @Body() updateFolderDto: UpdateFolderDto) {
-    return this.folderService.update(id, updateFolderDto);
-  }
-
   @Post(':id/add-file')
   @ApiOperation({ summary: 'Add a file to a folder' })
   @ApiParam({ name: 'id', description: 'Folder ID', type: 'number' })
@@ -36,7 +27,7 @@ export class FolderController {
 
   @Delete(':id/remove-file')
   @ApiOperation({ summary: 'Remove a file from a folder' })
-  @ApiParam({ name: 'id', description: 'Folder ID', type: 'number' })
+  @ApiParam({ name: 'id', description: 'Folder ID', type: 'string' })
   @ApiBody({ schema: { type: 'string', example: 'filename.txt', description: 'File name to remove' } })
   @ApiResponse({ status: 200, description: 'File removed successfully' })
   removeFile(@Param('id') id: Uuid, @Body() fileName: string) {
@@ -45,7 +36,7 @@ export class FolderController {
 
   @Patch(':id/rename')
   @ApiOperation({ summary: 'Rename a folder' })
-  @ApiParam({ name: 'id', description: 'Folder ID', type: 'number' })
+  @ApiParam({ name: 'id', description: 'Folder ID', type: 'string' })
   @ApiBody({ schema: { type: 'object', properties: { newName: { type: 'string', example: 'New Folder Name' } } } })
   @ApiResponse({ status: 200, description: 'Folder renamed successfully' })
   renameFolder(@Param('id') id: Uuid, @Body('newName') newName: string) {
