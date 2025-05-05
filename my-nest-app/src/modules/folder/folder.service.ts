@@ -14,14 +14,14 @@ export class FolderService {
 
   async findAll(): Promise<Folder[]> {
     return this.folderRepository.find({
-      relations: ['childFolderId', 'childCourseId'],
+        relations: {childCourseId: true, childFolderId: true},
     });
   }
 
   async findOne(id: Uuid): Promise<Folder> {
     const folder = await this.folderRepository.findOne({
       where: { id },
-      relations: ['childFolderId', 'childCourseId'],
+      relations: {childCourseId: true, childFolderId: true},
     });
     if (!folder) {
       throw new NotFoundException(`Folder with id ${id} not found`);
@@ -77,6 +77,20 @@ export class FolderService {
   }
 
   async addChild(parentId: Uuid, childName: string): Promise<string> {
+    const parent = await this.findOne(parentId);
+    
+    const child = await this.findOneByName(childName);
+
+    parent.childFolderId = child;
+    await this.folderRepository.save(parent);
     return `Child folder "${childName}" added to parent #${parentId}`;
+  }
+
+  async findOneByName(name: string): Promise<Folder> {
+    const folder = await this.folderRepository.findOne({ where: { name } });
+    if (!folder) {
+      throw new NotFoundException(`Folder with name "${name}" not found`);
+    }
+    return folder;
   }
 }

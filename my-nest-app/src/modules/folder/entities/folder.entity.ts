@@ -1,22 +1,27 @@
 import { AbstractEntity } from "../../../common/abstract.entity";
 import { CreateFolderDto } from "../dto/create-folder.dto";
-import { Column, Entity, ManyToMany, OneToMany, type Relation } from "typeorm";
-import { ApiProperty } from "@nestjs/swagger";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, type Relation } from "typeorm";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CourseEntity } from "../../../modules/course/entities/course.entity";
-
+import type { FolderDto } from "../dto/FolderDto";
 
 @Entity({ name: 'folders' })
-export class Folder extends AbstractEntity<CreateFolderDto> {
+export class Folder extends AbstractEntity<FolderDto> {
 
     @ApiProperty({ description: 'Name for the folder', format: 'string' })
     @Column('text')
     name!: string;
 
-    @ApiProperty({ description: 'id of child folder', format: 'uuid' })
-    @OneToMany(() => Folder, (folder) => folder.childFolderId, { nullable: true })
+    @ApiPropertyOptional({ description: 'id of child folder', format: 'uuid' })
+    @ManyToOne(() => Folder, (folder) => folder.childFolders, { nullable: true })
+    @JoinColumn({ name: 'child_folder_id' })
     childFolderId?: Relation<Folder>;
 
+    @OneToMany(() => Folder, (folder) => folder.childFolderId)
+    childFolders?: Relation<Folder[]>;
+
     @ApiProperty({ description: 'id of child course', format: 'uuid' })
-    @ManyToMany(() => CourseEntity, { nullable: true })
+    @ManyToOne(() => CourseEntity, { nullable: true })
+    @JoinColumn({ name: 'child_course_id' })
     childCourseId?: Relation<CourseEntity>;
 }
