@@ -1,5 +1,5 @@
 import { UseDto } from '../../../decorators/use-dto.decorator';
-import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { CategoryDto } from '../dto/CategoryDto';
 import { CourseEntity } from '../../../modules/course/entities/course.entity';
 import { AbstractEntity } from '../../../common/abstract.entity';
@@ -11,15 +11,13 @@ export class CategoryEntity extends AbstractEntity<CategoryDto> {
   name!: string;
 
   @ManyToOne(() => CourseEntity, (courseEntity) => courseEntity.category)
-  @JoinColumn()
   courses?: CourseEntity[];
 
-      @BeforeInsert()
-      @BeforeUpdate()
-      normalizeName() {
-          const fLetter = this.name.slice(0, 1).toUpperCase();
-          const remainLetters = this.name.slice(1).toLowerCase();
-  
-          this.name = fLetter + remainLetters;
-      }
+  @BeforeInsert()
+  @BeforeUpdate()
+  normalizeName() {
+    const fLetter = this.name.slice(0, 1).toUpperCase();
+    const remainLetters = this.name.slice(1).toLowerCase();
+    this.name = fLetter + remainLetters;
+  }
 }

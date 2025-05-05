@@ -12,7 +12,7 @@ export class FolderDto extends AbstractDto {
   @ApiPropertyOptional({ description: 'Child folder', type: () => FolderDto, nullable: true })
   childFolder?: FolderDto;
 
-  @ApiPropertyOptional({ description: 'Child course', type: () => Object, nullable: true })
+  @ApiProperty({ description: 'Child course', type: () => Object, nullable: true })
   childCourse?: CourseEntity;
 
   constructor(folder: Folder & { id: string; createdAt: Date; updatedAt: Date }) {

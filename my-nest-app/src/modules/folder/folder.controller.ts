@@ -18,7 +18,7 @@ export class FolderController {
 
   @Post(':id/add-file')
   @ApiOperation({ summary: 'Add a file to a folder' })
-  @ApiParam({ name: 'id', description: 'Folder ID', type: 'number' })
+  @ApiParam({ name: 'id', description: 'Folder ID', type: 'string' })
   @ApiBody({ schema: { type: 'string', example: 'filename.txt', description: 'File name to add' } })
   @ApiResponse({ status: 200, description: 'File added successfully' })
   addFile(@Param('id') id: Uuid, @Body() fileName: string) {
@@ -45,7 +45,7 @@ export class FolderController {
 
   @Post(':id/add-child')
   @ApiOperation({ summary: 'Add a child folder to a folder or course' })
-  @ApiParam({ name: 'id', description: 'Folder or Course ID', type: 'number' })
+  @ApiParam({ name: 'id', description: 'Folder or Course ID', type: 'string' })
   @ApiBody({ schema: { type: 'object', properties: { childName: { type: 'string', example: 'Child Folder Name' } } } })
   @ApiResponse({ status: 200, description: 'Child folder added successfully' })
   addChild(@Param('id') id: Uuid, @Body('childName') childName: string) {
