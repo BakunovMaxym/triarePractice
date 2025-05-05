@@ -29,7 +29,7 @@ export class CourseService {
         private subCategoryRepository: Repository<SubCategoryEntity>,
     ) { }
 
-    async deleteCache(userId: Uuid){
+    async deleteCache(userId: Uuid) {
         const keys: string[] = await this.cacheManager.store.keys(`courses:${userId}:*`);
 
         if (keys.length > 0) {
@@ -213,6 +213,8 @@ export class CourseService {
             .leftJoinAndSelect('course.students', 'student')
             .leftJoinAndSelect('course.category', 'category')
             .leftJoinAndSelect('course.subCategory', 'subCategory')
+            .leftJoinAndSelect('course.tasks', 'tasks')
+            .leftJoinAndSelect('tasks.owner', 'owner')
             .where('course.id = :courseid', { courseid })
             .andWhere('owner.id = :userId', { userId })
             .orWhere('teacher.id = :userId', { userId })

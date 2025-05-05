@@ -1,49 +1,35 @@
-import { IsArray, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { StringField } from '../../../decorators/field.decorators';
-import type { UserNameDto } from 'modules/user/dtos/UserNameDto';
+import { StringField, UUIDField } from '../../../decorators/field.decorators';
+import { UserNameDto } from '../../../modules/user/dtos/UserNameDto';
+import { CourseNameDto } from '../../../modules/course/dto/CourseNameDto';
+import type { TaskEntity } from '../entities/task.entity';
 
 export class TaskDto {
+
+  @UUIDField({ description: 'ID завдання' })
+  id: Uuid;
+
   @ApiProperty({
-    description: 'Unique name of the task',
-    example: 'task-1',
+    description: 'Назва завдання',
+    example: 'Завдання-1',
   })
   @StringField()
-  name!: string;
+  name: string;
 
   @ApiProperty({
-    description: 'Description of the task',
-    example: 'This is a sample task description.',
+    description: 'Власник завдання',
   })
-  @StringField()
-  content!: string[];
+  owner: UserNameDto;
 
   @ApiProperty({
-    description: 'State of the task',
-    example: 'open',
+    description: 'Курс',
   })
-  @StringField()
-  state!: string;
+  course: CourseNameDto;
 
-  @ApiProperty({
-    description: 'Owner of the task',
-    example: 'Name of the owner',
-  })
-  owner!: UserNameDto;
-  static OPEN: unknown;
-
-  @ApiProperty({
-    description: 'Course associated with the task',
-    example: 'course-1234',
-  })
-  @StringField()
-  course!: string
-
-  @ApiProperty({
-    description: 'Comments associated with the task',
-    example: ['comment-1', 'comment-2'],
-  })
-  @IsArray()
-  @IsString({ each: true })
-  comments!: string[];
+  constructor(task: TaskEntity) {
+    this.id = task.id;
+    this.name = task.name;
+    this.owner = new UserNameDto(task.owner);
+    this.course = new CourseNameDto(task.course);
+  }
 }

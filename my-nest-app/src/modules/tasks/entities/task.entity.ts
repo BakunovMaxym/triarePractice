@@ -8,16 +8,16 @@ import { AbstractEntity } from '../../../common/abstract.entity';
 @Entity('tasks')
 export class TaskEntity extends AbstractEntity {
 
-  @Column({ unique: true })
+  @Column()
   name!: string;
 
-  @Column('simple-array')
+  @Column('simple-array', { nullable: true })
   textContent!: string[];
 
-  @Column('simple-array')
+  @Column('simple-array', { nullable: true })
   fileContent!: string[];
 
-  @ManyToOne(() => UserEntity, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => UserEntity, (userEntity) => userEntity.id, { eager: true, onDelete: 'CASCADE' })
   owner!: Relation<UserEntity>;
 
   @ManyToOne(() => CourseEntity, (course) => course.tasks, { eager: true })

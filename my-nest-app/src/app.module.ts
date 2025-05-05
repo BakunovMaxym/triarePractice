@@ -28,6 +28,7 @@ import { TaskModule } from './modules/tasks/tasks.module';
 import { CommentModule } from './modules/comment/comment.module.ts';
 import { UserTasksModule } from './modules/user-tasks/user-tasks.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { GoogleDriveModule } from './modules/google-drive/google-drive.module.ts';
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
 
@@ -38,6 +39,7 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     UserModule,
     PostModule,
     CourseModule,
+    GoogleDriveModule,
     CategoryModule,
     SubCategoryModule,
     TaskModule,

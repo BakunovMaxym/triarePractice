@@ -16,19 +16,19 @@ import { CourseEntity } from '../../modules/course/entities/course.entity.ts';
 @UseDto(UserDto)
 export class UserEntity extends AbstractEntity<UserDto> {
   @Column({ nullable: true, type: 'varchar' })
-  firstName!: string | null;
+  firstName!: string;
 
-  @Column({ nullable: true, type: 'varchar' })
-  lastName!: string | null;
+  @Column({ type: 'varchar' })
+  lastName!: string;
 
   @Column({ type: 'enum', enum: RoleType, default: RoleType.STUDENT })
   role!: RoleType;
 
-  @Column({ unique: true, nullable: true, type: 'varchar' })
-  email!: string | null;
+  @Column({ unique: true, type: 'varchar' })
+  email!: string;
 
-  @Column({ nullable: true, type: 'varchar' })
-  password!: string | null;
+  @Column({ type: 'varchar' })
+  password!: string;
 
   @OneToMany(() => CourseEntity, (courseEntity) => courseEntity.owner)
   ownCourses?: CourseEntity[];

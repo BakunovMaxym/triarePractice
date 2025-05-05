@@ -5,9 +5,15 @@ import { TaskEntity } from './entities/task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UserEntity } from '../user/user.entity';
+import { CourseEntity } from '../../modules/course/entities/course.entity';
+import { SingleTaskDto } from './dto/SingleTaskDto';
+import { GoogleDriveService } from '../../modules/google-drive/google-drive.service';
+import { PassThrough } from 'node:stream';
+import fs from 'fs';
 
 @Injectable()
 export class TaskService {
+
   async removeByName(name: string): Promise<TaskEntity> {
     const task = await this.taskRepository.findOne({ where: { name } });
     if (!task) {
@@ -17,25 +23,53 @@ export class TaskService {
     return task;
   }
   constructor(
+    private readonly googleDriveService: GoogleDriveService,
     @InjectRepository(TaskEntity)
     private taskRepository: Repository<TaskEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-  ) {}
+    @InjectRepository(CourseEntity)
+    private courseRepository: Repository<CourseEntity>,
+  ) { }
 
-  async create(createTaskDto: CreateTaskDto): Promise<TaskEntity> {
+  async create(createTaskDto: CreateTaskDto): Promise<SingleTaskDto> {
     const owner = await this.userRepository.findOne({ where: { id: createTaskDto.ownerId } });
     if (!owner) {
-      throw new NotFoundException(`User with id ${createTaskDto.ownerId} not found`);
+      throw new NotFoundException(`Такого користувача не існує`);
+    }
+
+    const course = await this.courseRepository.findOne({ where: { id: createTaskDto.courseId } });
+    if (!course) {
+      throw new NotFoundException(`Такого курса не існує`);
+    }
+
+    try {
+      console.log(createTaskDto.files)
+      if (createTaskDto.files.length > 0) {
+        createTaskDto.files.forEach(async (file) => {
+          console.log(file)
+          const bufferStream = new PassThrough();
+          bufferStream.end(file.buffer)
+          fs.writeFileSync('test_output.txt', file.buffer);
+
+          await this.googleDriveService.uploadFile(bufferStream, file.originalname, "1U3U7U3fSJte9l_iTmVmSfdHVHtB8BeBe", file.mimetype)
+        }
+
+        )
+      }
+    } catch (errror: any) {
+      console.log("errror")
+      console.log(errror)
     }
     const task = this.taskRepository.create({
       name: createTaskDto.name,
-      content: createTaskDto.content,
-      state: createTaskDto.state,
+      textContent: createTaskDto.textContent,
+      fileContent: createTaskDto.fileContent,
       owner: owner,
-      comments: [],
+      course: course,
     });
-    return this.taskRepository.save(task);
+    // const 
+    return this.taskRepository.save(new SingleTaskDto(task));
   }
 
   async findAll(): Promise<TaskEntity[]> {

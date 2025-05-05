@@ -9,6 +9,9 @@ import {
   Patch,
   HttpCode,
   ParseUUIDPipe,
+  UploadedFiles,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -21,21 +24,38 @@ import { TaskService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskEntity } from './entities/task.entity';
+import { AuthUser } from '../../decorators/auth-user.decorator';
+import type { UserEntity } from 'modules/user/user.entity';
+import type { TaskDto } from './dto/TaskDto';
+import { Auth } from '../../decorators/http.decorators';
+import { RoleType } from '../../constants/role-type';
+import type { SingleTaskDto } from './dto/SingleTaskDto';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import multer from 'multer';
 
-@ApiTags('tasks')
-@Controller('tasks')
+@ApiTags('courses/:id/tasks')
+@Controller('courses/:id/tasks')
+@ApiParam({ name: "id", type: String })
 export class TasksController {
   constructor(private readonly taskService: TaskService) { }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new task' })
-  @ApiBody({ type: CreateTaskDto })
+  @Auth([RoleType.TEACHER])
+  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
   @ApiResponse({
     status: 201,
-    description: 'The task has been successfully created.',
+    description: 'Завдання створено.',
     type: TaskEntity,
   })
-  create(@Body() dto: CreateTaskDto): Promise<TaskEntity> {
+  async create(
+    @Param('id') id: Uuid,
+    @AuthUser() user: UserEntity,
+    @UploadedFile() files: Express.Multer.File,
+    @Body() dto: CreateTaskDto
+  ): Promise<SingleTaskDto> {
+    dto.courseId = id;
+    dto.ownerId = user.id;
+    dto.files = [files]
     return this.taskService.create(dto);
   }
 

@@ -1,58 +1,41 @@
-import { IsArray, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { StringField, UUIDField } from '../../../decorators/field.decorators';
+import { StringField } from '../../../decorators/field.decorators';
 
 export class CreateTaskDto {
   @ApiProperty({
-    description: 'Unique name of the task',
-    example: 'task-1',
+    description: 'Назва завдання',
+    example: 'Завдання-1',
   })
   @StringField()
   name!: string;
 
   @ApiProperty({
-    description: 'Description of the task',
-    example: 'This is a sample task description.',
+    description: 'Текст завдання',
+    example: ['Завдання1: виконати роботу', 'Завдання2: вчасно'],
   })
-  @StringField()
-  content!: string[];
+  // @StringField()
+  textContent!: string[];
 
   @ApiProperty({
-    description: 'State of the task',
-    example: 'open',
+    description: 'Файли завдання',
+    example: ['завдання.txt', 'завдання.png'],
   })
-  @StringField()
-  state!: string;
+  // @StringField()
+  fileContent!: string[];
 
-  @ApiProperty({
-    description: 'Owner of the task',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @UUIDField()
+  files!: Array<Express.Multer.File>
   ownerId!: Uuid;
-  static OPEN: unknown;
 
-  @ApiProperty({
-    description: 'Course associated with the task',
-    example: 'course-1234',
-  })
-  @StringField()
-  course!: string
+  courseId!: Uuid;
 
-  @ApiProperty({
-    description: 'Comments associated with the task',
-    example: ['comment-1', 'comment-2'],
-  })
-  @IsArray()
-  @IsString({ each: true })
-  comments!: string[];
 
-  constructor(task: any) {
-    this.name = task.name;
-    this.content = task.content;
-    this.state = task.state;
-    this.ownerId = task.ownerId;
-    this.course = task.course;
-    this.comments = task.comments;
-  }
+
+  // @ApiProperty({
+  //   description: 'Comments associated with the task',
+  //   example: ['comment-1', 'comment-2'],
+  // })
+  // @IsArray()
+  // @IsString({ each: true })
+  // comments!: Uuid[];
+
 }

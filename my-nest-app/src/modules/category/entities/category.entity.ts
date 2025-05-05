@@ -14,12 +14,12 @@ export class CategoryEntity extends AbstractEntity<CategoryDto> {
   @JoinColumn()
   courses?: CourseEntity[];
 
-      @BeforeInsert()
-      @BeforeUpdate()
-      normalizeName() {
-          const fLetter = this.name.slice(0, 1).toUpperCase();
-          const remainLetters = this.name.slice(1).toLowerCase();
-  
-          this.name = fLetter + remainLetters;
-      }
+  @BeforeInsert()
+  @BeforeUpdate()
+  normalizeName() {
+    const fLetter = this.name.slice(0, 1).toUpperCase();
+    const remainLetters = this.name.slice(1).toLowerCase();
+
+    this.name = fLetter + remainLetters;
+  }
 }

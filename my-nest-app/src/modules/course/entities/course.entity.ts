@@ -53,7 +53,7 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
     // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
     // teachers?: UserEntity[];
 
-    @OneToMany(() => TaskEntity, (taskEntity) => taskEntity.id)
+    @OneToMany(() => TaskEntity, (taskEntity) => taskEntity.course)
     tasks?: TaskEntity[];
 
     @ManyToOne(() => CategoryEntity, (categoryEntity) => categoryEntity.courses)

@@ -1,16 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
+import type { UserEntity } from '../user.entity';
+import { StringField, UUIDField } from '../../../decorators/field.decorators';
 
 export class UserNameDto {
-  @ApiProperty({ example: 1, description: 'ID користувача' })
-  id: number;
+  @UUIDField({ example: 1, description: 'ID користувача' })
+  id: Uuid;
 
-  @ApiProperty({ description: "Ім'я користувача" })
+  @StringField({ description: "Ім'я користувача" })
   firstName: string;
 
-  @ApiProperty({ description: 'Прізвище користувача' })
+  @StringField({ description: 'Прізвище користувача' })
   lastName: string;
 
-  constructor(user: any) {
+  constructor(user: UserEntity) {
     this.id = user.id;
     this.firstName = user.firstName;
     this.lastName = user.lastName;
