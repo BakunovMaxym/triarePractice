@@ -29,7 +29,7 @@ import type { UserEntity } from 'modules/user/user.entity';
 import type { TaskDto } from './dto/TaskDto';
 import { Auth } from '../../decorators/http.decorators';
 import { RoleType } from '../../constants/role-type';
-import type { SingleTaskDto } from './dto/SingleTaskDto';
+import { SingleTaskDto } from './dto/SingleTaskDto';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import multer from 'multer';
 
@@ -40,8 +40,9 @@ export class TasksController {
   constructor(private readonly taskService: TaskService) { }
 
   @Post()
+  @ApiOperation({ summary: 'Створити завдання' })
   @Auth([RoleType.TEACHER])
-  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
+  @UseInterceptors(FilesInterceptor('file', 100, { storage: multer.memoryStorage() }))
   @ApiResponse({
     status: 201,
     description: 'Завдання створено.',
@@ -50,49 +51,51 @@ export class TasksController {
   async create(
     @Param('id') id: Uuid,
     @AuthUser() user: UserEntity,
-    @UploadedFile() files: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: CreateTaskDto
   ): Promise<SingleTaskDto> {
     dto.courseId = id;
     dto.ownerId = user.id;
-    dto.files = [files]
+    dto.files = files
     return this.taskService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all tasks' })
+  @ApiOperation({ summary: 'Отримати завдання курса' })
   @ApiResponse({
     status: 200,
     description: 'List of tasks',
     type: [TaskEntity],
   })
-  findAll(): Promise<TaskEntity[]> {
-    return this.taskService.findAll();
+  findAll(
+    @Param('id') id: Uuid,
+  ): Promise<TaskDto[]> {
+    return this.taskService.findAll(id);
   }
 
-  @Get(':name')
-  @ApiOperation({ summary: 'Get a task by name' })
+  @Get(':id')
+  @ApiOperation({ summary: 'Отримати задання за айді' })
   @ApiParam({
-    name: 'name',
-    description: 'Unique name of the task',
+    name: 'id',
+    description: 'Унікальне айді завдання',
     type: 'string',
   })
   @ApiResponse({
     status: 200,
-    description: 'Found task',
-    type: TaskEntity,
+    description: 'Завдання знайдено',
+    type: SingleTaskDto,
   })
-  @ApiResponse({ status: 404, description: 'Task not found' })
+  @ApiResponse({ status: 404, description: 'Завдання не знайдено' })
   findByName(
-    @Param('name') name: string,
-  ): Promise<TaskEntity> {
-    return this.taskService.findOneByName(name);
+    @Param('id') id: Uuid,
+  ): Promise<SingleTaskDto> {
+    return this.taskService.findOne(id);
   }
 
   @Patch(':name')
   @ApiOperation({ summary: 'Update a task by name' })
   @ApiParam({
-    name: 'name',
+    name: 'id',
     description: 'Unique name of the task to update',
     type: 'string',
   })
@@ -104,10 +107,10 @@ export class TasksController {
   })
   @ApiResponse({ status: 404, description: 'Task not found' })
   updateByName(
-    @Param('name') name: string,
+    @Param('id') id: Uuid,
     @Body() dto: UpdateTaskDto,
   ): Promise<TaskEntity> {
-    return this.taskService.updateByName(name, dto);
+    return this.taskService.updateById(id, dto);
   }
 
   @Delete(':name')

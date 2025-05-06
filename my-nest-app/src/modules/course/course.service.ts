@@ -4,7 +4,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { Transactional } from 'typeorm-transactional';
 import { CourseEntity } from './entities/course.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, SelectQueryBuilder, type Repository } from 'typeorm';
+import { Brackets, In, SelectQueryBuilder, type Repository } from 'typeorm';
 import { UserEntity } from '../../modules/user/user.entity';
 import { CategoryEntity } from '../../modules/category/entities/category.entity';
 import { CourseInfoDto } from './dto/CurseInfoDto';
@@ -214,11 +214,14 @@ export class CourseService {
             .leftJoinAndSelect('course.category', 'category')
             .leftJoinAndSelect('course.subCategory', 'subCategory')
             .leftJoinAndSelect('course.tasks', 'tasks')
-            .leftJoinAndSelect('tasks.owner', 'owner')
+            .leftJoinAndSelect('tasks.owner', 'taskOwner')
             .where('course.id = :courseid', { courseid })
-            .andWhere('owner.id = :userId', { userId })
-            .orWhere('teacher.id = :userId', { userId })
-            .orWhere('student.id = :userId', { userId })
+            .andWhere(new Brackets(qb =>
+                qb.where('owner.id = :userId', { userId })
+                    .orWhere('teacher.id = :userId', { userId })
+                    .orWhere('student.id = :userId', { userId })
+            ))
+
 
 
         const course = await courseQuery.getOne()

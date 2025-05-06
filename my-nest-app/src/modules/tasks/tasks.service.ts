@@ -9,7 +9,7 @@ import { CourseEntity } from '../../modules/course/entities/course.entity';
 import { SingleTaskDto } from './dto/SingleTaskDto';
 import { GoogleDriveService } from '../../modules/google-drive/google-drive.service';
 import { PassThrough } from 'node:stream';
-import fs from 'fs';
+import { TaskDto } from './dto/TaskDto';
 
 @Injectable()
 export class TaskService {
@@ -42,56 +42,71 @@ export class TaskService {
     if (!course) {
       throw new NotFoundException(`Такого курса не існує`);
     }
+    let fileContent: object[] = [];
 
     try {
-      console.log(createTaskDto.files)
-      if (createTaskDto.files.length > 0) {
-        createTaskDto.files.forEach(async (file) => {
-          console.log(file)
+      if (createTaskDto.files && createTaskDto.files.length > 0) {
+        const uploadPromises = createTaskDto.files.map(async (file) => {
           const bufferStream = new PassThrough();
-          bufferStream.end(file.buffer)
-          fs.writeFileSync('test_output.txt', file.buffer);
+          bufferStream.end(file.buffer);
 
-          await this.googleDriveService.uploadFile(bufferStream, file.originalname, "1U3U7U3fSJte9l_iTmVmSfdHVHtB8BeBe", file.mimetype)
-        }
+          const uploadedFile = await this.googleDriveService.uploadFile(
+            bufferStream,
+            file.originalname,
+            "1U3U7U3fSJte9l_iTmVmSfdHVHtB8BeBe",
+            file.mimetype
+          );
 
-        )
+          return uploadedFile;
+        });
+
+        fileContent = await Promise.all(uploadPromises);
+
+        console.log(fileContent);
       }
-    } catch (errror: any) {
-      console.log("errror")
-      console.log(errror)
+    } catch (error: any) {
+      console.log("error");
+      console.log(error);
     }
+
     const task = this.taskRepository.create({
       name: createTaskDto.name,
       textContent: createTaskDto.textContent,
-      fileContent: createTaskDto.fileContent,
+      fileContent: fileContent,
       owner: owner,
       course: course,
     });
-    // const 
-    return this.taskRepository.save(new SingleTaskDto(task));
+
+    const savedTask = await this.taskRepository.save(task);
+
+    return new SingleTaskDto(savedTask);
   }
 
-  async findAll(): Promise<TaskEntity[]> {
-    return this.taskRepository.find({ relations: ['owner', 'comments', 'userTasks'] });
+  async findAll(courseId: Uuid): Promise<TaskDto[]> {
+    const tasks = this.taskRepository.find({
+      where: { course: { id: courseId } },
+      relations: ['owner', 'comments', 'userTasks'],
+    });
+    return (await tasks).map(task => new TaskDto(task));
   }
 
-  async findOneByName(name: string): Promise<TaskEntity> {
+
+  async findOne(id: Uuid): Promise<SingleTaskDto> {
     const task = await this.taskRepository.findOne({
-      where: { name },
+      where: { id },
       relations: ['owner', 'comments', 'userTasks'],
     });
     if (!task) {
-      throw new NotFoundException(`Task with name ${name} not found`);
+      throw new NotFoundException(`Task with name ${id} not found`);
     }
-    return task;
+    return new SingleTaskDto(task);
   }
 
-  async updateByName(name: string, updateTaskDto: UpdateTaskDto): Promise<TaskEntity> {
-    const task = await this.findOneByName(name);
+  async updateById(id: Uuid, updateTaskDto: UpdateTaskDto): Promise<TaskEntity> {
+    const task = await this.findOne(id);
 
-    if (updateTaskDto.content) task.content = updateTaskDto.content;
-    if (updateTaskDto.state) task.state = updateTaskDto.state;
+    // if (updateTaskDto.content) task.content = updateTaskDto.content;
+    // if (updateTaskDto.state) task.state = updateTaskDto.state;
 
     return this.taskRepository.save(task);
   }

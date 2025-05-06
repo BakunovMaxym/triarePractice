@@ -3,6 +3,7 @@ import { StringField } from '../../../decorators/field.decorators';
 import type { Comment } from 'modules/comment/entities/comment.entity';
 import type { TaskEntity } from '../entities/task.entity';
 import { TaskDto } from './TaskDto';
+import type { TaskFileEntity } from '../../task-file/entities/task-file.entity';
 
 export class SingleTaskDto extends TaskDto {
     @ApiProperty({
@@ -16,8 +17,9 @@ export class SingleTaskDto extends TaskDto {
         description: 'Файли завдання',
         example: ['завдання.txt', 'завдання.png'],
     })
-    @StringField()
-    fileContent!: string[];
+
+    @ApiProperty()
+    fileContent!: TaskFileEntity[];
 
     @ApiProperty({
         description: 'Коментарі',

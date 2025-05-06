@@ -7,7 +7,7 @@ import { AbstractEntity } from '../../../common/abstract.entity';
 @Entity({ name: 'categories' })
 @UseDto(SubCategoryDto)
 export class SubCategoryEntity extends AbstractEntity<SubCategoryDto> {
-  @Column({ nullable: false, type: 'varchar', length: 255 })
+  @Column({ nullable: false, type: 'varchar', length: 255, unique: true })
   name!: string;
 
   @ManyToOne(() => CourseEntity, (courseEntity) => courseEntity.name)

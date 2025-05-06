@@ -30,6 +30,7 @@ import { UserTasksModule } from './modules/user-tasks/user-tasks.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { GoogleDriveModule } from './modules/google-drive/google-drive.module.ts';
 import { FolderModule } from './modules/folder/folder.module';
+import { TaskFileModule } from './modules/task-file/tasks-file.module.ts';
 
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
@@ -45,6 +46,7 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     CategoryModule,
     SubCategoryModule,
     TaskModule,
+    TaskFileModule,
     ClsModule.forRoot({
       global: true,
       middleware: {

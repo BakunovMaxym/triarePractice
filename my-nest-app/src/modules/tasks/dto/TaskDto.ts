@@ -19,7 +19,7 @@ export class TaskDto {
   @ApiProperty({
     description: 'Власник завдання',
   })
-  owner: UserNameDto;
+  owner?: UserNameDto;
 
   @ApiProperty({
     description: 'Курс',
@@ -29,7 +29,7 @@ export class TaskDto {
   constructor(task: TaskEntity) {
     this.id = task.id;
     this.name = task.name;
-    this.owner = new UserNameDto(task.owner);
+    this.owner = task.owner ? new UserNameDto(task.owner) : undefined;
     this.course = new CourseNameDto(task.course);
   }
 }

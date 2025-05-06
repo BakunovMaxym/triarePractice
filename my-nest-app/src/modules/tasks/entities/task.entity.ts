@@ -4,6 +4,7 @@ import { UserTask } from '../../user-tasks/entities/user-task.entity';
 import { CourseEntity } from '../../../modules/course/entities/course.entity';
 import { UserEntity } from '../../../modules/user/user.entity';
 import { AbstractEntity } from '../../../common/abstract.entity';
+import { TaskFileEntity } from '../../task-file/entities/task-file.entity';
 
 @Entity('tasks')
 export class TaskEntity extends AbstractEntity {
@@ -14,8 +15,10 @@ export class TaskEntity extends AbstractEntity {
   @Column('simple-array', { nullable: true })
   textContent!: string[];
 
-  @Column('simple-array', { nullable: true })
-  fileContent!: string[];
+  @OneToMany(() => TaskFileEntity, (file) => file.task, {
+    cascade: true,
+  })
+  fileContent!: Relation<TaskFileEntity[]>;
 
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.id, { eager: true, onDelete: 'CASCADE' })
   owner!: Relation<UserEntity>;
