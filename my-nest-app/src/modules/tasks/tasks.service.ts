@@ -10,6 +10,7 @@ import { SingleTaskDto } from './dto/SingleTaskDto';
 import { GoogleDriveService } from '../../modules/google-drive/google-drive.service';
 import { PassThrough } from 'node:stream';
 import { TaskDto } from './dto/TaskDto';
+import { TaskFileEntity } from '../../modules/task-file/entities/task-file.entity';
 
 @Injectable()
 export class TaskService {
@@ -30,57 +31,44 @@ export class TaskService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(CourseEntity)
     private courseRepository: Repository<CourseEntity>,
+    @InjectRepository(TaskFileEntity)
+    private taskFileRepository: Repository<TaskFileEntity>,
   ) { }
 
   async create(createTaskDto: CreateTaskDto): Promise<SingleTaskDto> {
+    console.log(createTaskDto.textContent)
+
     const owner = await this.userRepository.findOne({ where: { id: createTaskDto.ownerId } });
-    if (!owner) {
-      throw new NotFoundException(`Такого користувача не існує`);
-    }
-
+    if (!owner) throw new NotFoundException(`Користувача не існує`);
     const course = await this.courseRepository.findOne({ where: { id: createTaskDto.courseId } });
-    if (!course) {
-      throw new NotFoundException(`Такого курса не існує`);
-    }
-    let fileContent: object[] = [];
+    if (!course) throw new NotFoundException(`Курсу не існує`);
 
-    try {
-      if (createTaskDto.files && createTaskDto.files.length > 0) {
-        const uploadPromises = createTaskDto.files.map(async (file) => {
-          const bufferStream = new PassThrough();
-          bufferStream.end(file.buffer);
-
-          const uploadedFile = await this.googleDriveService.uploadFile(
-            bufferStream,
-            file.originalname,
-            "1U3U7U3fSJte9l_iTmVmSfdHVHtB8BeBe",
-            file.mimetype
-          );
-
-          return uploadedFile;
-        });
-
-        fileContent = await Promise.all(uploadPromises);
-
-        console.log(fileContent);
-      }
-    } catch (error: any) {
-      console.log("error");
-      console.log(error);
+    //save to google drive
+    let uploadedMeta: Array<{ fileId: string; fileName: string; fileUrl: string }> = [];
+    if (createTaskDto.files?.length) {
+      uploadedMeta = await Promise.all(
+        createTaskDto.files.map(file => {
+          const stream = new PassThrough();
+          stream.end(file.buffer);
+          return this.googleDriveService.uploadFile(stream, file.originalname, file.mimetype);
+        })
+      );
     }
 
     const task = this.taskRepository.create({
-      name: createTaskDto.name,
-      textContent: createTaskDto.textContent,
-      fileContent: fileContent,
-      owner: owner,
-      course: course,
+      ...createTaskDto,
+      owner,
+      course,
     });
-
     const savedTask = await this.taskRepository.save(task);
 
+    const fileEntities = uploadedMeta.map(meta =>
+      this.taskFileRepository.create({ ...meta, data: null, task: savedTask })
+    );
+    savedTask.fileContent = await this.taskFileRepository.save(fileEntities);
     return new SingleTaskDto(savedTask);
   }
+
 
   async findAll(courseId: Uuid): Promise<TaskDto[]> {
     const tasks = this.taskRepository.find({
@@ -94,11 +82,18 @@ export class TaskService {
   async findOne(id: Uuid): Promise<SingleTaskDto> {
     const task = await this.taskRepository.findOne({
       where: { id },
-      relations: ['owner', 'comments', 'userTasks'],
+      relations: {
+        userTasks: true,
+        owner: true,
+        comments: true,
+        fileContent: { task: true }
+
+      },
     });
     if (!task) {
       throw new NotFoundException(`Task with name ${id} not found`);
     }
+    console.log(task)
     return new SingleTaskDto(task);
   }
 

@@ -3,6 +3,6 @@ import { GoogleDriveService } from './google-drive.service';
 
 @Module({
     providers: [GoogleDriveService],
-    exports: [GoogleDriveService], // So other modules/services can use it
+    exports: [GoogleDriveService],
 })
 export class GoogleDriveModule { }

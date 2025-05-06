@@ -3,7 +3,7 @@ import { StringField } from '../../../decorators/field.decorators';
 import type { Comment } from 'modules/comment/entities/comment.entity';
 import type { TaskEntity } from '../entities/task.entity';
 import { TaskDto } from './TaskDto';
-import type { TaskFileEntity } from '../../task-file/entities/task-file.entity';
+import { TaskFileDto } from '../../../modules/task-file/dto/TaskFileDto';
 
 export class SingleTaskDto extends TaskDto {
     @ApiProperty({
@@ -11,7 +11,7 @@ export class SingleTaskDto extends TaskDto {
         example: ['Завдання1: виконати роботу', 'Завдання2: вчасно'],
     })
     @StringField()
-    textContent!: string[];
+    textContent!: string;
 
     @ApiProperty({
         description: 'Файли завдання',
@@ -19,7 +19,7 @@ export class SingleTaskDto extends TaskDto {
     })
 
     @ApiProperty()
-    fileContent!: TaskFileEntity[];
+    fileContent!: TaskFileDto[];
 
     @ApiProperty({
         description: 'Коментарі',
@@ -29,7 +29,7 @@ export class SingleTaskDto extends TaskDto {
     constructor(task: TaskEntity) {
         super(task)
         this.textContent = task.textContent;
-        this.fileContent = task.fileContent;
+        this.fileContent = task.fileContent.map(file => new TaskFileDto(file));
         this.comments = task.comments;
     }
 }

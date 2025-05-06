@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { google, drive_v3 } from 'googleapis';
+import { CreateTaskFileDto } from '../../modules/task-file/dto/create-task-file.dto';
 
 @Injectable()
 export class GoogleDriveService {
@@ -20,7 +21,7 @@ export class GoogleDriveService {
     async uploadFile(
         file: NodeJS.ReadableStream,
         fileName: string,
-        folderId: string,
+        // folderId: string,
         mimeType: string
     ): Promise<{ fileId: string; fileName: string; fileUrl: string }> {
         const authClient = await this.authorize();
@@ -28,7 +29,7 @@ export class GoogleDriveService {
 
         const fileMetadata = {
             name: fileName,
-            parents: [folderId],
+            parents: ["1U3U7U3fSJte9l_iTmVmSfdHVHtB8BeBe"],
         };
 
         const media = {
@@ -45,11 +46,11 @@ export class GoogleDriveService {
         const fileId = response.data.id!;
         await this.makeFilePublic(fileId);
 
-        return {
+        return Object.assign(CreateTaskFileDto, {
             fileId: fileId,
             fileName: response.data.name!,
             fileUrl: this.getPublicUrl(fileId),
-        };
+        });
     }
 
 

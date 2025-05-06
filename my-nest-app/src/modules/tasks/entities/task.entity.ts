@@ -12,8 +12,8 @@ export class TaskEntity extends AbstractEntity {
   @Column()
   name!: string;
 
-  @Column('simple-array', { nullable: true })
-  textContent!: string[];
+  @Column({ nullable: true, type: 'varchar' })
+  textContent!: string;
 
   @OneToMany(() => TaskFileEntity, (file) => file.task, {
     cascade: true,

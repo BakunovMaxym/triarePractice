@@ -13,8 +13,8 @@ export class CreateTaskDto {
     description: 'Текст завдання',
     example: ['Завдання1: виконати роботу', 'Завдання2: вчасно'],
   })
-  // @StringField()
-  textContent!: string[];
+  @StringField()
+  textContent!: string;
 
   @ApiProperty({
     description: 'Файли завдання',

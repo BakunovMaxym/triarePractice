@@ -54,6 +54,7 @@ export class TasksController {
     @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: CreateTaskDto
   ): Promise<SingleTaskDto> {
+    console.log("hsgahjgahsvxashvxhvhvxsvhavhx", dto)
     dto.courseId = id;
     dto.ownerId = user.id;
     dto.files = files
