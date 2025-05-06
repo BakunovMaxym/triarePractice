@@ -6,6 +6,7 @@ import {
   Get,
   Delete,
   ParseUUIDPipe,
+  HttpCode,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -13,6 +14,7 @@ import {
   ApiParam,
   ApiResponse,
   ApiBody,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -23,17 +25,25 @@ import { Comment } from './entities/comment.entity';
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new comment' })
-  @ApiBody({ type: CreateCommentDto })
-  @ApiResponse({
-    status: 201,
-    description: 'The comment has been successfully created.',
-    type: Comment,
-  })
-  create(@Body() dto: CreateCommentDto): Promise<Comment> {
-    return this.commentService.create(dto);
-  }
+@Post('comment/:TaskId')
+@HttpCode(201)
+@ApiOperation({ summary: 'Create a new comment' })
+@ApiParam({
+  name: 'TaskId',
+  description: 'UUID of the Task',
+  type: 'string',
+  format: 'uuid',
+})
+@ApiOkResponse({
+  description: 'Comment created successfully',
+  type: Comment,
+})
+async create(
+  @Param('taskId')taskId: Uuid,
+  @Body() createCommentDto: CreateCommentDto,
+): Promise<Comment> {
+  return this.commentService.create(taskId, createCommentDto);
+}
 
   @Get('task/:taskId')
   @ApiOperation({ summary: 'Get all comments by Task ID' })

@@ -19,18 +19,18 @@ export class CommentService {
     private readonly tasksRepo: Repository<TaskEntity>,
   ) {}
 
-  async create(dto: CreateCommentDto): Promise<Comment> {
+  async create(taskId: Uuid, dto: CreateCommentDto): Promise<Comment> {
     const owner = await this.usersRepo.findOneBy({ id: dto.ownerId });
     if (!owner) throw new NotFoundException(`User ${dto.ownerId} not found`);
 
-    const task = await this.tasksRepo.findOneBy({ id: dto.taskId });
-    if (!task) throw new NotFoundException(`Task ${dto.taskId} not found`);
+    const task = await this.tasksRepo.findOneBy({ id: taskId });
+    if (!task) throw new NotFoundException(`Task ${taskId} not found`);
 
-    
+    // Only use content from DTO, and assign relations directly
     const comment = this.commentsRepo.create({
-      ...dto,
-      owner: { id: owner.id },
-      task: { id: task.id },
+      content: dto.content,
+      owner,
+      task,
     });
     return this.commentsRepo.save(comment);
   }
