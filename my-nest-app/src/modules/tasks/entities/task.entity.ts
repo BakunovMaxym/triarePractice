@@ -15,10 +15,8 @@ export class TaskEntity extends AbstractEntity {
   @Column({ nullable: true, type: 'varchar' })
   textContent!: string;
 
-  @OneToMany(() => TaskFileEntity, (file) => file.task, {
-    cascade: true,
-  })
-  fileContent!: Relation<TaskFileEntity[]>;
+  @OneToMany(() => TaskFileEntity, file => file.task, { cascade: ['insert'] })
+fileContent!: TaskFileEntity[];
 
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.id, { eager: true, onDelete: 'CASCADE' })
   owner!: Relation<UserEntity>;

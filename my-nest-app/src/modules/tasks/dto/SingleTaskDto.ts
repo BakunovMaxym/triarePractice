@@ -3,6 +3,7 @@ import { StringField } from '../../../decorators/field.decorators';
 import type { Comment } from 'modules/comment/entities/comment.entity';
 import type { TaskEntity } from '../entities/task.entity';
 import { TaskDto } from './TaskDto';
+import { TaskFileEntity } from '../../../modules/task-file/entities/task-file.entity';
 import { TaskFileDto } from '../../../modules/task-file/dto/TaskFileDto';
 
 export class SingleTaskDto extends TaskDto {
@@ -19,7 +20,7 @@ export class SingleTaskDto extends TaskDto {
     })
 
     @ApiProperty()
-    fileContent!: TaskFileDto[];
+    fileContent: TaskFileDto[];
 
     @ApiProperty({
         description: 'Коментарі',

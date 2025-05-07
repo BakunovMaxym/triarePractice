@@ -71,4 +71,15 @@ export class GoogleDriveService {
         return `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
     }
 
+    async deleteFile(fileId: string){
+        const authClient = await this.authorize();
+        const drive = google.drive({ version: 'v3', auth: authClient });
+        
+
+        const responce = await drive.files.delete({fileId: fileId,
+            supportsAllDrives: true})
+
+        return responce
+    }
+
 }

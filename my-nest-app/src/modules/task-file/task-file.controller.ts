@@ -7,28 +7,28 @@ import { UpdateTaskFileDto } from './dto/update-task-file.dto';
 export class TaskFileController {
   constructor(private readonly taskFileService: TaskFileService) {}
 
-  @Post()
-  create(@Body() createTaskFileDto: CreateTaskFileDto) {
-    return this.taskFileService.create(createTaskFileDto);
-  }
+  // @Post()
+  // create(@Body() createTaskFileDto: CreateTaskFileDto) {
+  //   return this.taskFileService.create(createTaskFileDto);
+  // }
 
-  @Get()
-  findAll() {
-    return this.taskFileService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.taskFileService.findAll();
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskFileService.findOne(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.taskFileService.findOne(+id);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskFileDto: UpdateTaskFileDto) {
-    return this.taskFileService.update(+id, updateTaskFileDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateTaskFileDto: UpdateTaskFileDto) {
+  //   return this.taskFileService.update(+id, updateTaskFileDto);
+  // }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskFileService.remove(+id);
+  remove(@Param('id') id: Uuid) {
+    return this.taskFileService.remove(id);
   }
 }

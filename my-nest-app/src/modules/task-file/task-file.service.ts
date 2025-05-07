@@ -1,16 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTaskFileDto } from './dto/create-task-file.dto';
 import { UpdateTaskFileDto } from './dto/update-task-file.dto';
-import type { Repository } from 'typeorm';
+import type { DeleteResult, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskFileEntity } from './entities/task-file.entity';
-import type { TaskEntity } from '../../modules/tasks/entities/task.entity';
+import { TaskEntity } from '../../modules/tasks/entities/task.entity';
+import { GoogleDriveService } from '../../modules/google-drive/google-drive.service';
 
 @Injectable()
 export class TaskFileService {
   constructor(
+    private readonly googleDriveService: GoogleDriveService,
     @InjectRepository(TaskFileEntity)
-    private readonly repo: Repository<TaskFileEntity>,
+    private readonly taskFieldRepository: Repository<TaskFileEntity>,
   ) { }
 
 
@@ -21,7 +23,7 @@ export class TaskFileService {
     if (!dtos?.length) return;
 
     const entities = dtos.map(dto => {
-      const entity = this.repo.create({
+      const entity = this.taskFieldRepository.create({
         fileId: dto.fileId,
         fileName: dto.fileName,
         fileUrl: dto.fileUrl,
@@ -30,7 +32,7 @@ export class TaskFileService {
       return entity;
     });
 
-    await this.repo.save(entities);
+    await this.taskFieldRepository.save(entities);
   }
 
 
@@ -46,7 +48,20 @@ export class TaskFileService {
     return `This action updates a #${id} taskFile`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} taskFile`;
+  async remove(id: Uuid) : Promise<DeleteResult>{
+    const file = await this.taskFieldRepository.findOne({
+      where: { id },
+      relations: {
+        task: true
+      },
+    });
+
+    if(!file) throw new NotFoundException;
+
+    await this.googleDriveService.deleteFile(file.fileId);
+
+    const deleted = this.taskFieldRepository.delete(file.id);
+
+    return deleted;
   }
 }

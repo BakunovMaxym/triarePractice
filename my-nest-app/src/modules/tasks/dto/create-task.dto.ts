@@ -11,31 +11,14 @@ export class CreateTaskDto {
 
   @ApiProperty({
     description: 'Текст завдання',
-    example: ['Завдання1: виконати роботу', 'Завдання2: вчасно'],
+    example: 'виконати роботу',
   })
   @StringField()
   textContent!: string;
 
-  @ApiProperty({
-    description: 'Файли завдання',
-    example: ['завдання.txt', 'завдання.png'],
-  })
-  // @StringField()
-  fileContent!: string[];
-
-  files!: Array<Express.Multer.File>
+  fileContent!: Array<Express.Multer.File>
   ownerId!: Uuid;
 
   courseId!: Uuid;
-
-
-
-  // @ApiProperty({
-  //   description: 'Comments associated with the task',
-  //   example: ['comment-1', 'comment-2'],
-  // })
-  // @IsArray()
-  // @IsString({ each: true })
-  // comments!: Uuid[];
 
 }
