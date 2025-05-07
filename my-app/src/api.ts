@@ -48,4 +48,42 @@ export async function getSubCategories() {
   return res.json();
 }
 
+export async function getTasks(token: string, courseId: string) {
+  const res = await fetch(`${API_URL}/courses/${courseId}/tasks`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch tasks');
+  return res.json();
+}
+
+export async function createCourse(token: string, data: { name: string; category: string; subCategory: string }) {
+  const res = await fetch(`${API_URL}/course`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create course');
+  return res.json();
+}
+
+export async function createTask(token: string, courseId: string, data: { name: string; textContent: string }) {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  formData.append('textContent', data.textContent);
+  // Add file upload support if needed
+
+  const res = await fetch(`${API_URL}/courses/${courseId}/tasks`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Failed to create task');
+  return res.json();
+}
+
 export {}

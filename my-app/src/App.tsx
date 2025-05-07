@@ -5,6 +5,7 @@ import { CourseList } from './components/CourseList';
 import { CourseDetail } from './components/CourseDetail';
 import { CategoryList } from './components/CategoryList';
 import { SubCategoryList } from './components/SubCategoryList';
+import './App.css';
 
 type Page = 'login' | 'register' | 'courses' | 'courseDetail' | 'categories' | 'subcategories';
 
@@ -12,6 +13,7 @@ export default function App() {
   const [page, setPage] = useState<Page>('login');
   const [token, setToken] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [isTeacher] = useState(true);
 
   const handleLogin = (token: string) => {
     setToken(token);
@@ -24,7 +26,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: 24 }}>
+    <div className="app-container">
       <nav style={{ marginBottom: 24 }}>
         {token ? (
           <>
@@ -49,10 +51,16 @@ export default function App() {
             setSelectedCourseId(id);
             setPage('courseDetail');
           }}
+          isTeacher={isTeacher}
         />
       )}
       {page === 'courseDetail' && token && selectedCourseId && (
-        <CourseDetail token={token} courseId={selectedCourseId} onBack={() => setPage('courses')} />
+        <CourseDetail
+          token={token}
+          courseId={selectedCourseId}
+          onBack={() => setPage('courses')}
+          isTeacher={isTeacher}
+        />
       )}
       {page === 'categories' && <CategoryList />}
       {page === 'subcategories' && <SubCategoryList />}
