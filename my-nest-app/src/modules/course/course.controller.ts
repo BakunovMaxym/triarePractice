@@ -39,7 +39,7 @@ export class CourseController {
         @Query() filter: FilterDto,
         @AuthUser() user: UserEntity
     ): Promise<{ ownerCourses: CourseInfoDto[]; teacherCourses: CourseInfoDto[]; studentCourses: CourseInfoDto[]; }> {
-        const courses = this.courseService.findAllWithFilters(user.id, filter);
+        const courses = await this.courseService.findAllWithFilters(user.id, filter);
         // return courses.map((course) => course.toDto());
         return courses;
     }
@@ -48,11 +48,11 @@ export class CourseController {
     @ApiParam({ name: "id", type: String })
     @HttpCode(HttpStatus.OK)
     @Auth([])
-    findById(
+    async findById(
         @Param('id') id: Uuid,
         @AuthUser() user: UserEntity
-    ): SingleCourseInfoDto {
-        const course = this.courseService.findById(user.id, id);
+    ): Promise<SingleCourseInfoDto> {
+        const course = await this.courseService.findById(user.id, id);
         return course;
     }
 

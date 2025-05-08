@@ -48,7 +48,7 @@ export function Register({ onRegister }: { onRegister: () => void }) {
           <option value="TEACHER">Teacher</option>
         </select>
       </div>
-      <button type="submit">Register</button>
+      <button type="submit" onClick={handleSubmit}>Register</button>
     </form>
   );
 }

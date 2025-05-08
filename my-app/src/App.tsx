@@ -18,13 +18,32 @@ type Page =
   | 'userTasks';
 
 export default function App() {
-  // Existing state
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    // Try to restore token from localStorage on first load
+    return localStorage.getItem('token');
+  });
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [isTeacher] = useState(true);
+  const [isTeacher, setIsTeacher] = useState<boolean>(true); // You may want to set this from user info
+  const [page, setPage] = useState<Page>(() => {
+    // Try to restore last page from localStorage, fallback to login if not authenticated
+    const savedPage = localStorage.getItem('page') as Page | null;
+    if (savedPage && savedPage !== 'login' && savedPage !== 'register' && localStorage.getItem('token')) {
+      return savedPage;
+    }
+    return localStorage.getItem('token') ? 'courses' : 'login';
+  });
 
-  // **New**: declare page state and its updater
-  const [page, setPage] = useState<Page>('login');
+  // Persist token and page to localStorage
+  React.useEffect(() => {
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
+  }, [token]);
+  React.useEffect(() => {
+    localStorage.setItem('page', page);
+  }, [page]);
 
   const handleLogin = (token: string) => {
     setToken(token);
@@ -34,6 +53,22 @@ export default function App() {
   const handleLogout = () => {
     setToken(null);
     setPage('login');
+    setSelectedCourseId(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('page');
+  };
+
+  // Navigation handler that prevents unauthorized navigation
+  const safeSetPage = (target: Page) => {
+    if (!token && (target === 'courses' || target === 'categories' || target === 'subcategories' || target === 'userTasks' || target === 'courseDetail')) {
+      setPage('login');
+      return;
+    }
+    if (token && (target === 'login' || target === 'register')) {
+      setPage('courses');
+      return;
+    }
+    setPage(target);
   };
 
   return (
@@ -41,16 +76,16 @@ export default function App() {
       <nav style={{ marginBottom: 24 }}>
         {token ? (
           <>
-            <button onClick={() => setPage('courses')}>Courses</button>
-            <button onClick={() => setPage('categories')}>Categories</button>
-            <button onClick={() => setPage('subcategories')}>SubCategories</button>
-            <button onClick={() => setPage('userTasks')}>My Tasks</button>
+            <button onClick={() => safeSetPage('courses')}>Courses</button>
+            <button onClick={() => safeSetPage('categories')}>Categories</button>
+            <button onClick={() => safeSetPage('subcategories')}>SubCategories</button>
+            <button onClick={() => safeSetPage('userTasks')}>My Tasks</button>
             <button onClick={handleLogout}>Logout</button>
           </>
         ) : (
           <>
-            <button onClick={() => setPage('login')}>Login</button>
-            <button onClick={() => setPage('register')}>Register</button>
+            <button onClick={() => safeSetPage('login')}>Login</button>
+            <button onClick={() => safeSetPage('register')}>Register</button>
           </>
         )}
       </nav>
@@ -68,15 +103,17 @@ export default function App() {
         />
       )}
       {page === 'courseDetail' && token && selectedCourseId && (
-        <CourseDetail
-          token={token}
-          courseId={selectedCourseId}
-          onBack={() => setPage('courses')}
-          isTeacher={isTeacher}
-        />
+        <React.Suspense fallback={<div>Loading course...</div>}>
+          <CourseDetail
+            token={token}
+            courseId={selectedCourseId}
+            onBack={() => setPage('courses')}
+            isTeacher={isTeacher}
+          />
+        </React.Suspense>
       )}
-      {page === 'categories' && <CategoryList />}
-      {page === 'subcategories' && <SubCategoryList />}
+      {page === 'categories' && token && <CategoryList />}
+      {page === 'subcategories' && token && <SubCategoryList />}
       {page === 'userTasks' && token && (
         <UserTasks token={token} userId={token} />
       )}

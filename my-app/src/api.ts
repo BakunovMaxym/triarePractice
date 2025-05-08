@@ -25,7 +25,15 @@ export async function getCourses(token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch courses');
-  return res.json();
+  const data = await res.json();
+  if (Array.isArray(data)) {
+    return { ownerCourses: data, teacherCourses: [], studentCourses: [] };
+  }
+  // Якщо бекенд повертає null або undefined, повертаємо порожні масиви
+  if (!data) {
+    return { ownerCourses: [], teacherCourses: [], studentCourses: [] };
+  }
+  return data;
 }
 
 export async function getCourse(token: string, id: string) {
@@ -69,18 +77,13 @@ export async function createCourse(token: string, data: { name: string; category
   return res.json();
 }
 
-export async function createTask(token: string, courseId: string, data: { name: string; textContent: string }) {
-  const formData = new FormData();
-  formData.append('name', data.name);
-  formData.append('textContent', data.textContent);
-  // Add file upload support if needed
-
+export async function createTask(token: string, courseId: string, data: FormData) {
   const res = await fetch(`${API_URL}/course/${courseId}/tasks`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: formData,
+    body: data,
   });
   if (!res.ok) throw new Error('Failed to create task');
   return res.json();
