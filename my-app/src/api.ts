@@ -10,7 +10,7 @@ export async function login(email: string, password: string) {
   return res.json();
 }
 
-export async function register(data: { firstName: string; lastName: string; email: string; password: string }) {
+export async function register(data: { firstName: string; lastName: string; email: string; password: string; role: string }) {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -49,7 +49,7 @@ export async function getSubCategories() {
 }
 
 export async function getTasks(token: string, courseId: string) {
-  const res = await fetch(`${API_URL}/courses/${courseId}/tasks`, {
+  const res = await fetch(`${API_URL}/course/${courseId}/tasks`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch tasks');
@@ -75,7 +75,7 @@ export async function createTask(token: string, courseId: string, data: { name: 
   formData.append('textContent', data.textContent);
   // Add file upload support if needed
 
-  const res = await fetch(`${API_URL}/courses/${courseId}/tasks`, {
+  const res = await fetch(`${API_URL}/course/${courseId}/tasks`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -83,6 +83,35 @@ export async function createTask(token: string, courseId: string, data: { name: 
     body: formData,
   });
   if (!res.ok) throw new Error('Failed to create task');
+  return res.json();
+}
+
+export async function getTask(token: string, taskId: string) {
+  const res = await fetch(`${API_URL}/tasks/${taskId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch task');
+  return res.json();
+}
+
+export async function getUserTasks(token: string) {
+  const res = await fetch(`${API_URL}/user-tasks`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch user tasks');
+  return res.json();
+}
+
+export async function createUserTask(token: string, data: { userId: string; taskId: string; status?: string; deadline?: string }) {
+  const res = await fetch(`${API_URL}/user-tasks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create user task');
   return res.json();
 }
 

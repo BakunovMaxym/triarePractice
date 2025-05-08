@@ -5,15 +5,26 @@ import { CourseList } from './components/CourseList';
 import { CourseDetail } from './components/CourseDetail';
 import { CategoryList } from './components/CategoryList';
 import { SubCategoryList } from './components/SubCategoryList';
+import { UserTasks } from './components/UserTasks';
 import './App.css';
 
-type Page = 'login' | 'register' | 'courses' | 'courseDetail' | 'categories' | 'subcategories';
+type Page = 
+  | 'login'
+  | 'register'
+  | 'courses'
+  | 'courseDetail'
+  | 'categories'
+  | 'subcategories'
+  | 'userTasks';
 
 export default function App() {
-  const [page, setPage] = useState<Page>('login');
+  // Existing state
   const [token, setToken] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [isTeacher] = useState(true);
+
+  // **New**: declare page state and its updater
+  const [page, setPage] = useState<Page>('login');
 
   const handleLogin = (token: string) => {
     setToken(token);
@@ -33,6 +44,7 @@ export default function App() {
             <button onClick={() => setPage('courses')}>Courses</button>
             <button onClick={() => setPage('categories')}>Categories</button>
             <button onClick={() => setPage('subcategories')}>SubCategories</button>
+            <button onClick={() => setPage('userTasks')}>My Tasks</button>
             <button onClick={handleLogout}>Logout</button>
           </>
         ) : (
@@ -42,6 +54,7 @@ export default function App() {
           </>
         )}
       </nav>
+
       {page === 'login' && <Login onLogin={handleLogin} />}
       {page === 'register' && <Register onRegister={() => setPage('login')} />}
       {page === 'courses' && token && (
@@ -64,6 +77,9 @@ export default function App() {
       )}
       {page === 'categories' && <CategoryList />}
       {page === 'subcategories' && <SubCategoryList />}
+      {page === 'userTasks' && token && (
+        <UserTasks token={token} userId={token} />
+      )}
     </div>
   );
 }

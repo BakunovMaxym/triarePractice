@@ -7,10 +7,11 @@ export function Register({ onRegister }: { onRegister: () => void }) {
     lastName: '',
     email: '',
     password: '',
+    role: 'STUDENT', // default role
   });
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -40,6 +41,12 @@ export function Register({ onRegister }: { onRegister: () => void }) {
       </div>
       <div>
         <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
+      </div>
+      <div>
+        <select name="role" value={form.role} onChange={handleChange} required>
+          <option value="STUDENT">Student</option>
+          <option value="TEACHER">Teacher</option>
+        </select>
       </div>
       <button type="submit">Register</button>
     </form>
