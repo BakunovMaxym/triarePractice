@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query, UseInterceptors, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query, } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CourseDto } from './dto/CourseDto';
 import { Auth } from '../../decorators/http.decorators';
 import { RoleType } from '../../constants/role-type';
@@ -22,7 +22,7 @@ export class CourseController {
     @Post()
     @HttpCode(HttpStatus.OK)
     @Auth([RoleType.TEACHER])
-    @ApiOkResponse({ type: CourseDto, description: "Course created" })
+    @ApiOkResponse({ type: CourseDto, description: "Курс створено" })
     async create(
         @Body() createCourseDto: CreateCourseDto,
         @AuthUser() user: UserEntity
@@ -51,7 +51,7 @@ export class CourseController {
     findById(
         @Param('id') id: Uuid,
         @AuthUser() user: UserEntity
-    ): SingleCourseInfoDto {
+    ): Promise<SingleCourseInfoDto> {
         const course = this.courseService.findById(user.id, id);
         return course;
     }
@@ -59,7 +59,7 @@ export class CourseController {
     @Patch(':id')
     @ApiParam({ name: "id", type: String })
     @Auth([RoleType.TEACHER, RoleType.STUDENT])
-    @ApiOkResponse({ type: CourseDto, description: "Course updated" })
+    @ApiOkResponse({ type: CourseDto, description: "Курс оновлено" })
     async update(
         @Param('id') id: Uuid,
         @Body() updateCourseDto: UpdateCourseDto,
@@ -87,7 +87,7 @@ export class CourseController {
     @Post(':id/as')
     @ApiParam({ name: "id", type: String })
     @Auth([RoleType.TEACHER, RoleType.STUDENT])
-    @ApiOkResponse({ type: CourseInfoDto, description: "" })
+    @ApiOkResponse({ type: CourseInfoDto, description: "Студента додано" })
     async addStudent(
         @Param("id") id: Uuid,
         @AuthUser() student: UserEntity
@@ -100,7 +100,7 @@ export class CourseController {
     @ApiParam({ name: "id", type: String })
     @ApiParam({ name: "tId", type: String })
     @Auth([RoleType.TEACHER])
-    @ApiOkResponse({ description: "Teacher successfully deleted" })
+    @ApiOkResponse({ description: "Вчителя видалено" })
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteTeacher(
         @Param("id") id: Uuid,
@@ -114,7 +114,7 @@ export class CourseController {
     @Delete(":id/ds/:tId")
     @ApiParam({ name: "id", type: String })
     @ApiParam({ name: "sId", type: String })
-    @ApiOkResponse({ description: "Student successfully deleted" })
+    @ApiOkResponse({ description: "Студента видалено" })
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteStudent(
         @Param("id") id: Uuid,

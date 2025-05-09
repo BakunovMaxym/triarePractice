@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { google, drive_v3 } from 'googleapis';
+import { google } from 'googleapis';
 import { CreateTaskFileDto } from '../../modules/task-file/dto/create-task-file.dto';
 
 @Injectable()
@@ -46,11 +46,13 @@ export class GoogleDriveService {
         const fileId = response.data.id!;
         await this.makeFilePublic(fileId);
 
-        return Object.assign(CreateTaskFileDto, {
+        const fileDto = new CreateTaskFileDto({
             fileId: fileId,
             fileName: response.data.name!,
             fileUrl: this.getPublicUrl(fileId),
         });
+
+        return fileDto;
     }
 
 
@@ -71,13 +73,15 @@ export class GoogleDriveService {
         return `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
     }
 
-    async deleteFile(fileId: string){
+    async deleteFile(fileId: string) {
         const authClient = await this.authorize();
         const drive = google.drive({ version: 'v3', auth: authClient });
-        
 
-        const responce = await drive.files.delete({fileId: fileId,
-            supportsAllDrives: true})
+
+        const responce = await drive.files.delete({
+            fileId: fileId,
+            supportsAllDrives: true
+        })
 
         return responce
     }

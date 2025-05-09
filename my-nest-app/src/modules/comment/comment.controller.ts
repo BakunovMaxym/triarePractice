@@ -13,37 +13,43 @@ import {
   ApiOperation,
   ApiParam,
   ApiResponse,
-  ApiBody,
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { Comment } from './entities/comment.entity';
+import { Auth } from '../../decorators/http.decorators';
+import { AuthUser } from '../../decorators/auth-user.decorator';
+import type { UserEntity } from '../../modules/user/user.entity';
+import { RoleType } from '../../constants/role-type';
+import { CommentDto } from './dto/CommentDto';
 
 @ApiTags('comments')
 @Controller('comments')
 export class CommentController {
-  constructor(private readonly commentService: CommentService) {}
+  constructor(private readonly commentService: CommentService) { }
 
-@Post('comment/:TaskId')
-@HttpCode(201)
-@ApiOperation({ summary: 'Create a new comment' })
-@ApiParam({
-  name: 'TaskId',
-  description: 'UUID of the Task',
-  type: 'string',
-  format: 'uuid',
-})
-@ApiOkResponse({
-  description: 'Comment created successfully',
-  type: Comment,
-})
-async create(
-  @Param('taskId')taskId: Uuid,
-  @Body() createCommentDto: CreateCommentDto,
-): Promise<Comment> {
-  return this.commentService.create(taskId, createCommentDto);
-}
+  @Post('comment/:TaskId')
+  @HttpCode(201)
+  @ApiOperation({ summary: 'Create a new comment' })
+  @Auth([RoleType.TEACHER, RoleType.STUDENT])
+  @ApiParam({
+    name: 'TaskId',
+    description: 'UUID of the Task',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiOkResponse({
+    description: 'Comment created successfully',
+    type: CommentDto,
+  })
+  async create(
+    @Param('TaskId') taskId: Uuid,
+    @Body() createCommentDto: CreateCommentDto,
+    @AuthUser() user: UserEntity
+  ): Promise<CommentDto> {
+    createCommentDto.ownerId = user.id;
+    return this.commentService.create(taskId, createCommentDto);
+  }
 
   @Get('task/:taskId')
   @ApiOperation({ summary: 'Get all comments by Task ID' })
@@ -56,11 +62,11 @@ async create(
   @ApiResponse({
     status: 200,
     description: 'List of comments for the given task',
-    type: [Comment],
+    type: [CommentDto],
   })
   getByTask(
     @Param('taskId', new ParseUUIDPipe()) taskId: Uuid,
-  ): Promise<Comment[]> {
+  ): Promise<CommentDto[]> {
     return this.commentService.findByTask(taskId);
   }
 

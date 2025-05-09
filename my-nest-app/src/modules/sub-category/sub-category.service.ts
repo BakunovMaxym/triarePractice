@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { CreateSubCategoryDto } from './dto/create-sub-category.dto';
 import { UpdateSubCategoryDto } from './dto/update-sub-category.dto';
 import { SubCategoryEntity } from './entities/sub-category.entity';
-import { CourseEntity } from '../course/entities/course.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 
@@ -14,7 +13,7 @@ export class SubCategoryService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @InjectRepository(SubCategoryEntity)
     private readonly subCategoryRepo: Repository<SubCategoryEntity>,
-  ) {}
+  ) { }
 
   async create(dto: CreateSubCategoryDto): Promise<SubCategoryEntity> {
     await this.cacheManager.store.del('sub-categories');

@@ -1,16 +1,15 @@
 import {
-  Column, Entity, ManyToMany, /*, OneToMany, OneToOne, VirtualColumn */
-  OneToMany
+  Column, Entity, ManyToMany,
+  OneToMany,
+  OneToOne
 } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { UseDto } from '../../decorators/use-dto.decorator.ts';
-// import { PostEntity } from '../post/post.entity.ts';
-// import type { UserDtoOptions } from './dtos/user.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
 import { CourseEntity } from '../../modules/course/entities/course.entity.ts';
-// import { UserSettingsEntity } from './user-settings.entity.ts';
+import { UserTask } from '../../modules/user-tasks/entities/user-task.entity.ts';
 
 @Entity({ name: 'users' })
 @UseDto(UserDto)
@@ -38,4 +37,7 @@ export class UserEntity extends AbstractEntity<UserDto> {
 
   @ManyToMany(() => CourseEntity, (courseEntity) => courseEntity.students)
   studentCourses?: CourseEntity[];
+
+  @OneToOne(() => UserTask, (userTask) => userTask.user)
+  userTasks?: UserTask[];
 }

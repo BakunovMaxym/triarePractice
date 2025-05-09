@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { StringField, UUIDField, UUIDFieldOptional } from "../../../decorators/field.decorators";
 
 export class CreateFolderDto {
@@ -10,8 +10,8 @@ export class CreateFolderDto {
     @StringField()
     name!: string;
 
-    
-    @UUIDFieldOptional({nullable: true})
+
+    @UUIDFieldOptional({ nullable: true })
     childFolderId?: Uuid;
 
     @ApiProperty({

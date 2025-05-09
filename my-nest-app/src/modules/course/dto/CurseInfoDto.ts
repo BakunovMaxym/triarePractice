@@ -17,10 +17,10 @@ export class CourseInfoDto {
   teachers: UserNameDto[];
 
   @StringField({ description: 'Назва категорії курсу' })
-  categoryName: string;
+  categoryName: string | undefined;
 
   @StringField({ description: 'Назва категорії курсу' })
-  subCategoryName: string;
+  subCategoryName: string | undefined;
 
   @DateField({ description: 'Дата створення курсу', format: 'date-time' })
   createdAt: Date;
@@ -28,7 +28,7 @@ export class CourseInfoDto {
   constructor(course: CourseEntity) {
     this.id = course.id;
     this.name = course.name;
-    this.owner = course.owner ? new UserNameDto(course.owner) : null;
+    this.owner = new UserNameDto(course.owner);
     this.teachers = Array.isArray(course.teachers)
       ? course.teachers.map((t: any) => new UserNameDto(t))
       : [];

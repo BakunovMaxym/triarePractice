@@ -1,4 +1,3 @@
-// File: src/tasks/tasks.controller.ts
 import {
   Controller,
   Get,
@@ -8,21 +7,17 @@ import {
   Delete,
   Patch,
   HttpCode,
-  ParseUUIDPipe,
   UploadedFiles,
   UseInterceptors,
-  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiParam,
   ApiResponse,
-  ApiBody,
 } from '@nestjs/swagger';
 import { TaskService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskEntity } from './entities/task.entity';
 import { AuthUser } from '../../decorators/auth-user.decorator';
 import type { UserEntity } from 'modules/user/user.entity';
@@ -57,7 +52,7 @@ export class TasksController {
   ): Promise<SingleTaskDto> {
     dto.courseId = id;
     dto.ownerId = user.id;
-    dto.fileContent = files
+    dto.fileContents = files
     return this.taskService.create(dto);
   }
 
@@ -92,36 +87,27 @@ export class TasksController {
     type: SingleTaskDto,
   })
   @ApiResponse({ status: 404, description: 'Завдання не знайдено' })
-  findByName(
+  async findByName(
     @Param('id') id: Uuid,
   ): Promise<SingleTaskDto> {
-    return this.taskService.findOne(id);
+    return new SingleTaskDto(await this.taskService.findOne(id));
   }
 
   @Patch('/tasks/:id')
-  @ApiOperation({ summary: 'Оновити завдання за айді' })
-  @ApiParam({
-    name: 'id',
-    description: 'Унікальне айді завдання',
-    type: String,
-  })
   @UseInterceptors(FilesInterceptor('file', 100, { storage: multer.memoryStorage() }))
-  @ApiResponse({
-    status: 200,
-    description: 'Завдання оновлено',
-    type: TaskEntity,
-  })
-  @ApiResponse({ status: 404, description: 'Завдання не знайдено' })
-  updateByName(
+  async updateByName(
     @Param('id') id: Uuid,
-    @Body() dto: UpdateTaskDto,
+    @Body() dto: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<SingleTaskDto> {
-    dto.fileContent = files;
-    console.log('dto');
-    console.log(dto);
-    return this.taskService.updateById(id, dto);
+    if (dto.fileContents && typeof dto.fileContents === 'string')
+      dto.fileContents = JSON.parse(dto.fileContents);
+
+    console.log("dto")
+    console.log(dto)
+    return this.taskService.updateById(id, files, dto);
   }
+
 
   @Delete('/tasks/:id')
   @ApiOperation({ summary: 'Видалити завдання за айді' })

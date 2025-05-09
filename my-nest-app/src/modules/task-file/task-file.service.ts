@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTaskFileDto } from './dto/create-task-file.dto';
-import { UpdateTaskFileDto } from './dto/update-task-file.dto';
 import type { DeleteResult, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskFileEntity } from './entities/task-file.entity';
@@ -36,31 +35,31 @@ export class TaskFileService {
   }
 
 
-  findAll() {
-    return `This action returns all taskFile`;
-  }
+  // findAll() {
+  //   return `This action returns all taskFile`;
+  // }
 
-  findOne(id: number) {
-    return `This action returns a #${id} taskFile`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} taskFile`;
+  // }
 
-  update(id: number, updateTaskFileDto: UpdateTaskFileDto) {
-    return `This action updates a #${id} taskFile`;
-  }
+  // update(id: number, updateTaskFileDto: UpdateTaskFileDto) {
+  //   return `This action updates a #${id} taskFile`;
+  // }
 
-  async remove(id: Uuid) : Promise<DeleteResult>{
+  async remove(fileId: string): Promise<DeleteResult> {
     const file = await this.taskFieldRepository.findOne({
-      where: { id },
+      where: { fileId },
       relations: {
         task: true
       },
     });
 
-    if(!file) throw new NotFoundException;
+    if (!file) throw new NotFoundException;
 
     await this.googleDriveService.deleteFile(file.fileId);
 
-    const deleted = this.taskFieldRepository.delete(file.id);
+    const deleted = this.taskFieldRepository.delete(file.fileId);
 
     return deleted;
   }

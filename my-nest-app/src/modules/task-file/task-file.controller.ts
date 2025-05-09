@@ -1,11 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Param, Delete } from '@nestjs/common';
 import { TaskFileService } from './task-file.service';
-import { CreateTaskFileDto } from './dto/create-task-file.dto';
-import { UpdateTaskFileDto } from './dto/update-task-file.dto';
 
 @Controller('task-file')
 export class TaskFileController {
-  constructor(private readonly taskFileService: TaskFileService) {}
+  constructor(private readonly taskFileService: TaskFileService) { }
 
   // @Post()
   // create(@Body() createTaskFileDto: CreateTaskFileDto) {

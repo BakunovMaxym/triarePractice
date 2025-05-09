@@ -1,5 +1,4 @@
 import { AbstractEntity } from "../../../common/abstract.entity";
-import { CreateFolderDto } from "../dto/create-folder.dto";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, type Relation } from "typeorm";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CourseEntity } from "../../../modules/course/entities/course.entity";

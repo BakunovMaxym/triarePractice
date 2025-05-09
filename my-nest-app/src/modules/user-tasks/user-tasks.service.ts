@@ -10,9 +10,16 @@ export class UserTasksService {
   constructor(
     @InjectRepository(UserTask)
     private readonly userTasksRepository: Repository<UserTask>,
-  ) {}
+  ) { }
 
-  async create(createDto: CreateUserTaskDto): Promise<UserTask> {
+  async create(timeToComplete: string, createDto: CreateUserTaskDto): Promise<UserTask> {
+    createDto.deadline = new Date();
+
+    if (!timeToComplete) {
+      createDto.deadline = null;
+
+    }
+
     const userTask = this.userTasksRepository.create(createDto);
     return this.userTasksRepository.save(userTask);
   }

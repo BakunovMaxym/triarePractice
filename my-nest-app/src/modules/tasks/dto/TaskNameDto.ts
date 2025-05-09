@@ -1,5 +1,4 @@
 import { StringField, UUIDField } from '../../../decorators/field.decorators';
-import type { TaskEntity } from '../entities/task.entity';
 
 export class TaskNameDto {
 

@@ -26,7 +26,7 @@ export class AuthController {
   constructor(
     private userService: UserService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -54,8 +54,8 @@ export class AuthController {
     @Body() userRegisterDto: UserRegisterDto,
   ): Promise<UserDto> {
     const createdUser = await this.userService.createUser(userRegisterDto);
-console.log(createdUser)
-    return createdUser.toDto({});
+    console.log(createdUser)
+    return createdUser.toDto();
   }
 
   @Version('1')

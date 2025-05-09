@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AbstractDto } from "../../../common/dto/abstract.dto";
 import type { Folder } from "../entities/folder.entity";
-import { UUIDField, StringField } from "../../../decorators/field.decorators";
+import { StringField } from "../../../decorators/field.decorators";
 import type { CourseEntity } from "../../../modules/course/entities/course.entity";
 
 export class FolderDto extends AbstractDto {

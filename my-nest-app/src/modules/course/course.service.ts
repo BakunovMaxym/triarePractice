@@ -1,10 +1,10 @@
-import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Transactional } from 'typeorm-transactional';
 import { CourseEntity } from './entities/course.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, In, SelectQueryBuilder, type Repository } from 'typeorm';
+import { Brackets, type Repository } from 'typeorm';
 import { UserEntity } from '../../modules/user/user.entity';
 import { CategoryEntity } from '../../modules/category/entities/category.entity';
 import { CourseInfoDto } from './dto/CurseInfoDto';
@@ -241,7 +241,7 @@ export class CourseService {
 
         const course = await this.courseRepository.findOne({
             where: { id: id },
-            relations: ["owner", "teachers", "students", "category"]
+            relations: ["owner", "teachers", "students", "category", "subCategory"]
         })
 
         if (!course) {

@@ -1,22 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { StringField } from '../../../decorators/field.decorators';
+import { DateField, StringField } from '../../../decorators/field.decorators';
 
 export class CreateTaskDto {
-  @ApiProperty({
-    description: 'Назва завдання',
-    example: 'Завдання-1',
-  })
-  @StringField()
+  @StringField({ description: 'Назва завдання', example: 'Завдання-1' })
   name!: string;
 
-  @ApiProperty({
-    description: 'Текст завдання',
-    example: 'виконати роботу',
-  })
-  @StringField()
+  @StringField({ description: 'Текст завдання', example: 'Виконати роботу' })
   textContent!: string;
 
-  fileContent!: Array<Express.Multer.File>
+  @DateField({ description: 'Час на виконання', example: '1 година', nullable: true, default: null })
+  timeToComplete!: string | null;
+
+  fileContents!: Array<Express.Multer.File> | { fileId: string, fileName: string, fileUrl: string }[]
   ownerId!: Uuid;
 
   courseId!: Uuid;

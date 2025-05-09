@@ -4,20 +4,15 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  Query,
-  ValidationPipe,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { PageDto } from '../../common/dto/page.dto.ts';
 import { RoleType } from '../../constants/role-type.ts';
-import { ApiPageResponse } from '../../decorators/api-page-response.decorator.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
-import { Auth, UUIDParam } from '../../decorators/http.decorators.ts';
+import { Auth } from '../../decorators/http.decorators.ts';
 import { UseLanguageInterceptor } from '../../interceptors/language-interceptor.service.ts';
 import { TranslationService } from '../../shared/services/translation.service.ts';
 import { UserDto } from './dtos/user.dto.ts';
-import { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
 import { UserService } from './user.service.ts';
 

@@ -14,7 +14,6 @@ import { RolesGuard } from '../guards/roles.guard.ts';
 import { AuthUserInterceptor } from '../interceptors/auth-user-interceptor.service.ts';
 import { PublicRoute } from './public-route.decorator.ts';
 import { Roles } from './roles.decorator.ts';
-import type { RoleType } from '../constants/role-type.ts';
 
 export function Auth(
   roles: string[],

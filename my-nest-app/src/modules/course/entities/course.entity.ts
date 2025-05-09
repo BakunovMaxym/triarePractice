@@ -1,6 +1,6 @@
 import { UseDto } from "../../../decorators/use-dto.decorator";
 // import { UseDto } from "../../../decorators/";
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, type Relation, OneToMany, AfterUpdate, BeforeInsert, BeforeUpdate } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, type Relation, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
 import { CourseDto } from "../dto/CourseDto";
 import { UserEntity } from "../../user/user.entity";
 import { CategoryEntity } from "../../category/entities/category.entity";

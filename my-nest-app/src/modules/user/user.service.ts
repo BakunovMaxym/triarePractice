@@ -1,26 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { InjectRepository } from '@nestjs/typeorm';
-// import { plainToClass } from 'class-transformer';
-import type { FindOptionsWhere } from 'typeorm';
-import { Repository } from 'typeorm';
-import { Transactional } from 'typeorm-transactional';
-
-import type { PageDto } from '../../common/dto/page.dto.ts';
-// import { FileNotImageException } from '../../exceptions/file-not-image.exception.ts';
-import { UserNotFoundException } from '../../exceptions/user-not-found.exception.ts';
-// import type { IFile } from '../../interfaces/IFile.ts';
-// import { AwsS3Service } from '../../shared/services/aws-s3.service.ts';
-// import { ValidatorService } from '../../shared/services/validator.service.ts';
-// import type { Reference } from '../../types.ts';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
 import { CreateSettingsCommand } from './commands/create-settings.command.ts';
 import { CreateSettingsDto } from './dtos/create-settings.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
-import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
 import type { UserSettingsEntity } from './user-settings.entity.ts';
-import { NotFound } from '@aws-sdk/client-s3';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { FindOptionsWhere, Repository } from 'typeorm';
+import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class UserService {
@@ -89,14 +77,13 @@ export class UserService {
       ])
       .where("user.id = :id", { id })
       .getOne()
-    if (user) {
-      user.toDto(UserDto)
-    }
-
     if (!user) {
       throw NotFoundException
     }
-    return user;
+
+    const finalUser = new UserDto(user)
+
+    return finalUser;
   }
 
   // async getUser(userId: Uuid): Promise<UserDto> {

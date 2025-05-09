@@ -8,37 +8,37 @@ import {
   Delete,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';  // імпорт Swagger
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UserTasksService } from './user-tasks.service';
 import { CreateUserTaskDto } from './dto/create-user-task.dto';
 import { UpdateUserTaskDto } from './dto/update-user-task.dto';
 
-@ApiTags('user-tasks')  // Групує всі ендпоінти в розділі “user-tasks” :contentReference[oaicite:0]{index=0}
+@ApiTags('user-tasks')
 @Controller('user-tasks')
 export class UserTasksController {
-  constructor(private readonly userTasksService: UserTasksService) {}
+  constructor(private readonly userTasksService: UserTasksService) { }
 
   @Post()
-  @ApiOperation({ summary: 'Створити нове завдання користувача' })  // Опис операції :contentReference[oaicite:1]{index=1}
-  @ApiBody({ type: CreateUserTaskDto })  // Вказує на DTO для Swagger :contentReference[oaicite:2]{index=2}
+  @ApiOperation({ summary: 'Створити нове завдання користувача' })
+  @ApiBody({ type: CreateUserTaskDto })
   @ApiResponse({ status: 201, description: 'Created successfully', type: CreateUserTaskDto })
   create(@Body() createDto: CreateUserTaskDto) {
     return this.userTasksService.create(createDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Отримати всі UserTasks' })  // Короткий опис для списку :contentReference[oaicite:3]{index=3}
+  @ApiOperation({ summary: 'Отримати всі UserTasks' })
   @ApiResponse({ status: 200, description: 'List of user tasks', type: [CreateUserTaskDto] })
   findAll() {
     return this.userTasksService.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Отримати UserTask за UUID' })  // Опис отримання одиночного запису :contentReference[oaicite:4]{index=4}
-  @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'UUID UserTask' })  // Параметр шляху :contentReference[oaicite:5]{index=5}
+  @ApiOperation({ summary: 'Отримати UserTask за UUID' })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'UUID UserTask' })
   @ApiResponse({ status: 200, description: 'Found UserTask', type: CreateUserTaskDto })
   @ApiResponse({ status: 404, description: 'Not Found' })
-  findOne(@Param('id', new ParseUUIDPipe()) id: Uuid) {  // Використовуємо ParseUUIDPipe для валідації UUID :contentReference[oaicite:6]{index=6}
+  findOne(@Param('id', new ParseUUIDPipe()) id: Uuid) {
     return this.userTasksService.findOne(id);
   }
 

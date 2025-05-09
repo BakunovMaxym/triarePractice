@@ -1,4 +1,9 @@
-import { PartialType } from '@nestjs/swagger';
-import { CourseDto } from './CourseDto';
+import { StringFieldOptional, UUIDFieldOptional } from '../../../decorators/field.decorators';
 
-export class UpdateCourseDto extends PartialType(CourseDto) {}
+export class UpdateCourseDto {
+    @StringFieldOptional()
+    name!: string;
+
+    @UUIDFieldOptional({ nullable: false })
+    ownerId!: Uuid;
+}

@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository }   from '@nestjs/typeorm';
-import { Repository }         from 'typeorm';
-import { Comment }      from './entities/comment.entity';
-import { CreateCommentDto }   from './dto/create-comment.dto';
-import { UserEntity }         from '../user/user.entity';
-import { TaskEntity }         from '../tasks/entities/task.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Comment } from './entities/comment.entity';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UserEntity } from '../user/user.entity';
+import { TaskEntity } from '../tasks/entities/task.entity';
+import { CommentDto } from './dto/CommentDto';
 
 @Injectable()
 export class CommentService {
@@ -17,9 +18,9 @@ export class CommentService {
 
     @InjectRepository(TaskEntity)
     private readonly tasksRepo: Repository<TaskEntity>,
-  ) {}
+  ) { }
 
-  async create(taskId: Uuid, dto: CreateCommentDto): Promise<Comment> {
+  async create(taskId: Uuid, dto: CreateCommentDto): Promise<CommentDto> {
     const owner = await this.usersRepo.findOneBy({ id: dto.ownerId });
     if (!owner) throw new NotFoundException(`User ${dto.ownerId} not found`);
 
@@ -32,15 +33,17 @@ export class CommentService {
       owner,
       task,
     });
-    return this.commentsRepo.save(comment);
+    const savedUser = await this.commentsRepo.save(comment);
+    return new CommentDto(savedUser)
   }
 
-  async findByTask(taskId: Uuid): Promise<Comment[]> {
-    return this.commentsRepo.find({
+  async findByTask(taskId: Uuid): Promise<CommentDto[]> {
+    const comments = await this.commentsRepo.find({
       where: { task: { id: taskId as any } },
       relations: ['owner', 'task'],
       order: { createdAt: 'ASC' },
     });
+    return comments.map(com => new CommentDto(com))
   }
 
   async delete(id: Uuid): Promise<void> {

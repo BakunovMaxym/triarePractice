@@ -1,7 +1,5 @@
-import { Optional } from '@nestjs/common';
 import { AbstractDto } from '../../../common/dto/abstract.dto';
-import { DateField, EnumField, StringField, UUIDField } from '../../../decorators/field.decorators';
-import { ApiProperty } from '@nestjs/swagger';
+import { EnumField, UUIDField } from '../../../decorators/field.decorators';
 import { TaskStatus } from '../../../constants/status-type';
 
 
@@ -22,14 +20,9 @@ export class CreateUserTaskDto extends AbstractDto {
   @EnumField(() => TaskStatus, {
     description: 'Статус',
     example: 'Призначено',
+    default: TaskStatus.ASSIGNED
   })
   status!: TaskStatus;
 
-  @ApiProperty({
-    description: 'Completion timestamp of the user task',
-    example: '2023-10-01T12:00:00Z',
-  })
-  @Optional()
-  @DateField()
-  deadline?: string;
+  deadline?: Date | null;
 }

@@ -1,5 +1,4 @@
-import type { UserEntity } from "modules/user/user.entity";
-import { ClassField, StringField, UUIDField, UUIDFieldOptional } from "../../../decorators/field.decorators";
+import { StringField } from "../../../decorators/field.decorators";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateCourseDto {
@@ -7,8 +6,8 @@ export class CreateCourseDto {
     @StringField()
     readonly name!: string;
 
-    @ApiProperty({ description: "owner's id", nullable: true })
-    @UUIDFieldOptional({ nullable: true })
+    // @ApiProperty({ description: "owner's id", nullable: true })
+    // @UUIDFieldOptional({ nullable: true })
     owner!: string;
 
     @ApiProperty({ description: "course's category" })

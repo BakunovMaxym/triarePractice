@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne, type Relation } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, OneToOne, type Relation } from 'typeorm';
 import { Comment } from '../../comment/entities/comment.entity';
 import { UserTask } from '../../user-tasks/entities/user-task.entity';
 import { CourseEntity } from '../../../modules/course/entities/course.entity';
@@ -15,8 +15,11 @@ export class TaskEntity extends AbstractEntity {
   @Column({ nullable: true, type: 'varchar' })
   textContent!: string;
 
+  @Column({ nullable: true, type: 'interval' })
+  timeToComplete!: string
+
   @OneToMany(() => TaskFileEntity, file => file.task, { cascade: ['insert'] })
-fileContent!: TaskFileEntity[];
+  fileContent!: TaskFileEntity[];
 
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.id, { eager: true, onDelete: 'CASCADE' })
   owner!: Relation<UserEntity>;

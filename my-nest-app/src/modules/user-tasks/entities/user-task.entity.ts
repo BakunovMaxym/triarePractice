@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, type Relation } from 'typeorm';
+import { Entity, Column, JoinColumn, type Relation, OneToOne } from 'typeorm';
 import { TaskEntity } from '../../tasks/entities/task.entity';
 import { AbstractEntity } from '../../../common/abstract.entity';
 import { UserEntity } from '../../../modules/user/user.entity';
@@ -16,11 +16,11 @@ export class UserTask extends AbstractEntity<UserTask> {
   @Column({ type: 'timestamp', nullable: true })
   completeTimestamp!: Date;
 
-  @ManyToOne(() => UserEntity, { eager: true, onDelete: 'CASCADE' })
+  @OneToOne(() => UserEntity, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user!: Relation<UserEntity>;
 
-  @ManyToOne(() => TaskEntity, { eager: true, onDelete: 'CASCADE' })
+  @OneToOne(() => TaskEntity, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'taskId' })
   task!: Relation<TaskEntity>;
 }
