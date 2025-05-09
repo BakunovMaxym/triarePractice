@@ -67,6 +67,9 @@ export class CourseService {
 
         await this.courseRepository.save(course);
 
+        // Очищення кешу курсів для цього користувача, щоб новий курс з'явився у списку
+        await this.deleteCache(userId);
+
         return course;
     }
 
@@ -75,130 +78,50 @@ export class CourseService {
         teacherCourses: CourseInfoDto[];
         studentCourses: CourseInfoDto[];
     }> {
-        const cacheKey = `courses:${userId}:${JSON.stringify(filter)}`;
+        // Ігноруємо userId, повертаємо всі курси
+        const cacheKey = `courses:all:${JSON.stringify(filter)}`;
 
         const cached = await this.cacheManager.get(cacheKey);
         if (cached) return cached;
 
-        if (filter.category) {
-            const category = await this.categoryRepository.findOne({
-                where: { name: filter.category },
-            });
-            if (!category) {
-                return { ownerCourses: [], teacherCourses: [], studentCourses: [] };
-            }
-        }
-
-        if (filter.subCategory) {
-            const subCategory = await this.subCategoryRepository.findOne({
-                where: { name: filter.subCategory },
-            });
-            if (!subCategory) {
-                return { ownerCourses: [], teacherCourses: [], studentCourses: [] };
-            }
-        }
-
-        // owner
-        const ownerQB = this.courseRepository
+        const qb = this.courseRepository
             .createQueryBuilder('course')
             .leftJoinAndSelect('course.owner', 'owner')
             .leftJoinAndSelect('course.teachers', 'teacher')
             .leftJoinAndSelect('course.students', 'student')
             .leftJoinAndSelect('course.category', 'category')
-            .leftJoinAndSelect('course.subCategory', 'subCategory')
-            .where('owner.id = :userId', { userId });
+            .leftJoinAndSelect('course.subCategory', 'subCategory');
 
-        if (filter.ownerId) {
-            ownerQB.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
+        if (filter?.ownerId) {
+            qb.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
         }
-        if (filter.name) {
-            ownerQB.andWhere('course.name = :name', { name: filter.name });
+        if (filter?.name) {
+            qb.andWhere('course.name = :name', { name: filter.name });
         }
-        if (filter.teacherId) {
-            ownerQB.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
+        if (filter?.teacherId) {
+            qb.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
         }
-        if (filter.category) {
-            ownerQB.andWhere('category.name = :category', { category: filter.category });
+        if (filter?.category) {
+            qb.andWhere('category.name = :category', { category: filter.category });
         }
-        if (filter.subCategory) {
-            ownerQB.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
-        }
-
-        // teacher
-        const teacherQB = this.courseRepository
-            .createQueryBuilder('course')
-            .leftJoinAndSelect('course.owner', 'owner')
-            .leftJoinAndSelect('course.teachers', 'teacher')
-            .leftJoinAndSelect('course.students', 'student')
-            .leftJoinAndSelect('course.category', 'category')
-            .leftJoinAndSelect('course.subCategory', 'subCategory')
-            .where('teacher.id = :userId', { userId });
-
-        if (filter.ownerId) {
-            teacherQB.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
-        }
-        if (filter.name) {
-            ownerQB.andWhere('course.name = :name', { name: filter.name });
-        }
-        if (filter.teacherId) {
-            teacherQB.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
-        }
-        if (filter.category) {
-            teacherQB.andWhere('category.name = :category', { category: filter.category });
-        }
-        if (filter.subCategory) {
-            teacherQB.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
+        if (filter?.subCategory) {
+            qb.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
         }
 
-        // student
-        const studentQB = this.courseRepository
-            .createQueryBuilder('course')
-            .leftJoinAndSelect('course.owner', 'owner')
-            .leftJoinAndSelect('course.teachers', 'teacher')
-            .leftJoinAndSelect('course.students', 'student')
-            .leftJoinAndSelect('course.category', 'category')
-            .leftJoinAndSelect('course.subCategory', 'subCategory')
-            .where('student.id = :userId', { userId });
+        const allCourses = await qb.getMany();
+        const courseDtos = allCourses.map(course => new CourseInfoDto(course));
 
-        if (filter.ownerId) {
-            studentQB.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
-        }
-        if (filter.name) {
-            ownerQB.andWhere('course.name = :name', { name: filter.name });
-        }
-        if (filter.teacherId) {
-            studentQB.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
-        }
-        if (filter.category) {
-            studentQB.andWhere('category.name = :category', { category: filter.category });
-        }
-        if (filter.subCategory) {
-            studentQB.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
-        }
-
-        const [ownerCourses, teacherCourses, studentCourses] = await Promise.all([
-            ownerQB.getMany(),
-            teacherQB.getMany(),
-            studentQB.getMany(),
-        ]);
-
-        const ownerCourseDtos = ownerCourses.map(course => new CourseInfoDto(course));
-        const teacherCourseDtos = teacherCourses.map(course => new CourseInfoDto(course));
-        const studentCourseDtos = studentCourses.map(course => new CourseInfoDto(course));
-
-        await this.cacheManager.set(cacheKey, {
-            ownerCourses: ownerCourseDtos,
-            teacherCourses: teacherCourseDtos,
-            studentCourses: studentCourseDtos,
-        });
-
-        return {
-            ownerCourses: ownerCourseDtos,
-            teacherCourses: teacherCourseDtos,
-            studentCourses: studentCourseDtos,
+        // Всі курси повертаємо як ownerCourses, інші масиви порожні
+        const result = {
+            ownerCourses: courseDtos,
+            teacherCourses: [],
+            studentCourses: [],
         };
-    }
 
+        await this.cacheManager.set(cacheKey, result);
+
+        return result;
+    }
 
     async findById(userId: Uuid, courseid: Uuid): Promise<SingleCourseInfoDto> {
         const cacheKey = `courses:${userId}:${courseid}`;
