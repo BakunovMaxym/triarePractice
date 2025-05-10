@@ -13,11 +13,14 @@ import { SubCategoryEntity } from '../../modules/sub-category/entities/sub-categ
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { SingleCourseInfoDto } from './dto/SingleCourseInfoDto';
+import { TaskStatus } from '../../constants/status-type';
+import { UserTasksService } from '../../modules/user-tasks/user-tasks.service';
 // import { UserEntity } from 'modules/user/user.entity';
 
 @Injectable()
 export class CourseService {
     constructor(
+        private readonly userTaskService: UserTasksService,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
         @InjectRepository(CourseEntity)
         private courseRepository: Repository<CourseEntity>,
@@ -164,7 +167,7 @@ export class CourseService {
 
         const course = await this.courseRepository.findOne({
             where: { id: id },
-            relations: ["owner", "teachers", "students", "category", "subCategory"]
+            relations: ["owner", "teachers", "students", "category", "subCategory", "tasks"]
         })
 
         if (!course) {
@@ -192,7 +195,7 @@ export class CourseService {
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
-            relations: ["owner", "teachers", "students", "category"],
+            relations: ["owner", "teachers", "students", "category", "tasks"],
         });
 
         if (!course) {
@@ -221,7 +224,7 @@ export class CourseService {
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
-            relations: ["owner", "teachers", "students", "category"],
+            relations: ["owner", "teachers", "students", "category", "tasks"],
         });
 
         if (!course) {
@@ -240,6 +243,11 @@ export class CourseService {
 
         course.students.push(newStudent);
 
+        course.tasks?.forEach(async (task) => {
+            const userTaskDto = { user: newStudent, deadline: undefined, task: task, status: TaskStatus.ASSIGNED };
+            await this.userTaskService.create(userTaskDto);
+        })
+
         const savedCourse = await this.courseRepository.save(course);
 
         return new SingleCourseInfoDto(savedCourse);
@@ -251,7 +259,7 @@ export class CourseService {
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
-            relations: ["owner", "teachers", "students", "category"],
+            relations: ["owner", "teachers", "students", "category", "tasks"],
         });
 
         if (!course) {
@@ -285,7 +293,7 @@ export class CourseService {
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
-            relations: ["owner", "teachers", "students", "category"],
+            relations: ["owner", "teachers", "students", "category", "tasks"],
         });
 
         if (!course) {

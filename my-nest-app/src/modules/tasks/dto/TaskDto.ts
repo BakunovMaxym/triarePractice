@@ -26,10 +26,17 @@ export class TaskDto {
   })
   course: CourseNameDto;
 
+  @ApiProperty({
+    description: 'Час на виконання',
+  })
+  timeToComplete: number;
+
+
   constructor(task: TaskEntity) {
     this.id = task.id;
     this.name = task.name;
     this.owner = task.owner ? new UserNameDto(task.owner) : undefined;
     this.course = new CourseNameDto(task.course);
+    this.timeToComplete = task.timeToComplete;
   }
 }

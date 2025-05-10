@@ -1,7 +1,6 @@
 import {
   Column, Entity, ManyToMany,
   OneToMany,
-  OneToOne
 } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
@@ -38,6 +37,6 @@ export class UserEntity extends AbstractEntity<UserDto> {
   @ManyToMany(() => CourseEntity, (courseEntity) => courseEntity.students)
   studentCourses?: CourseEntity[];
 
-  @OneToOne(() => UserTask, (userTask) => userTask.user)
+  @OneToMany(() => UserTask, (userTask) => userTask.student)
   userTasks?: UserTask[];
 }

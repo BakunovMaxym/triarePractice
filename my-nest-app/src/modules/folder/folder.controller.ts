@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ApiOperation, ApiParam, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { FolderService } from './folder.service';
 import { CreateFolderDto } from './dto/create-folder.dto';
-import { UpdateFolderDto } from './dto/update-folder.dto';
 
 @Controller('folder')
 export class FolderController {

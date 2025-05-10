@@ -1,4 +1,4 @@
-import { DateField, StringField } from '../../../decorators/field.decorators';
+import { NumberFieldOptional, StringField } from '../../../decorators/field.decorators';
 
 export class CreateTaskDto {
   @StringField({ description: 'Назва завдання', example: 'Завдання-1' })
@@ -7,8 +7,8 @@ export class CreateTaskDto {
   @StringField({ description: 'Текст завдання', example: 'Виконати роботу' })
   textContent!: string;
 
-  @DateField({ description: 'Час на виконання', example: '1 година', nullable: true, default: null })
-  timeToComplete!: string | null;
+  @NumberFieldOptional({ description: 'Час на виконання', example: '1 година', nullable: true, default: null })
+  timeToComplete!: number | null;
 
   fileContents!: Array<Express.Multer.File> | { fileId: string, fileName: string, fileUrl: string }[]
   ownerId!: Uuid;

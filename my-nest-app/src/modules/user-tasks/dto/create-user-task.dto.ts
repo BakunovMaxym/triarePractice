@@ -1,21 +1,14 @@
-import { AbstractDto } from '../../../common/dto/abstract.dto';
-import { EnumField, UUIDField } from '../../../decorators/field.decorators';
+import { EnumField } from '../../../decorators/field.decorators';
 import { TaskStatus } from '../../../constants/status-type';
+import type { UserEntity } from '../../../modules/user/user.entity';
+import type { TaskEntity } from '../../../modules/tasks/entities/task.entity';
 
 
-export class CreateUserTaskDto extends AbstractDto {
+export class CreateUserTaskDto {
 
-  @UUIDField({
-    description: 'Айді користувача',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  userId!: Uuid;
+  student!: UserEntity;
 
-  @UUIDField({
-    description: 'Айді завдання',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  taskId!: Uuid;
+  task!: TaskEntity;
 
   @EnumField(() => TaskStatus, {
     description: 'Статус',
@@ -24,5 +17,5 @@ export class CreateUserTaskDto extends AbstractDto {
   })
   status!: TaskStatus;
 
-  deadline?: Date | null;
+  deadline?: Date | undefined;
 }

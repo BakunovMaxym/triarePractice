@@ -11,12 +11,16 @@ import { GoogleDriveService } from '../../modules/google-drive/google-drive.serv
 import { PassThrough } from 'node:stream';
 import { TaskDto } from './dto/TaskDto';
 import { TaskFileEntity } from '../../modules/task-file/entities/task-file.entity';
+import { UserTasksService } from '../../modules/user-tasks/user-tasks.service';
+import { TaskStatus } from '../../constants/status-type';
+import { Transactional } from 'typeorm-transactional';
 // import { TaskFileService } from '../../modules/task-file/task-file.service';
 
 @Injectable()
 export class TaskService {
   constructor(
     private readonly googleDriveService: GoogleDriveService,
+    private readonly userTaskService: UserTasksService,
     // private readonly taskFileService: TaskFileService,
     @InjectRepository(TaskEntity)
     private taskRepository: Repository<TaskEntity>,
@@ -28,10 +32,11 @@ export class TaskService {
     private taskFileRepository: Repository<TaskFileEntity>,
   ) { }
 
+  @Transactional()
   async create(createTaskDto: CreateTaskDto): Promise<SingleTaskDto> {
     const owner: UserEntity = await this.userRepository.findOneOrFail({ where: { id: createTaskDto.ownerId } });
     if (!owner) throw new NotFoundException(`Користувача не існує`);
-    const course: CourseEntity = await this.courseRepository.findOneOrFail({ where: { id: createTaskDto.courseId } });
+    const course: CourseEntity = await this.courseRepository.findOneOrFail({ where: { id: createTaskDto.courseId }, relations: {students: true} });
     if (!course) throw new NotFoundException(`Курсу не існує`);
 
     //save to google drive
@@ -63,6 +68,10 @@ export class TaskService {
       });
     });
 
+    course.students?.forEach(async (student) => {
+    const userTaskDto = {user: student, deadline: undefined, task: savedTask, status: TaskStatus.ASSIGNED};
+      await this.userTaskService.create(userTaskDto);
+    });
 
     await this.taskFileRepository.save(fileEntities);
 

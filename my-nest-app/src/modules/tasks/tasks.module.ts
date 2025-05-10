@@ -8,10 +8,11 @@ import { CourseEntity } from '../../modules/course/entities/course.entity';
 import { GoogleDriveModule } from '../../modules/google-drive/google-drive.module';
 import { TaskFileModule } from '../../modules/task-file/task-file.module';
 import { TaskFileEntity } from '../../modules/task-file/entities/task-file.entity';
+import { UserTasksModule } from '../../modules/user-tasks/user-tasks.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TaskEntity, UserEntity, CourseEntity, TaskFileEntity]), GoogleDriveModule, TaskFileModule],
-  providers: [TaskService, GoogleDriveModule],
+  imports: [TypeOrmModule.forFeature([TaskEntity, UserEntity, CourseEntity, TaskFileEntity]), GoogleDriveModule, TaskFileModule, UserTasksModule],
+  providers: [TaskService, GoogleDriveModule, UserTasksModule],
   controllers: [TasksController],
   exports: [TaskService],
 })

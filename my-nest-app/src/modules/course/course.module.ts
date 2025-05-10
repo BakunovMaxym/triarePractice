@@ -6,9 +6,10 @@ import { CourseEntity } from './entities/course.entity';
 import { UserEntity } from '../../modules/user/user.entity';
 import { CategoryEntity } from '../../modules/category/entities/category.entity';
 import { SubCategoryEntity } from '../../modules/sub-category/entities/sub-category.entity';
+import { UserTasksModule } from '../../modules/user-tasks/user-tasks.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CourseEntity, UserEntity, CategoryEntity, SubCategoryEntity])],
+  imports: [TypeOrmModule.forFeature([CourseEntity, UserEntity, CategoryEntity, SubCategoryEntity]), UserTasksModule],
   controllers: [CourseController],
   exports: [CourseService],
   providers: [CourseService],

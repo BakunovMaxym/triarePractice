@@ -1,0 +1,36 @@
+import { DateFieldOptional, EnumField, UUIDField } from '../../../decorators/field.decorators';
+import { UserNameDto } from '../../../modules/user/dtos/UserNameDto';
+import type { UserTask } from '../entities/user-task.entity';
+import { TaskStatus } from '../../../constants/status-type';
+import { TaskNameDto } from '../../../modules/tasks/dto/TaskNameDto';
+
+export class UserTaskDto {
+
+  @UUIDField({ description: 'ID завдання користувача' })
+  id: Uuid;
+
+  @EnumField(() => TaskStatus)
+  status!: TaskStatus;
+
+  @DateFieldOptional({nullable: true})
+  deadline!: Date | undefined;
+
+  @DateFieldOptional({nullable: true})
+  completeTimestamp!: Date | undefined;
+
+  student!: UserNameDto;
+
+  task!: TaskNameDto;
+
+  grade?: number;
+
+  constructor(userTask: UserTask) {
+    this.id = userTask.id;
+    this.status = userTask.status;
+    this.deadline = userTask.deadline;
+    this.completeTimestamp = userTask.completeTimestamp;
+    this.student = new UserNameDto(userTask.student);
+    this.task = new TaskNameDto(userTask.task);
+    this.grade = userTask.grade;
+  }
+}
