@@ -31,6 +31,7 @@ import { GoogleDriveModule } from './modules/google-drive/google-drive.module.ts
 import { FolderModule } from './modules/folder/folder.module';
 import { TaskFileModule } from './modules/task-file/task-file.module.ts';
 import { UserTaskFileModule } from './modules/user-task-file/user-task-file.module.ts';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
@@ -65,7 +66,19 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
       isGlobal: true,
       envFilePath: '.env',
     }),
-
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          // user: process.env.EMAIL_USERNAME,
+          // pass: process.env.EMAIL_PASSWORD,
+          user: "max.2006@ukr.net",
+          pass: "zfma lxjj cowt nrtv",
+        },
+      },
+    }),
     TypeOrmModule.forRootAsync({
       imports: [SharedModule],
       useFactory: (configService: ApiConfigService) =>

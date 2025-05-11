@@ -11,11 +11,13 @@ import { PassThrough } from 'stream';
 import { UserTaskFileEntity } from '../../modules/user-task-file/entities/user-task-file.entity';
 import { RoleType } from '../../constants/role-type';
 import type { UserEntity } from 'modules/user/user.entity';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UserTasksService {
   constructor(
     private readonly googleDriveService: GoogleDriveService,
+    private readonly mailService: MailerService,
     @InjectRepository(UserTask)
     private readonly userTasksRepository: Repository<UserTask>,
     @InjectRepository(UserTaskFileEntity)
@@ -24,7 +26,13 @@ export class UserTasksService {
 
   async create(createDto: CreateUserTaskDto): Promise<UserTask> {
     const userTask = this.userTasksRepository.create(createDto);
-    console.log(userTask);
+    console.log(process.env.EMAIL_USERNAME);
+    console.log(process.env.EMAIL_PASSWORD);
+try{
+  await this.mailService.sendMail({from: "LMS", to: "max.2006@ukr.net" /*`${userTask.student.email}`*/, subject: "info", text: `u've got new task: ${userTask.task.name}`})
+} catch (err) {
+  console.log(err);
+}
     const savedUserTask = await this.userTasksRepository.save(userTask);
     return savedUserTask;
   }
@@ -83,18 +91,12 @@ export class UserTasksService {
       relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
     if (completeTaskDto.studentId !== found.student.id) throw new NotFoundException
 
-        console.log(completeTaskDto.fileContents);
-        console.log(found);
-
     if (found.fileContent.length !== 0) {
-      console.log("fgdfgdf");
       let filesToKeepIds: string[] = [];
       if (completeTaskDto.fileContents) {
-        console.log(completeTaskDto.fileContents);
         filesToKeepIds = completeTaskDto.fileContents
           .filter(file => typeof file === 'object' && file !== null && 'fileId' in file)
           .map(file => file.fileId);
-          console.log(filesToKeepIds);
       }
 
       for (const file of found.fileContent) {
@@ -114,7 +116,6 @@ export class UserTasksService {
         })
       );
 
-      console.log(uploadedMeta);
 
       const fileEntities = uploadedMeta.map(meta =>
         this.userTaskFileRepository.create({ ...meta, userTask: found })
