@@ -15,7 +15,6 @@ import type { Cache } from 'cache-manager';
 import { SingleCourseInfoDto } from './dto/SingleCourseInfoDto';
 import { TaskStatus } from '../../constants/status-type';
 import { UserTasksService } from '../../modules/user-tasks/user-tasks.service';
-// import { UserEntity } from 'modules/user/user.entity';
 
 @Injectable()
 export class CourseService {
@@ -64,13 +63,13 @@ export class CourseService {
         const course = this.courseRepository.create({
             name: createCourseDto.name,
             owner,
+            teachers: [owner],
             category,
             subCategory,
         });
 
         await this.courseRepository.save(course);
 
-        // Очищення кешу курсів для цього користувача, щоб новий курс з'явився у списку
         await this.deleteCache(userId);
 
         return course;
@@ -81,8 +80,7 @@ export class CourseService {
         teacherCourses: CourseInfoDto[];
         studentCourses: CourseInfoDto[];
     }> {
-        // Ігноруємо userId, повертаємо всі курси
-        const cacheKey = `courses:all:${JSON.stringify(filter)}`;
+        const cacheKey = `courses:all:${userId}:${JSON.stringify(filter)}`;
 
         const cached = await this.cacheManager.get(cacheKey);
         if (cached) return cached;
@@ -93,7 +91,8 @@ export class CourseService {
             .leftJoinAndSelect('course.teachers', 'teacher')
             .leftJoinAndSelect('course.students', 'student')
             .leftJoinAndSelect('course.category', 'category')
-            .leftJoinAndSelect('course.subCategory', 'subCategory');
+            .leftJoinAndSelect('course.subCategory', 'subCategory')
+            .where('owner.id = :userId OR teacher.id = :userId OR student.id = :userId', { userId });
 
         if (filter?.ownerId) {
             qb.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
@@ -114,7 +113,6 @@ export class CourseService {
         const allCourses = await qb.getMany();
         const courseDtos = allCourses.map(course => new CourseInfoDto(course));
 
-        // Всі курси повертаємо як ownerCourses, інші масиви порожні
         const result = {
             ownerCourses: courseDtos,
             teacherCourses: [],
@@ -300,21 +298,26 @@ export class CourseService {
             throw new NotFoundException("Курс не знайдено");
         }
 
+        console.log(course.owner.id);
+        console.log(callerId);
+        console.log(student);
+        console.log(course.students.some(s => s.id === callerId));
+        
         const isOwnerOrStudent =
             course.owner.id === callerId ||
-            callerId === student && course.students.some(t => t.id === callerId);
+            callerId === student && course.students.some(s => s.id === callerId);
 
         if (!isOwnerOrStudent) {
-            throw new ForbiddenException("You cannot remove teachers from this course");
+            throw new ForbiddenException("Ви не маєте прав на видалення студента з цього курсу");
         }
 
-        const studentExists = course.students.some(t => { return t.id === student });
+        const studentExists = course.students.some(s => { return s.id === student });
 
         if (!studentExists) {
-            throw new NotFoundException("Teacher not found in this course");
+            throw new NotFoundException("Студента в курсі не знайдено");
         }
 
-        course.students = course.students.filter(t => t.id !== student);
+        course.students = course.students.filter(s => s.id !== student);
 
 
         await this.courseRepository.save(course);

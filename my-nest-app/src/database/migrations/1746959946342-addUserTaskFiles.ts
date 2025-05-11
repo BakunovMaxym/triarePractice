@@ -1,15 +1,16 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
-export class RemakeTaskStructure1746775636388 implements MigrationInterface {
-    name = 'RemakeTaskStructure1746775636388'
+export class AddUserTaskFiles1746959946342 implements MigrationInterface {
+    name = 'AddUserTaskFiles1746959946342'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "categories" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying(255) NOT NULL, "courses_id" uuid, CONSTRAINT "UQ_8b0be371d28245da6e4f4b61878" UNIQUE ("name"), CONSTRAINT "PK_24dbc6126a28ff948da33e97d3b" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "comments" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "content" text NOT NULL, "owner_id" uuid NOT NULL, "task_id" uuid NOT NULL, CONSTRAINT "PK_8bf68bc960f2b69e818bdb90dcb" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "user_task_files" ("file_id" character varying NOT NULL, "file_name" character varying NOT NULL, "file_url" character varying NOT NULL, "user_task_id" uuid, CONSTRAINT "PK_b14256e2f51afa25627bf184991" PRIMARY KEY ("file_id"))`);
         await queryRunner.query(`CREATE TYPE "public"."user_tasks_status_enum" AS ENUM('Призначено', 'Прийнято', 'Здано', 'Протерміновано', 'Здано з запізненням', 'Оцінено', 'Відхилено')`);
-        await queryRunner.query(`CREATE TABLE "user_tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "status" "public"."user_tasks_status_enum" NOT NULL DEFAULT 'Призначено', "deadline" TIMESTAMP, "complete_timestamp" TIMESTAMP, "userId" uuid, "taskId" uuid, CONSTRAINT "REL_83e94423ca0675e4ac503d8641" UNIQUE ("userId"), CONSTRAINT "REL_eff2f1ef189a7952bc6294a1da" UNIQUE ("taskId"), CONSTRAINT "PK_dd5ebb5c408af74cba775bd2326" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "user_tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "status" "public"."user_tasks_status_enum" NOT NULL DEFAULT 'Призначено', "deadline" TIMESTAMP, "grade" integer, "complete_timestamp" TIMESTAMP, "userId" uuid, "taskId" uuid, CONSTRAINT "PK_dd5ebb5c408af74cba775bd2326" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "task_files" ("file_id" character varying NOT NULL, "file_name" character varying NOT NULL, "file_url" character varying NOT NULL, "task_id" uuid, CONSTRAINT "PK_867bc69a731d3792f60f825cd0c" PRIMARY KEY ("file_id"))`);
-        await queryRunner.query(`CREATE TABLE "tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "text_content" character varying, "time_to_complete" interval, "owner_id" uuid, "course_id" uuid, CONSTRAINT "PK_8d12ff38fcc62aaba2cab748772" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "text_content" character varying, "time_to_complete" bigint, "owner_id" uuid, "course_id" uuid, CONSTRAINT "PK_8d12ff38fcc62aaba2cab748772" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "courses" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "students_count" integer NOT NULL DEFAULT '0', "teachers_count" integer NOT NULL DEFAULT '0', "owner_id" uuid, "category_id" uuid, "sub_category_id" uuid, CONSTRAINT "PK_3f70a487cc718ad8eda4e6d58c9" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TYPE "public"."users_role_enum" AS ENUM('STUDENT', 'TEACHER')`);
         await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "first_name" character varying, "last_name" character varying NOT NULL, "role" "public"."users_role_enum" NOT NULL DEFAULT 'STUDENT', "email" character varying NOT NULL, "password" character varying NOT NULL, CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
@@ -24,6 +25,7 @@ export class RemakeTaskStructure1746775636388 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "categories" ADD CONSTRAINT "FK_9f2c65ffd89e91844699e741057" FOREIGN KEY ("courses_id") REFERENCES "courses"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "comments" ADD CONSTRAINT "FK_d154b3f2f34508a1112a04fc247" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "comments" ADD CONSTRAINT "FK_18c2493067c11f44efb35ca0e03" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "user_task_files" ADD CONSTRAINT "FK_4293abc0fe671281da6a0a1d8bd" FOREIGN KEY ("user_task_id") REFERENCES "user_tasks"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "user_tasks" ADD CONSTRAINT "FK_83e94423ca0675e4ac503d86413" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "user_tasks" ADD CONSTRAINT "FK_eff2f1ef189a7952bc6294a1da5" FOREIGN KEY ("taskId") REFERENCES "tasks"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "task_files" ADD CONSTRAINT "FK_e302f4010ff50a1e8199a489090" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
@@ -55,6 +57,7 @@ export class RemakeTaskStructure1746775636388 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "task_files" DROP CONSTRAINT "FK_e302f4010ff50a1e8199a489090"`);
         await queryRunner.query(`ALTER TABLE "user_tasks" DROP CONSTRAINT "FK_eff2f1ef189a7952bc6294a1da5"`);
         await queryRunner.query(`ALTER TABLE "user_tasks" DROP CONSTRAINT "FK_83e94423ca0675e4ac503d86413"`);
+        await queryRunner.query(`ALTER TABLE "user_task_files" DROP CONSTRAINT "FK_4293abc0fe671281da6a0a1d8bd"`);
         await queryRunner.query(`ALTER TABLE "comments" DROP CONSTRAINT "FK_18c2493067c11f44efb35ca0e03"`);
         await queryRunner.query(`ALTER TABLE "comments" DROP CONSTRAINT "FK_d154b3f2f34508a1112a04fc247"`);
         await queryRunner.query(`ALTER TABLE "categories" DROP CONSTRAINT "FK_9f2c65ffd89e91844699e741057"`);
@@ -73,6 +76,7 @@ export class RemakeTaskStructure1746775636388 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "task_files"`);
         await queryRunner.query(`DROP TABLE "user_tasks"`);
         await queryRunner.query(`DROP TYPE "public"."user_tasks_status_enum"`);
+        await queryRunner.query(`DROP TABLE "user_task_files"`);
         await queryRunner.query(`DROP TABLE "comments"`);
         await queryRunner.query(`DROP TABLE "categories"`);
     }

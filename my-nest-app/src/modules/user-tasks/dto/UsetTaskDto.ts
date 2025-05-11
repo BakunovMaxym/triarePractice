@@ -1,4 +1,4 @@
-import { DateFieldOptional, EnumField, UUIDField } from '../../../decorators/field.decorators';
+import { DateFieldOptional, EnumField, NumberFieldOptional, UUIDField } from '../../../decorators/field.decorators';
 import { UserNameDto } from '../../../modules/user/dtos/UserNameDto';
 import type { UserTask } from '../entities/user-task.entity';
 import { TaskStatus } from '../../../constants/status-type';
@@ -13,7 +13,7 @@ export class UserTaskDto {
   status!: TaskStatus;
 
   @DateFieldOptional({nullable: true})
-  deadline!: Date | undefined;
+  deadline!: Date | null;
 
   @DateFieldOptional({nullable: true})
   completeTimestamp!: Date | undefined;
@@ -22,15 +22,16 @@ export class UserTaskDto {
 
   task!: TaskNameDto;
 
-  grade?: number;
+  @NumberFieldOptional({nullable: true})
+  grade?: number | null;
 
   constructor(userTask: UserTask) {
     this.id = userTask.id;
     this.status = userTask.status;
-    this.deadline = userTask.deadline;
+    this.deadline = userTask.deadline || null;
     this.completeTimestamp = userTask.completeTimestamp;
     this.student = new UserNameDto(userTask.student);
     this.task = new TaskNameDto(userTask.task);
-    this.grade = userTask.grade;
+    this.grade = userTask.grade ?? null;
   }
 }

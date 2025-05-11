@@ -111,9 +111,10 @@ export class CourseController {
         return isTeacherDeleted ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST;
     }
 
-    @Delete(":id/ds/:tId")
+    @Delete(":id/ds/:sId")
     @ApiParam({ name: "id", type: String })
     @ApiParam({ name: "sId", type: String })
+    @Auth([])
     @ApiOkResponse({ description: "Студента видалено" })
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteStudent(

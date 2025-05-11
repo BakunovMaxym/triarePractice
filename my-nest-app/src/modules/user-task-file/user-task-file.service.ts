@@ -34,19 +34,6 @@ export class UserTaskFileService {
     await this.userTaskFileRepository.save(entities);
   }
 
-
-  // findAll() {
-  //   return `This action returns all taskFile`;
-  // }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} taskFile`;
-  // }
-
-  // update(id: number, updateTaskFileDto: UpdateTaskFileDto) {
-  //   return `This action updates a #${id} taskFile`;
-  // }
-
   async remove(fileId: string): Promise<DeleteResult> {
     const file = await this.userTaskFileRepository.findOne({
       where: { fileId },

@@ -2,65 +2,143 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   NotFoundException,
+  Patch,
+  Body,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UserTasksService } from './user-tasks.service';
-import { CreateUserTaskDto } from './dto/create-user-task.dto';
 import { Auth } from '../../decorators/http.decorators';
 import { RoleType } from '../../constants/role-type';
 import { UserTaskDto } from './dto/UsetTaskDto';
+import { AuthUser } from '../../decorators/auth-user.decorator';
+import type { UserEntity } from '../../modules/user/user.entity';
+import { SingleUserTaskDto } from './dto/SingleUserTaskDto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import multer from 'multer';
+import type { CompleteTaskDto } from '../../modules/user-task-file/dto/CompleteTaskDto';
 
 @ApiTags('user-tasks')
 @Controller()
 export class UserTasksController {
   constructor(private readonly userTasksService: UserTasksService) { }
 
-  @Get("/task/:id")
+  @Get("/task/:id/user-tasks")
   @ApiParam({ name: "id", description: 'Унікальне айді завдання', type: String })
   @ApiOperation({ summary: 'Отримати всі UserTasks завдання' })
-    @Auth([RoleType.TEACHER])
-  @ApiResponse({ status: 200, description: 'List of user tasks', type: [CreateUserTaskDto] })
-  async findAll(
+  @Auth([RoleType.TEACHER])
+  @ApiResponse({ status: 200, description: 'List of user tasks', type: [UserTaskDto] })
+  async findAllToTask(
     @Param('id') id: Uuid,
   ) {
     const userTasks = await this.userTasksService.findAllToTask(id);
-    if(!userTasks){
+    if (!userTasks) {
       throw new NotFoundException
     }
-
     return userTasks?.map(ut => new UserTaskDto(ut))
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Отримати UserTask за UUID' })
-  @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'UUID UserTask' })
-  @ApiResponse({ status: 200, description: 'Found UserTask', type: CreateUserTaskDto })
-  @ApiResponse({ status: 404, description: 'Not Found' })
-  findOne(@Param('id', new ParseUUIDPipe()) id: Uuid) {
-    return this.userTasksService.findOne(id);
+  @Get("/user-task/student/:id")
+  @ApiParam({ name: "id", description: 'Унікальне айді студента', type: String })
+  @ApiOperation({ summary: 'Отримати всі UserTasks студента' })
+  @Auth([])
+  @ApiResponse({ status: 200, description: 'List of user tasks', type: [UserTaskDto] })
+  async findAllToStudent(
+    @Param('id') id: Uuid,
+    @AuthUser() user: UserEntity
+  ) {
+    const userTasks = await this.userTasksService.findAllToStudent(id, user);
+    if (!userTasks) {
+      throw new NotFoundException
+    }
+    return userTasks?.map(ut => new UserTaskDto(ut))
   }
 
-  // @Patch(':id')
-  // @ApiOperation({ summary: 'Оновити UserTask за UUID' })
-  // @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'UUID UserTask' })
-  // @ApiBody({ type: UpdateUserTaskDto })
-  // @ApiResponse({ status: 200, description: 'Updated successfully', type: CreateUserTaskDto })
-  // @ApiResponse({ status: 404, description: 'Not Found' })
-  // update(
-  //   @Param('id', new ParseUUIDPipe()) id: Uuid,
-  //   @Body() updateDto: UpdateUserTaskDto,
-  // ) {
-  //   return this.userTasksService.update(id, updateDto);
-  // }
+  @Get("/user-task/:id")
+  @ApiParam({ name: "id", description: 'Унікальне айді завдання користувача', type: String })
+  @ApiOperation({ summary: 'Отримати один UserTask' })
+  @Auth([])
+  @ApiResponse({ status: 200, description: 'Single user tasks', type: [SingleUserTaskDto] })
+  async findOne(
+    @Param('id') id: Uuid,
+    @AuthUser() user: UserEntity
+  ) {
+    const userTask = await this.userTasksService.findOne(id, user.role);
+    if (!userTask) {
+      throw new NotFoundException
+    }
+    return userTask
+  }
 
-  // @Delete(':id')
-  // @ApiOperation({ summary: 'Видалити UserTask за UUID' })
-  // @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'UUID UserTask' })
-  // @ApiResponse({ status: 204, description: 'Deleted successfully' })
-  // @ApiResponse({ status: 404, description: 'Not Found' })
-  // remove(@Param('id', new ParseUUIDPipe()) id: Uuid) {
-  //   return this.userTasksService.remove(id);
-  // }
+  @Patch("/user-task/:id/grade")
+  @ApiParam({ name: "id", description: 'Унікальне айді завдання користувача', type: String })
+  @ApiOperation({ summary: 'Поставити оцінку завданню студента' })
+  @Auth([RoleType.TEACHER])
+  @ApiResponse({ status: 200, description: 'user task', type: [SingleUserTaskDto] })
+  async grade(
+    @Param('id') id: Uuid,
+    @Body() body: any,
+  ) {
+    const grade = Number(body.grade);
+    if (isNaN(grade)) {
+      throw new BadRequestException('Оцінка повинна бути числом');
+    }
+    const userTask = await this.userTasksService.grade(id, grade);
+    if (!userTask) {
+      throw new NotFoundException
+    }
+    return userTask
+  }
+
+  @Patch("/user-task/:id/reject")
+  @ApiParam({ name: "id", description: 'Унікальне айді завдання користувача', type: String })
+  @ApiOperation({ summary: 'Відхилити завдання студента' })
+  @Auth([RoleType.TEACHER])
+  @ApiResponse({ status: 200, description: 'user task', type: [SingleUserTaskDto] })
+  async reject(
+    @Param('id') id: Uuid,
+  ) {
+    const userTask = await this.userTasksService.reject(id);
+    if (!userTask) {
+      throw new NotFoundException
+    }
+    return userTask
+  }
+
+  @Patch("/user-task/:id/accept")
+  @ApiParam({ name: "id", description: 'Унікальне айді завдання користувача', type: String })
+  @ApiOperation({ summary: 'прийняти завдання' })
+  @Auth([])
+  @ApiResponse({ status: 200, description: 'user task', type: [SingleUserTaskDto] })
+  async acceptTask(
+    @Param('id') id: Uuid,
+    @AuthUser() user: UserEntity
+  ) {
+    const userTask = await this.userTasksService.acceptTask(id, user.id);
+    if (!userTask) {
+      throw new NotFoundException
+    }
+    return userTask
+  }
+
+  @Patch('/user-task/:id/complete')
+  @Auth([RoleType.STUDENT])
+  @UseInterceptors(FilesInterceptor('file', 100, { storage: multer.memoryStorage() }))
+  async completeTask(
+    @Param('id') id: Uuid,
+    @Body() dto: CompleteTaskDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @AuthUser() user: UserEntity
+  ): Promise<SingleUserTaskDto> {
+    if (dto.fileContents && typeof dto.fileContents === 'string')
+      dto.fileContents = JSON.parse(dto.fileContents);
+    dto.userTaskId = id;
+    dto.studentId = user.id;
+
+    return this.userTasksService.completeTask(files, dto);
+  }
+
 }

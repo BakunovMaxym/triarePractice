@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserTask } from './entities/user-task.entity';
@@ -9,6 +9,8 @@ import type { CompleteTaskDto } from '../../modules/user-task-file/dto/CompleteT
 import { GoogleDriveService } from '../../modules/google-drive/google-drive.service';
 import { PassThrough } from 'stream';
 import { UserTaskFileEntity } from '../../modules/user-task-file/entities/user-task-file.entity';
+import { RoleType } from '../../constants/role-type';
+import type { UserEntity } from 'modules/user/user.entity';
 
 @Injectable()
 export class UserTasksService {
@@ -21,13 +23,8 @@ export class UserTasksService {
   ) { }
 
   async create(createDto: CreateUserTaskDto): Promise<UserTask> {
-    // if (!timeToComplete) {
-    createDto.deadline = undefined;
-    // }else{
-    //   createDto.deadline = new Date(Date.now() + timeToComplete)
-    // }
-
     const userTask = this.userTasksRepository.create(createDto);
+    console.log(userTask);
     const savedUserTask = await this.userTasksRepository.save(userTask);
     return savedUserTask;
   }
@@ -36,65 +33,73 @@ export class UserTasksService {
     return this.userTasksRepository.find({ where: { task: { id: taskId } } });
   }
 
-  findAllToStudent(studentId: Uuid): Promise<UserTask[]> {
+  findAllToStudent(studentId: Uuid, user: UserEntity): Promise<UserTask[]> {
+    if(user.role !== RoleType.TEACHER && user.id !== studentId) throw new ForbiddenException
     return this.userTasksRepository.find({ where: { student: { id: studentId } } });
   }
 
-  async findOne(id: Uuid): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id } });
-    return new SingleUserTaskDto(found);
+  async findOne(id: Uuid, userRole: RoleType): Promise<SingleUserTaskDto> {
+    const found = await this.userTasksRepository.findOneOrFail({ where: { id },
+    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],});
+
+    return new SingleUserTaskDto(found, userRole === RoleType.TEACHER);
   }
 
   async grade(id: Uuid, grade: number): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id } });
+    const found = await this.userTasksRepository.findOneOrFail({ where: { id },
+    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
     found.grade = grade;
     found.status = TaskStatus.GRADED;
+    const saved = await this.userTasksRepository.save(found);
 
-    return new SingleUserTaskDto(found);
+    return new SingleUserTaskDto(saved);
   }
 
   async reject(id: Uuid): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id } });
+    const found = await this.userTasksRepository.findOneOrFail({ where: { id },
+    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
     found.status = TaskStatus.REJECTED;
+    found.grade = null;
+    const saved = await this.userTasksRepository.save(found);
 
-    return new SingleUserTaskDto(found);
+    return new SingleUserTaskDto(saved);
   }
 
-  // async update(id: Uuid, updateDto: UpdateUserTaskDto): Promise<UserTask> {
-  //   const userTask = await this.findOne(id);
-  //   Object.assign(userTask, updateDto);
-  //   return this.userTasksRepository.save(userTask);
-  // }
-
   async acceptTask(userTaskId: Uuid, studentId: Uuid): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id: userTaskId } });
-    if (studentId !== found.student.id) throw new NotFoundException
+    const found = await this.userTasksRepository.findOne({ where: {id: userTaskId},
+    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
+    if (!found || studentId !== found.student.id) throw new NotFoundException("У вас нема такого завдання")
+
+      if(found.status === TaskStatus.ACCEPTED) throw new ConflictException("Завдання вже прийнято")
 
     found.status = TaskStatus.ACCEPTED;
-    found.deadline = new Date(Date.now() + found.task.timeToComplete);
-    return new SingleUserTaskDto(found);
+    found.deadline = new Date(Date.now() + Number(found.task.timeToComplete));
+    const saved = await this.userTasksRepository.save(found);
+    return new SingleUserTaskDto(saved);
   }
 
   async completeTask(files: Array<Express.Multer.File>, completeTaskDto: CompleteTaskDto): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id: completeTaskDto.userTaskId } });
+    const found = await this.userTasksRepository.findOneOrFail({ where: { id: completeTaskDto.userTaskId },
+      relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
     if (completeTaskDto.studentId !== found.student.id) throw new NotFoundException
 
+        console.log(completeTaskDto.fileContents);
+        console.log(found);
+
     if (found.fileContent.length !== 0) {
+      console.log("fgdfgdf");
       let filesToKeepIds: string[] = [];
       if (completeTaskDto.fileContents) {
+        console.log(completeTaskDto.fileContents);
         filesToKeepIds = completeTaskDto.fileContents
           .filter(file => typeof file === 'object' && file !== null && 'fileId' in file)
           .map(file => file.fileId);
+          console.log(filesToKeepIds);
       }
 
       for (const file of found.fileContent) {
         if (!filesToKeepIds.includes(file.fileId)) {
-          // console.log(`remove ${file.fileId}`)
-          // await this.taskFileService.remove(file.fileId)
-
           await this.googleDriveService.deleteFile(file.fileId);
-          // await this.taskFileRepository.delete(file.fileId);
-
           found.fileContent = found.fileContent.filter(f => f.fileId !== file.fileId);
         }
       }
@@ -109,8 +114,10 @@ export class UserTasksService {
         })
       );
 
+      console.log(uploadedMeta);
+
       const fileEntities = uploadedMeta.map(meta =>
-        this.userTasksRepository.create({ ...meta, found })
+        this.userTaskFileRepository.create({ ...meta, userTask: found })
       );
 
       let allfiles: UserTaskFileEntity[] = [];
@@ -139,8 +146,4 @@ export class UserTasksService {
         return new SingleUserTaskDto(updatedUserTask)
   }
 
-  // async remove(id: Uuid): Promise<void> {
-  //   const userTask = await this.findOne(id);
-  //   await this.userTasksRepository.remove(userTask);
-  // }
 }

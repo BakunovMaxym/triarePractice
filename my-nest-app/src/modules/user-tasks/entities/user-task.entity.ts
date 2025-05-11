@@ -15,7 +15,7 @@ export class UserTask extends AbstractEntity<UserTask> {
   deadline?: Date;
 
   @Column({ type: 'integer', nullable: true })
-  grade?: number;
+  grade?: number | null;
 
   @Column({ type: 'timestamp', nullable: true })
   completeTimestamp!: Date;
