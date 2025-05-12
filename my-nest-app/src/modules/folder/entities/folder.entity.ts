@@ -1,8 +1,8 @@
 import { AbstractEntity } from "../../../common/abstract.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, type Relation } from "typeorm";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { CourseEntity } from "../../../modules/course/entities/course.entity";
 import type { FolderDto } from "../dto/FolderDto";
+import { UserEntity } from "modules/user/user.entity";
 
 @Entity({ name: 'folders' })
 export class Folder extends AbstractEntity<FolderDto> {
@@ -11,16 +11,16 @@ export class Folder extends AbstractEntity<FolderDto> {
     @Column('text')
     name!: string;
 
-    @ApiPropertyOptional({ description: 'id of child folder', format: 'uuid' })
+    @ApiPropertyOptional({ description: 'Parent folder ID', format: 'uuid' })
     @ManyToOne(() => Folder, (folder) => folder.childFolders, { nullable: true })
-    @JoinColumn({ name: 'child_folder_id' })
-    childFolderId?: Relation<Folder>;
+    @JoinColumn({ name: 'parent_folder_id' })
+    parentFolder?: Relation<Folder>;
 
-    @OneToMany(() => Folder, (folder) => folder.childFolderId)
+    @OneToMany(() => Folder, (folder) => folder.parentFolder, { cascade: true })
     childFolders?: Relation<Folder[]>;
 
-    @ApiProperty({ description: 'id of child course', format: 'uuid' })
-    @ManyToOne(() => CourseEntity, { nullable: true })
-    @JoinColumn({ name: 'child_course_id' })
-    childCourseId?: Relation<CourseEntity>;
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'owner_id' })
+    owner!: Relation<UserEntity>;
+
 }
