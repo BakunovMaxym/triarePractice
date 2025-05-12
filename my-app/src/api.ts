@@ -45,9 +45,27 @@ export async function getCourse(token: string, id: string) {
 }
 
 export async function getCategories() {
-  const res = await fetch(`${API_URL}/categories`);
-  if (!res.ok) throw new Error('Failed to fetch categories');
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/categories`, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    if (!data) return [];
+    return Array.isArray(data) ? data : [];
+    
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
 }
 
 export async function getSubCategories() {
@@ -115,6 +133,57 @@ export async function createUserTask(token: string, data: { userId: string; task
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to create user task');
+  return res.json();
+}
+
+export async function getFolders(token: string) {
+  const res = await fetch(`${API_URL}/folder`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch folders');
+  return res.json();
+}
+
+export async function createFolder(token: string, name: string) {
+  const res = await fetch(`${API_URL}/folder`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error('Failed to create folder');
+  return res.json();
+}
+
+export async function moveCourseToFolder(token: string, folderId: string, courseId: string) {
+  const res = await fetch(`${API_URL}/folder/${folderId}/add-child`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ childCourseId: courseId }),
+  });
+  if (!res.ok) throw new Error('Failed to move course to folder');
+  return res.json();
+}
+
+export async function getUser(token: string, id: string) {
+  if (!id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+    throw new Error('Invalid UUID format');
+  }
+
+  const res = await fetch(`${API_URL}/users/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to fetch user');
+  }
+
   return res.json();
 }
 

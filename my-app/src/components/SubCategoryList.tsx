@@ -17,7 +17,7 @@ export function SubCategoryList() {
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <ul>
         {subCategories.map((cat) => (
-          <li key={cat.name}>{cat.name}</li>
+          <li key={cat.id || cat.name}>{cat.name}</li>
         ))}
       </ul>
     </div>
