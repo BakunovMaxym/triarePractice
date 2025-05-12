@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Folder } from './entities/folder.entity';
 import { UpdateFolderDto } from './dto/update-folder.dto';
 import type { CreateFolderDto } from './dto/create-folder.dto';
+import { FolderDto } from './dto/FolderDto';
 
 @Injectable()
 export class FolderService {
@@ -14,14 +15,14 @@ export class FolderService {
 
   async findAll(): Promise<Folder[]> {
     return this.folderRepository.find({
-        relations: {childCourseId: true, childFolderId: true},
+      relations: ['parentFolder', 'childFolders'],
     });
   }
 
   async findOne(id: Uuid): Promise<Folder> {
     const folder = await this.folderRepository.findOne({
       where: { id },
-      relations: {childCourseId: true, childFolderId: true},
+      relations: ['parentFolder', 'childFolders'],
     });
     if (!folder) {
       throw new NotFoundException(`Folder with id ${id} not found`);
@@ -29,17 +30,20 @@ export class FolderService {
     return folder;
   }
 
-  async create(createFolderDto: CreateFolderDto): Promise<Folder> {
+  async create(createFolderDto: CreateFolderDto): Promise<FolderDto> {
+    let parentFolder: Folder | undefined = undefined;
+    if (createFolderDto.parentFolderId) {
+      parentFolder = await this.folderRepository.findOne({ where: { id: createFolderDto.parentFolderId } }) ?? undefined;
+    }
+
     const folder = this.folderRepository.create({
       name: createFolderDto.name,
-      childFolderId: createFolderDto.childFolderId
-        ? { id: createFolderDto.childFolderId }
-        : undefined,
-      childCourseId: createFolderDto.childCourseId
-        ? { id: createFolderDto.childCourseId }
-        : undefined,
+      parentFolder,
     });
-    return this.folderRepository.save(folder);
+
+    const savedFolder = await this.folderRepository.save(folder);
+
+    return new FolderDto(savedFolder);
   }
 
   async update(id: Uuid, updateFolderDto: UpdateFolderDto): Promise<Folder> {
@@ -58,39 +62,20 @@ export class FolderService {
     }
   }
 
-  async addFile(folderId: Uuid, fileName: string): Promise<string> {
-    return `File "${fileName}" added to folder #${folderId}`;
-  }
-
-  async removeFile(folderId: Uuid, fileName: string): Promise<string> {
-    return `File "${fileName}" removed from folder #${folderId}`;
-  }
-
   async renameFolder(folderId: Uuid, newName: string): Promise<string> {
     const folder = await this.folderRepository.findOne({ where: { id: folderId } });
     if (!folder) {
       throw new NotFoundException(`Folder with id ${folderId} not found`);
     }
     folder.name = newName;
-    await this.folderRepository.save(folder);
-    return `Folder #${folderId} renamed to "${newName}"`;
+    const savedFolder = await this.folderRepository.save(folder);
+    return savedFolder.name;
   }
 
-  async addChild(parentId: Uuid, childName: string): Promise<string> {
+  async addChild(parentId: Uuid, childName: string): Promise<FolderDto> {
     const parent = await this.findOne(parentId);
-    
-    const child = await this.findOneByName(childName);
-
-    parent.childFolderId = child;
-    await this.folderRepository.save(parent);
-    return `Child folder "${childName}" added to parent #${parentId}`;
-  }
-
-  async findOneByName(name: string): Promise<Folder> {
-    const folder = await this.folderRepository.findOne({ where: { name } });
-    if (!folder) {
-      throw new NotFoundException(`Folder with name "${name}" not found`);
-    }
-    return folder;
+    const child = this.folderRepository.create({ name: childName, parentFolder: parent });
+    const childFolder = await this.folderRepository.save(child);
+    return new FolderDto(childFolder);
   }
 }
