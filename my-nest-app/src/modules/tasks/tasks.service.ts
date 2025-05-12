@@ -36,7 +36,7 @@ export class TaskService {
   async create(createTaskDto: CreateTaskDto): Promise<SingleTaskDto> {
     const owner: UserEntity = await this.userRepository.findOneOrFail({ where: { id: createTaskDto.ownerId } });
     if (!owner) throw new NotFoundException(`Користувача не існує`);
-    const course: CourseEntity = await this.courseRepository.findOneOrFail({ where: { id: createTaskDto.courseId }, relations: {students: true} });
+    const course: CourseEntity = await this.courseRepository.findOneOrFail({ where: { id: createTaskDto.courseId }, relations: { students: true } });
     if (!course) throw new NotFoundException(`Курсу не існує`);
 
     //save to google drive
@@ -70,7 +70,7 @@ export class TaskService {
 
     course.students?.forEach(async (student) => {
       console.log(student);
-    const userTaskDto = {student: student, deadline: undefined, task: savedTask, status: TaskStatus.ASSIGNED};
+      const userTaskDto = { student: student, deadline: undefined, task: savedTask, status: TaskStatus.ASSIGNED };
       await this.userTaskService.create(userTaskDto);
     });
 
@@ -127,7 +127,7 @@ export class TaskService {
           // console.log(`remove ${file.fileId}`)
           // await this.taskFileService.remove(file.fileId)
 
-          await this.googleDriveService.deleteFile(file.fileId);
+          this.googleDriveService.deleteFile(file.fileId);
           await this.taskFileRepository.delete(file.fileId);
 
           task.fileContent = task.fileContent.filter(f => f.fileId !== file.fileId);

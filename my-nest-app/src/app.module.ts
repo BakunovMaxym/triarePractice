@@ -68,16 +68,23 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     }),
     MailerModule.forRoot({
       transport: {
+        service: 'gmail',
         host: 'smtp.gmail.com',
         port: 465,
         secure: true,
         auth: {
           // user: process.env.EMAIL_USERNAME,
           // pass: process.env.EMAIL_PASSWORD,
-          user: "max.2006@ukr.net",
-          pass: "zfma lxjj cowt nrtv",
+          user: "sometestexampleforspammails@gmail.com",
+          pass: "jhcw revd mwgm jaky", //for sometestexampleforspammails@gmail.com
+
+          // user: "max.2006@ukr.net",
+          // pass: "zfma lxjj cowt nrtv", // for max.2006@ukr.net
         },
       },
+      defaults: {
+        from: "dffrfer <sometestexampleforspammails@gmail.com>",
+      }
     }),
     TypeOrmModule.forRootAsync({
       imports: [SharedModule],
@@ -115,7 +122,7 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
-        store: redisStore, // Do NOT call it here
+        store: redisStore,
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
         prefix: 'fefefe:',

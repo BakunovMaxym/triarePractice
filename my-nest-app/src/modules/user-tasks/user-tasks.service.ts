@@ -26,14 +26,22 @@ export class UserTasksService {
 
   async create(createDto: CreateUserTaskDto): Promise<UserTask> {
     const userTask = this.userTasksRepository.create(createDto);
-    console.log(process.env.EMAIL_USERNAME);
-    console.log(process.env.EMAIL_PASSWORD);
-try{
-  await this.mailService.sendMail({from: "LMS", to: "max.2006@ukr.net" /*`${userTask.student.email}`*/, subject: "info", text: `u've got new task: ${userTask.task.name}`})
-} catch (err) {
-  console.log(err);
-}
+    // console.log(process.env.EMAIL_USERNAME);
+    // console.log(process.env.EMAIL_PASSWORD);
     const savedUserTask = await this.userTasksRepository.save(userTask);
+
+    try {
+      await this.mailService.sendMail({
+        to: `${userTask.student.email}`,
+        subject: "Нове завдання",
+        html: `
+        <p>У вас нове завдання від <strong>${userTask.task.owner.lastName}</strong>:
+        <a href="http://localhost:3000/user-task/${userTask.id}"> ${userTask.task.name}</a></p>`
+      })
+    } catch (err) {
+      console.log(err);
+    }
+
     return savedUserTask;
   }
 
@@ -42,30 +50,48 @@ try{
   }
 
   findAllToStudent(studentId: Uuid, user: UserEntity): Promise<UserTask[]> {
-    if(user.role !== RoleType.TEACHER && user.id !== studentId) throw new ForbiddenException
+    if (user.role !== RoleType.TEACHER && user.id !== studentId) throw new ForbiddenException
     return this.userTasksRepository.find({ where: { student: { id: studentId } } });
   }
 
   async findOne(id: Uuid, userRole: RoleType): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id },
-    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],});
+    const found = await this.userTasksRepository.findOneOrFail({
+      where: { id },
+      relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
+    });
 
     return new SingleUserTaskDto(found, userRole === RoleType.TEACHER);
   }
 
   async grade(id: Uuid, grade: number): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id },
-    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
+    const found = await this.userTasksRepository.findOneOrFail({
+      where: { id },
+      relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
+    });
     found.grade = grade;
     found.status = TaskStatus.GRADED;
     const saved = await this.userTasksRepository.save(found);
+
+    try {
+      await this.mailService.sendMail({
+        to: `${found.student.email}`,
+        subject: "Нова оцінка",
+        html: `
+        <h1>${found.task.course.name}</h1>
+        <p>У вас нова оцінка за завдання <strong>${found.task.name}</strong>: ${found.grade}</p>`
+      })
+    } catch (err) {
+      console.log(err);
+    }
 
     return new SingleUserTaskDto(saved);
   }
 
   async reject(id: Uuid): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id },
-    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
+    const found = await this.userTasksRepository.findOneOrFail({
+      where: { id },
+      relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
+    });
     found.status = TaskStatus.REJECTED;
     found.grade = null;
     const saved = await this.userTasksRepository.save(found);
@@ -74,11 +100,13 @@ try{
   }
 
   async acceptTask(userTaskId: Uuid, studentId: Uuid): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOne({ where: {id: userTaskId},
-    relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
+    const found = await this.userTasksRepository.findOne({
+      where: { id: userTaskId },
+      relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
+    });
     if (!found || studentId !== found.student.id) throw new NotFoundException("У вас нема такого завдання")
 
-      if(found.status === TaskStatus.ACCEPTED) throw new ConflictException("Завдання вже прийнято")
+    if (found.status === TaskStatus.ACCEPTED) throw new ConflictException("Завдання вже прийнято")
 
     found.status = TaskStatus.ACCEPTED;
     found.deadline = new Date(Date.now() + Number(found.task.timeToComplete));
@@ -87,8 +115,10 @@ try{
   }
 
   async completeTask(files: Array<Express.Multer.File>, completeTaskDto: CompleteTaskDto): Promise<SingleUserTaskDto> {
-    const found = await this.userTasksRepository.findOneOrFail({ where: { id: completeTaskDto.userTaskId },
-      relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'], });
+    const found = await this.userTasksRepository.findOneOrFail({
+      where: { id: completeTaskDto.userTaskId },
+      relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
+    });
     if (completeTaskDto.studentId !== found.student.id) throw new NotFoundException
 
     if (found.fileContent.length !== 0) {
@@ -136,15 +166,15 @@ try{
 
     found.completeTimestamp = new Date()
 
-    if(found.deadline !== undefined && found.completeTimestamp <= found.deadline){
+    if (found.deadline !== undefined && found.completeTimestamp <= found.deadline) {
       found.status = TaskStatus.SUBMITED
-    }else{
+    } else {
       found.status = TaskStatus.SUBMITED_LATE
     }
 
     const updatedUserTask = await this.userTasksRepository.save(found);
-    
-        return new SingleUserTaskDto(updatedUserTask)
+
+    return new SingleUserTaskDto(updatedUserTask)
   }
 
 }

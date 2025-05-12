@@ -73,24 +73,36 @@ export class UserTasksController {
     return userTask
   }
 
-  @Patch("/user-task/:id/grade")
-  @ApiParam({ name: "id", description: 'Унікальне айді завдання користувача', type: String })
+  @Patch('/user-task/:id/grade')
+  @ApiParam({ name: 'id', description: 'Унікальне айді завдання користувача', type: String })
   @ApiOperation({ summary: 'Поставити оцінку завданню студента' })
   @Auth([RoleType.TEACHER])
-  @ApiResponse({ status: 200, description: 'user task', type: [SingleUserTaskDto] })
+  @ApiResponse({ status: 200, description: 'user task', type: SingleUserTaskDto })
+  @ApiBody({
+    description: 'Оцінка завдання користувача',
+    schema: {
+      type: 'object',
+      properties: {
+        grade: { type: 'number', example: 5, description: 'Оцінка студента' },
+      },
+      required: ['grade'],
+    },
+  })
   async grade(
     @Param('id') id: Uuid,
-    @Body() body: any,
+    @Body('grade') grade: number,
   ) {
-    const grade = Number(body.grade);
-    if (isNaN(grade)) {
+    const numericGrade = Number(grade);
+    if (isNaN(numericGrade)) {
       throw new BadRequestException('Оцінка повинна бути числом');
     }
-    const userTask = await this.userTasksService.grade(id, grade);
+
+    const userTask = await this.userTasksService.grade(id, numericGrade);
     if (!userTask) {
-      throw new NotFoundException
+      throw new NotFoundException();
     }
-    return userTask
+
+    return userTask;
   }
 
   @Patch("/user-task/:id/reject")
