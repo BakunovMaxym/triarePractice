@@ -12,7 +12,7 @@ import { Folder } from "../../folder/entities/folder.entity";
 @Entity({ name: "courses" })
 @UseDto(CourseDto)
 export class CourseEntity extends AbstractEntity<CourseDto> {
-    @Column({ nullable: false, type: "varchar" })
+    @Column({ nullable: false, type: "varchar", unique: false })
     name!: string;
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
