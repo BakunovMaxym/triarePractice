@@ -96,7 +96,8 @@ export async function createCourse(token: string, data: { name: string; category
 }
 
 export async function createTask(token: string, courseId: string, data: FormData) {
-  const res = await fetch(`${API_URL}/course/${courseId}/tasks`, {
+  // Use correct backend route: /courses/:id/tasks (plural "courses")
+  const res = await fetch(`${API_URL}/courses/${courseId}/tasks`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
