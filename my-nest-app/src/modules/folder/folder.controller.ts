@@ -5,7 +5,7 @@ import { CreateFolderDto } from './dto/create-folder.dto';
 
 @Controller('folder')
 export class FolderController {
-  constructor(private readonly folderService: FolderService) {}
+  constructor(private readonly folderService: FolderService) { }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get folder by ID' })
@@ -32,16 +32,18 @@ export class FolderController {
   @Post(':id/add-child')
   @ApiOperation({ summary: 'Add a child folder to a folder' })
   @ApiParam({ name: 'id', description: 'Parent folder ID', type: 'string' })
-  @ApiBody({ schema: { 
-    type: 'object', 
-    properties: { 
-      childName: { type: 'string', example: 'Child Folder Name' },
-      childCourseId: { type: 'string', example: 'Course UUID' }
-    } 
-  } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        childName: { type: 'string', example: 'Child Folder Name' },
+        childCourseId: { type: 'string', example: 'Course UUID' }
+      }
+    }
+  })
   @ApiResponse({ status: 200, description: 'Child folder added successfully' })
   async addChild(
-    @Param('id') id: Uuid, 
+    @Param('id') id: Uuid,
     @Body() body: { childName?: string, childCourseId?: Uuid }
   ) {
     return this.folderService.addChild(id, body.childName, body.childCourseId);
@@ -49,7 +51,6 @@ export class FolderController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new folder' })
-  @ApiBody({ type: CreateFolderDto })
   @ApiResponse({ status: 201, description: 'Folder created successfully' })
   async create(@Body() createFolderDto: CreateFolderDto) {
     return this.folderService.create(createFolderDto);

@@ -15,12 +15,18 @@ import type { Cache } from 'cache-manager';
 import { SingleCourseInfoDto } from './dto/SingleCourseInfoDto';
 import { TaskStatus } from '../../constants/status-type';
 import { UserTasksService } from '../../modules/user-tasks/user-tasks.service';
-import type { CreateUserTaskDto } from 'modules/user-tasks/dto/create-user-task.dto';
+import type { CreateUserTaskDto } from '../../modules/user-tasks/dto/create-user-task.dto';
+import { CategoryService } from '../../modules/category/category.service';
+import { SubCategoryService } from '../../modules/sub-category/sub-category.service';
+import { CreateCategoryDto } from '../../modules/category/dto/create-category.dto';
+import { CreateSubCategoryDto } from '../../modules/sub-category/dto/create-sub-category.dto';
 
 @Injectable()
 export class CourseService {
     constructor(
         private readonly userTaskService: UserTasksService,
+        private readonly categoryService: CategoryService,
+        private readonly subCategoryService: SubCategoryService,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
         @InjectRepository(CourseEntity)
         private courseRepository: Repository<CourseEntity>,
@@ -51,14 +57,25 @@ export class CourseService {
             throw new NotFoundException("Користувача не знайдено");
         }
 
-        const category = await this.categoryRepository.findOne({ where: { name: createCourseDto.category } });
-        if (!category) {
-            throw new NotFoundException('Категорію не знайдено');
+        const normalizeName = (name: string) => {
+            const fLetter = name.slice(0, 1).toUpperCase();
+            const remainLetters = name.slice(1).toLowerCase();
+
+            name = fLetter + remainLetters;
+
+            return name;
         }
 
-        const subCategory = await this.subCategoryRepository.findOne({ where: { name: createCourseDto.subCategory } });
+        var category = await this.categoryRepository.findOne({ where: { name: normalizeName(createCourseDto.category) } });
+        console.log(category)
+        if (!category) {
+            category = await this.categoryService.create(new CreateCategoryDto(createCourseDto.category))
+        }
+
+        var subCategory = await this.subCategoryRepository.findOne({ where: { name: normalizeName(createCourseDto.subCategory) } });
         if (!subCategory) {
-            throw new NotFoundException('Підкатегорію не знайдено');
+            subCategory = await this.subCategoryService.create(new CreateSubCategoryDto(createCourseDto.subCategory))
+
         }
 
         const course = this.courseRepository.create({
@@ -73,7 +90,6 @@ export class CourseService {
 
         await this.deleteCache(userId);
 
-        // Додатково видалити кеш для списку курсів
         await this.cacheManager.del(`courses:all:${userId}:${JSON.stringify({})}`);
 
         return course;

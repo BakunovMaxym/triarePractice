@@ -1,14 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AbstractDto } from "../../../common/dto/abstract.dto";
 import type { Folder } from "../entities/folder.entity";
-import { StringField, UUIDField } from "../../../decorators/field.decorators";
+import { StringField } from "../../../decorators/field.decorators";
 import { FolderNameDto } from "./FolderNameDto";
 import { CourseNameDto } from "../../course/dto/CourseNameDto";
-import type { UserNameDto } from "modules/user/dtos/UserNameDto";
+import { UserNameDto } from "../../../modules/user/dtos/UserNameDto";
 
 export class FolderDto extends AbstractDto {
-  @StringField()
-  @ApiProperty({ description: 'Name for the folder' })
+  @StringField({ description: 'Name for the folder' })
   name!: string;
 
   @ApiPropertyOptional({ description: 'Parent folder', type: () => FolderDto, nullable: true })
@@ -20,14 +19,15 @@ export class FolderDto extends AbstractDto {
   @ApiProperty({ description: 'Child courses', type: () => [CourseNameDto], nullable: true })
   childCourses?: CourseNameDto[];
 
-  @UUIDField()
-  @ApiProperty({ description: 'Associated owner ID', type: () => [String], nullable: true })
-  ownerId?: UserNameDto;
+  owner!: UserNameDto;
 
-  constructor(folder: Folder & { id: string; createdAt: Date; updatedAt: Date }) {
+  constructor(folder: Folder) {
     super(folder);
     this.name = folder.name;
     this.parentFolder = folder.parentFolder ? new FolderDto(folder.parentFolder) : undefined;
     this.childFolders = folder.childFolders?.map((child) => new FolderDto(child));
+    this.childCourses = folder.childCourses?.map((child) => new CourseNameDto(child));
+    this.owner = new UserNameDto(folder.owner);
+
   }
 }
