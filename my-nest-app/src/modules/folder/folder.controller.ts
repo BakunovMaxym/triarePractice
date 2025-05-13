@@ -15,6 +15,11 @@ export class FolderController {
     return this.folderService.findOne(id);
   }
 
+  @Get()
+  async findAll() {
+    return this.folderService.findAll();
+  }
+
   @Patch(':id/rename')
   @ApiOperation({ summary: 'Rename a folder' })
   @ApiParam({ name: 'id', description: 'Folder ID', type: 'string' })
@@ -27,10 +32,19 @@ export class FolderController {
   @Post(':id/add-child')
   @ApiOperation({ summary: 'Add a child folder to a folder' })
   @ApiParam({ name: 'id', description: 'Parent folder ID', type: 'string' })
-  @ApiBody({ schema: { type: 'object', properties: { childName: { type: 'string', example: 'Child Folder Name' } } } })
+  @ApiBody({ schema: { 
+    type: 'object', 
+    properties: { 
+      childName: { type: 'string', example: 'Child Folder Name' },
+      childCourseId: { type: 'string', example: 'Course UUID' }
+    } 
+  } })
   @ApiResponse({ status: 200, description: 'Child folder added successfully' })
-  addChild(@Param('id') id: Uuid, @Body('childName') childName: string) {
-    return this.folderService.addChild(id, childName);
+  async addChild(
+    @Param('id') id: Uuid, 
+    @Body() body: { childName?: string, childCourseId?: Uuid }
+  ) {
+    return this.folderService.addChild(id, body.childName, body.childCourseId);
   }
 
   @Post()

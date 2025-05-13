@@ -3,6 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, type Relation } from 
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import type { FolderDto } from "../dto/FolderDto";
 import { UserEntity } from "../../../modules/user/user.entity";
+import { CourseEntity } from "../../../modules/course/entities/course.entity";
 
 @Entity({ name: 'folders' })
 export class Folder extends AbstractEntity<FolderDto> {
@@ -22,5 +23,8 @@ export class Folder extends AbstractEntity<FolderDto> {
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'owner_id' })
     owner!: Relation<UserEntity>;
+
+    @OneToMany(() => CourseEntity, (course) => course.folder, { cascade: true })
+    childCourses?: Relation<CourseEntity[]>;
 
 }

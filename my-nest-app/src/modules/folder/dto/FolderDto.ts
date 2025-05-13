@@ -18,7 +18,7 @@ export class FolderDto extends AbstractDto {
   @ApiPropertyOptional({ description: 'Child folders', type: () => [FolderNameDto], nullable: true })
   childFolders?: FolderNameDto[];
 
-  @ApiPropertyOptional({ description: 'Child courses', type: () => [CourseNameDto], nullable: true })
+  @ApiProperty({ description: 'Child courses', type: () => [CourseNameDto], nullable: true })
   childCourses?: CourseNameDto[];
 
   @UUIDField()

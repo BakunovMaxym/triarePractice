@@ -72,6 +72,9 @@ export class CourseService {
 
         await this.deleteCache(userId);
 
+        // Додатково видалити кеш для списку курсів
+        await this.cacheManager.del(`courses:all:${userId}:${JSON.stringify({})}`);
+
         return course;
     }
 
@@ -82,7 +85,11 @@ export class CourseService {
     }> {
         const cacheKey = `courses:all:${userId}:${JSON.stringify(filter)}`;
 
-        const cached = await this.cacheManager.get(cacheKey);
+        const cached = await this.cacheManager.get<{
+            ownerCourses: CourseInfoDto[];
+            teacherCourses: CourseInfoDto[];
+            studentCourses: CourseInfoDto[];
+        }>(cacheKey);
         if (cached) return cached;
 
         const qb = this.courseRepository
@@ -127,7 +134,7 @@ export class CourseService {
     async findById(userId: Uuid, courseid: Uuid): Promise<SingleCourseInfoDto> {
         const cacheKey = `courses:${userId}:${courseid}`;
 
-        const cached = await this.cacheManager.get(cacheKey);
+        const cached = await this.cacheManager.get<SingleCourseInfoDto>(cacheKey);
         if (cached) return cached;
 
         const courseQuery = this.courseRepository
@@ -242,7 +249,7 @@ export class CourseService {
         course.students.push(newStudent);
 
         course.tasks?.forEach(async (task) => {
-            const userTaskDto = { user: newStudent, deadline: undefined, task: task, status: TaskStatus.ASSIGNED };
+            const userTaskDto = { student: newStudent, deadline: undefined, task: task, status: TaskStatus.ASSIGNED };
             await this.userTaskService.create(userTaskDto);
         })
 

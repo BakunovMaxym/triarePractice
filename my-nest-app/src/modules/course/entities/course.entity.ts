@@ -7,6 +7,7 @@ import { CategoryEntity } from "../../category/entities/category.entity";
 import { AbstractEntity } from "../../../common/abstract.entity";
 import { TaskEntity } from "../../tasks/entities/task.entity";
 import { SubCategoryEntity } from "../../../modules/sub-category/entities/sub-category.entity";
+import { Folder } from "../../folder/entities/folder.entity";
 
 @Entity({ name: "courses" })
 @UseDto(CourseDto)
@@ -46,13 +47,6 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
     })
     teachers!: UserEntity[];
 
-
-    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
-    // students?: UserEntity[];
-
-    // @ManyToMany(() => UserEntity, (userEntity) => userEntity.id)
-    // teachers?: UserEntity[];
-
     @OneToMany(() => TaskEntity, (taskEntity) => taskEntity.course)
     tasks?: TaskEntity[];
 
@@ -63,6 +57,10 @@ export class CourseEntity extends AbstractEntity<CourseDto> {
     @ManyToOne(() => SubCategoryEntity, (subCategoryEntity) => subCategoryEntity.name)
     @JoinColumn()
     subCategory?: Relation<SubCategoryEntity>;
+
+    @ManyToOne(() => Folder, (folder) => folder.childCourses, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'folder_id' })
+    folder?: Folder;
 
     @Column({ type: "integer", default: 0 })
     studentsCount!: number;

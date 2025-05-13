@@ -5,18 +5,28 @@ import { Folder } from './entities/folder.entity';
 import { UpdateFolderDto } from './dto/update-folder.dto';
 import type { CreateFolderDto } from './dto/create-folder.dto';
 import { FolderDto } from './dto/FolderDto';
+import { CourseEntity } from '../../modules/course/entities/course.entity';
+import { UserEntity } from '../../modules/user/user.entity';
 
 @Injectable()
 export class FolderService {
   constructor(
     @InjectRepository(Folder)
     private readonly folderRepository: Repository<Folder>,
+    @InjectRepository(CourseEntity)
+    private readonly courseRepository: Repository<CourseEntity>,
   ) {}
 
-  async findAll(): Promise<Folder[]> {
-    return this.folderRepository.find({
-      relations: ['parentFolder', 'childFolders'],
+  async findAll(): Promise<FolderDto[]> {
+    const folders = await this.folderRepository.find({
+      relations: [
+        'parentFolder',
+        'childFolders',
+        'childCourses',
+        'owner',
+      ],
     });
+    return folders.map(f => new FolderDto(f));
   }
 
   async findOne(id: Uuid): Promise<Folder> {
@@ -36,9 +46,18 @@ export class FolderService {
       parentFolder = await this.folderRepository.findOne({ where: { id: createFolderDto.parentFolderId } }) ?? undefined;
     }
 
+    // Fetch owner entity
+    const owner = await this.folderRepository.manager.getRepository(UserEntity).findOne({
+      where: { id: createFolderDto.ownerId },
+    });
+    if (!owner) {
+      throw new NotFoundException(`Owner with id ${createFolderDto.ownerId} not found`);
+    }
+
     const folder = this.folderRepository.create({
       name: createFolderDto.name,
       parentFolder,
+      owner,
     });
 
     const savedFolder = await this.folderRepository.save(folder);
@@ -72,7 +91,25 @@ export class FolderService {
     return savedFolder.name;
   }
 
-  async addChild(parentId: Uuid, childName: string): Promise<FolderDto> {
+  async addChild(parentId: Uuid, childName?: string, childCourseId?: Uuid): Promise<FolderDto> {
+    if (childCourseId) {
+      // Move course to folder
+      const folder = await this.folderRepository.findOne({ where: { id: parentId } });
+      if (!folder) throw new NotFoundException(`Folder with id ${parentId} not found`);
+      const course = await this.courseRepository.findOne({ where: { id: childCourseId } });
+      if (!course) throw new NotFoundException(`Course with id ${childCourseId} not found`);
+      course.folder = folder;
+      await this.courseRepository.save(course);
+      // Return updated folder with courses
+      const updatedFolder = await this.folderRepository.findOne({
+        where: { id: parentId },
+        relations: ['parentFolder', 'childFolders', 'childCourses', 'owner'],
+      });
+      return new FolderDto(updatedFolder!);
+    }
+    if (!childName) {
+      throw new Error('childName is required to create a child folder');
+    }
     const parent = await this.findOne(parentId);
     const child = this.folderRepository.create({ name: childName, parentFolder: parent });
     const childFolder = await this.folderRepository.save(child);
