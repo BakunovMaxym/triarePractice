@@ -35,12 +35,12 @@ export function CourseDetail({
       // For each task, fetch user-tasks assigned to it
       Promise.all(
         course.tasks.map(async (task: any) => {
-          const res = await fetch(`http://localhost:3000/user-tasks`);
+          const res = await fetch(`/task/${task.id}/user-tasks`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           if (!res.ok) return [task.id, []];
-          const allUserTasks = await res.json();
-          // Filter user-tasks for this task
-          const filtered = allUserTasks.filter((ut: any) => ut.task?.id === task.id);
-          return [task.id, filtered];
+          const userTasks = await res.json();
+          return [task.id, userTasks];
         })
       ).then(results => {
         const map: Record<string, any[]> = {};
@@ -50,7 +50,7 @@ export function CourseDetail({
         setUserTasksByTask(map);
       });
     }
-  }, [isTeacher, course]);
+  }, [isTeacher, course, token]);
 
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
   if (!course) return <div>Loading...</div>;

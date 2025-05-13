@@ -73,6 +73,9 @@ export class CourseService {
 
         await this.deleteCache(userId);
 
+        // Додатково видалити кеш для списку курсів
+        await this.cacheManager.del(`courses:all:${userId}:${JSON.stringify({})}`);
+
         return course;
     }
 

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { StringField, UUIDFieldOptional } from "../../../decorators/field.decorators";
+import { StringField, UUIDField, UUIDFieldOptional } from "../../../decorators/field.decorators";
 
 export class CreateFolderDto {
 
@@ -18,7 +18,14 @@ export class CreateFolderDto {
         type: [String],
         example: ['550e8400-e29b-41d4-a716-446655440000'],
     })
-    @UUIDFieldOptional()
+    @UUIDField({ each: true })
     courseIds?: Uuid[];
 
+    @ApiProperty({
+        description: 'Owner user ID',
+        type: String,
+        example: '550e8400-e29b-41d4-a716-446655440000',
+    })
+    @UUIDField({ nullable: false })
+    ownerId!: Uuid;
 }

@@ -17,7 +17,7 @@ export function CreateCourseForm({ token, onCreated }: { token: string; onCreate
     try {
       await createCourse(token, form);
       setForm({ name: '', category: '', subCategory: '' });
-      onCreated();
+      await onCreated(); // Додаємо await для впевненості, що оновлення відбудеться після створення
     } catch (err) {
       setError('Failed to create course');
     } finally {

@@ -21,7 +21,7 @@ export async function register(data: { firstName: string; lastName: string; emai
 }
 
 export async function getCourses(token: string) {
-  const res = await fetch(`${API_URL}/course`, {
+  const res = await fetch(`${API_URL}/course?nocache=${Date.now()}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch courses');
@@ -141,17 +141,19 @@ export async function getFolders(token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch folders');
-  return res.json();
+  // Просто повертаємо всі папки, які приходять з бекенду
+  return await res.json();
 }
 
-export async function createFolder(token: string, name: string) {
+export async function createFolder(token: string, name: string, ownerId: string) {
+  const body: any = { name, ownerId };
   const res = await fetch(`${API_URL}/folder`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error('Failed to create folder');
   return res.json();
