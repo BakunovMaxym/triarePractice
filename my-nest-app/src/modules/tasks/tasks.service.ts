@@ -44,12 +44,17 @@ export class TaskService {
     if (createTaskDto.fileContents?.length) {
       uploadedMeta = await Promise.all(
         createTaskDto.fileContents.map(file => {
-          const stream = new PassThrough();
-          stream.end(file.buffer);
-          return this.googleDriveService.uploadFile(stream, file.originalname, file.mimetype);
+          if ('buffer' in file) {
+            const stream = new PassThrough();
+            stream.end(file.buffer);
+            return this.googleDriveService.uploadFile(stream, file.originalname, file.mimetype);
+          } else {
+            return file;
+          }
         })
       );
     }
+
 
     const task: TaskEntity = this.taskRepository.create({
       ...createTaskDto,

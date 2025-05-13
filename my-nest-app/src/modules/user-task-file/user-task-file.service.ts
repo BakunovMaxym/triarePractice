@@ -17,7 +17,7 @@ export class UserTaskFileService {
 
   async create(
     dtos: CreateUserTaskFileDto[],
-    task: TaskEntity,
+    userTask: TaskEntity,
   ): Promise<void> {
     if (!dtos?.length) return;
 
@@ -26,7 +26,7 @@ export class UserTaskFileService {
         fileId: dto.fileId,
         fileName: dto.fileName,
         fileUrl: dto.fileUrl,
-        task,
+        userTask,
       });
       return entity;
     });

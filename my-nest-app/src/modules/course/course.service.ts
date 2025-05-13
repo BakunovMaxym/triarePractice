@@ -15,6 +15,7 @@ import type { Cache } from 'cache-manager';
 import { SingleCourseInfoDto } from './dto/SingleCourseInfoDto';
 import { TaskStatus } from '../../constants/status-type';
 import { UserTasksService } from '../../modules/user-tasks/user-tasks.service';
+import type { CreateUserTaskDto } from 'modules/user-tasks/dto/create-user-task.dto';
 
 @Injectable()
 export class CourseService {
@@ -82,7 +83,11 @@ export class CourseService {
     }> {
         const cacheKey = `courses:all:${userId}:${JSON.stringify(filter)}`;
 
-        const cached = await this.cacheManager.get(cacheKey);
+        const cached: {
+            ownerCourses: CourseInfoDto[];
+            teacherCourses: CourseInfoDto[];
+            studentCourses: CourseInfoDto[];
+        } | undefined = await this.cacheManager.get(cacheKey);
         if (cached) return cached;
 
         const qb = this.courseRepository
@@ -127,7 +132,7 @@ export class CourseService {
     async findById(userId: Uuid, courseid: Uuid): Promise<SingleCourseInfoDto> {
         const cacheKey = `courses:${userId}:${courseid}`;
 
-        const cached = await this.cacheManager.get(cacheKey);
+        const cached: SingleCourseInfoDto | undefined = await this.cacheManager.get(cacheKey);
         if (cached) return cached;
 
         const courseQuery = this.courseRepository
@@ -242,7 +247,7 @@ export class CourseService {
         course.students.push(newStudent);
 
         course.tasks?.forEach(async (task) => {
-            const userTaskDto = { user: newStudent, deadline: undefined, task: task, status: TaskStatus.ASSIGNED };
+            const userTaskDto: CreateUserTaskDto = { student: newStudent, deadline: undefined, task: task, status: TaskStatus.ASSIGNED };
             await this.userTaskService.create(userTaskDto);
         })
 
@@ -302,7 +307,7 @@ export class CourseService {
         console.log(callerId);
         console.log(student);
         console.log(course.students.some(s => s.id === callerId));
-        
+
         const isOwnerOrStudent =
             course.owner.id === callerId ||
             callerId === student && course.students.some(s => s.id === callerId);

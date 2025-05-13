@@ -8,9 +8,9 @@ export class CreateTaskDto {
   textContent!: string;
 
   @NumberFieldOptional({ description: 'Час на виконання', example: '1 година', nullable: true, default: null })
-  timeToComplete!: number | null;
+  timeToComplete?: number | undefined;
 
-  fileContents!: Array<Express.Multer.File> | { fileId: string, fileName: string, fileUrl: string }[]
+  fileContents?: Array<Express.Multer.File> | { fileId: string, fileName: string, fileUrl: string }[]
   ownerId!: Uuid;
 
   courseId!: Uuid;

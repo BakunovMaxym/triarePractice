@@ -1,11 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
-import { CreateSettingsCommand } from './commands/create-settings.command.ts';
-import { CreateSettingsDto } from './dtos/create-settings.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
 import { UserEntity } from './user.entity.ts';
-import type { UserSettingsEntity } from './user-settings.entity.ts';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { FindOptionsWhere, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
@@ -15,9 +11,6 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    // private validatorService: ValidatorService,
-    // private awsS3Service: AwsS3Service,
-    private commandBus: CommandBus,
   ) { }
 
   /**
@@ -31,7 +24,6 @@ export class UserService {
     options: Partial<{ username: string; email: string }>,
   ): Promise<UserEntity | null> {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
-    // .leftJoinAndSelect<UserEntity, 'user'>('user.settings', 'settings');
 
     if (options.email) {
       queryBuilder.orWhere('user.email = :email', {
@@ -84,28 +76,5 @@ export class UserService {
     const finalUser = new UserDto(user)
 
     return finalUser;
-  }
-
-  // async getUser(userId: Uuid): Promise<UserDto> {
-  //   const queryBuilder = this.userRepository.createQueryBuilder('user');
-
-  //   queryBuilder.where('user.id = :userId', { userId });
-
-  //   const userEntity = await queryBuilder.getOne();
-
-  //   if (!userEntity) {
-  //     throw new UserNotFoundException();
-  //   }
-
-  //   return userEntity.toDto();
-  // }
-
-  createSettings(
-    userId: Uuid,
-    createSettingsDto: CreateSettingsDto,
-  ): Promise<UserSettingsEntity> {
-    return this.commandBus.execute<CreateSettingsCommand, UserSettingsEntity>(
-      new CreateSettingsCommand(userId, createSettingsDto),
-    );
   }
 }

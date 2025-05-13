@@ -28,8 +28,6 @@ export class UserTasksService {
 
   async create(createDto: CreateUserTaskDto): Promise<UserTask> {
     const userTask = this.userTasksRepository.create(createDto);
-    // console.log(process.env.EMAIL_USERNAME);
-    // console.log(process.env.EMAIL_PASSWORD);
     const savedUserTask = await this.userTasksRepository.save(userTask);
 
     try {
@@ -125,8 +123,8 @@ export class UserTasksService {
     found.status = TaskStatus.ACCEPTED;
     found.deadline = new Date(Date.now() + Number(found.task.timeToComplete));
 
-    if(found.deadline) this.croneTaskService.expireUserTask(found)
-    
+    if (found.deadline) this.croneTaskService.expireUserTask(found)
+
     const saved = await this.userTasksRepository.save(found);
     return new SingleUserTaskDto(saved);
   }

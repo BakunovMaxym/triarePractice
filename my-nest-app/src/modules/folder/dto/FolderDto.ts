@@ -3,7 +3,6 @@ import { AbstractDto } from "../../../common/dto/abstract.dto";
 import type { Folder } from "../entities/folder.entity";
 import { StringField, UUIDField } from "../../../decorators/field.decorators";
 import { FolderNameDto } from "./FolderNameDto";
-import type { CourseDto } from "modules/course/dto/CourseDto";
 import { CourseNameDto } from "../../course/dto/CourseNameDto";
 import type { UserNameDto } from "modules/user/dtos/UserNameDto";
 
