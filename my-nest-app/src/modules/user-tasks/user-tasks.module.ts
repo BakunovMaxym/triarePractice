@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserTasksService } from './user-tasks.service';
 import { UserTask } from './entities/user-task.entity';
@@ -7,9 +7,10 @@ import { UserTasksController } from './user-tasks.controller';
 import { GoogleDriveModule } from '../../modules/google-drive/google-drive.module';
 import { UserTaskFileModule } from '../../modules/user-task-file/user-task-file.module';
 import { UserTaskFileEntity } from '../../modules/user-task-file/entities/user-task-file.entity';
+import { CroneTaskModule } from '../../modules/crone-task/crone-task.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserTask, UserEntity, UserTask, UserTaskFileEntity]), GoogleDriveModule, UserTaskFileModule],
+  imports: [TypeOrmModule.forFeature([UserTask, UserEntity, UserTaskFileEntity]), GoogleDriveModule, UserTaskFileModule, forwardRef(() => CroneTaskModule) ],
   controllers: [UserTasksController],
   providers: [UserTasksService],
   exports: [UserTasksService],

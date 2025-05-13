@@ -15,7 +15,6 @@ import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 
 import { AuthModule } from './modules/auth/auth.module.ts';
-import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
 import { UserModule } from './modules/user/user.module.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
@@ -32,6 +31,8 @@ import { FolderModule } from './modules/folder/folder.module';
 import { TaskFileModule } from './modules/task-file/task-file.module.ts';
 import { UserTaskFileModule } from './modules/user-task-file/user-task-file.module.ts';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CroneTaskModule } from './modules/crone-task/crone-task.module.ts';
 
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
@@ -45,7 +46,8 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     GoogleDriveModule,
     CategoryModule,
     SubCategoryModule,
-    TaskModule,
+    UserTasksModule,
+    CroneTaskModule,
     TaskFileModule,
     UserTaskFileModule,
     ClsModule.forRoot({
@@ -73,19 +75,15 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
         port: 465,
         secure: true,
         auth: {
-          // user: process.env.EMAIL_USERNAME,
-          // pass: process.env.EMAIL_PASSWORD,
           user: "sometestexampleforspammails@gmail.com",
-          pass: "jhcw revd mwgm jaky", //for sometestexampleforspammails@gmail.com
-
-          // user: "max.2006@ukr.net",
-          // pass: "zfma lxjj cowt nrtv", // for max.2006@ukr.net
+          pass: "jhcw revd mwgm jaky",
         },
       },
       defaults: {
-        from: "dffrfer <sometestexampleforspammails@gmail.com>",
+        from: "Learning Management System <sometestexampleforspammails@gmail.com>",
       }
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [SharedModule],
       useFactory: (configService: ApiConfigService) =>
@@ -118,7 +116,6 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
       imports: [SharedModule],
       inject: [ApiConfigService],
     }),
-    HealthCheckerModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
@@ -134,7 +131,6 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     TaskModule,
     CommentModule,
     CommentModule,
-    UserTasksModule,
     FolderModule,
 
   ],

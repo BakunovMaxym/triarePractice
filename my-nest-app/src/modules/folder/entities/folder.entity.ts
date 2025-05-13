@@ -2,7 +2,7 @@ import { AbstractEntity } from "../../../common/abstract.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, type Relation } from "typeorm";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import type { FolderDto } from "../dto/FolderDto";
-import { UserEntity } from "modules/user/user.entity";
+import { UserEntity } from "../../../modules/user/user.entity";
 
 @Entity({ name: 'folders' })
 export class Folder extends AbstractEntity<FolderDto> {

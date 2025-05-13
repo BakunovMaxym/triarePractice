@@ -12,12 +12,14 @@ import { UserTaskFileEntity } from '../../modules/user-task-file/entities/user-t
 import { RoleType } from '../../constants/role-type';
 import type { UserEntity } from 'modules/user/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
+import { CroneTaskService } from '../../modules/crone-task/crone-task.service';
 
 @Injectable()
 export class UserTasksService {
   constructor(
     private readonly googleDriveService: GoogleDriveService,
     private readonly mailService: MailerService,
+    private readonly croneTaskService: CroneTaskService,
     @InjectRepository(UserTask)
     private readonly userTasksRepository: Repository<UserTask>,
     @InjectRepository(UserTaskFileEntity)
@@ -96,6 +98,18 @@ export class UserTasksService {
     found.grade = null;
     const saved = await this.userTasksRepository.save(found);
 
+    try {
+      await this.mailService.sendMail({
+        to: `${found.student.email}`,
+        subject: "Завдання відхилено",
+        html: `
+        <h1>${found.task.course.name}</h1>
+        <p>Ваше завдання <strong>${found.task.name}</strong>, відхилено. Відредагуйте свій розв'язок та надлішліть повторно</p>`
+      })
+    } catch (err) {
+      console.log(err);
+    }
+
     return new SingleUserTaskDto(saved);
   }
 
@@ -110,6 +124,9 @@ export class UserTasksService {
 
     found.status = TaskStatus.ACCEPTED;
     found.deadline = new Date(Date.now() + Number(found.task.timeToComplete));
+
+    if(found.deadline) this.croneTaskService.expireUserTask(found)
+    
     const saved = await this.userTasksRepository.save(found);
     return new SingleUserTaskDto(saved);
   }

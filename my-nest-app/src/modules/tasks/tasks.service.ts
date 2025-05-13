@@ -69,7 +69,6 @@ export class TaskService {
     });
 
     course.students?.forEach(async (student) => {
-      console.log(student);
       const userTaskDto = { student: student, deadline: undefined, task: savedTask, status: TaskStatus.ASSIGNED };
       await this.userTaskService.create(userTaskDto);
     });
