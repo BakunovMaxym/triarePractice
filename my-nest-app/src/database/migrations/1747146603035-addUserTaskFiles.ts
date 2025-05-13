@@ -1,7 +1,7 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
-export class ChangeSubcategories1747124673942 implements MigrationInterface {
-    name = 'ChangeSubcategories1747124673942'
+export class AddUserTaskFiles1747146603035 implements MigrationInterface {
+    name = 'AddUserTaskFiles1747146603035'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "categories" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying(255) NOT NULL, "courses_id" uuid, CONSTRAINT "UQ_8b0be371d28245da6e4f4b61878" UNIQUE ("name"), CONSTRAINT "PK_24dbc6126a28ff948da33e97d3b" PRIMARY KEY ("id"))`);
@@ -12,11 +12,10 @@ export class ChangeSubcategories1747124673942 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE "task_files" ("file_id" character varying NOT NULL, "file_name" character varying NOT NULL, "file_url" character varying NOT NULL, "task_id" uuid, CONSTRAINT "PK_867bc69a731d3792f60f825cd0c" PRIMARY KEY ("file_id"))`);
         await queryRunner.query(`CREATE TABLE "tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "text_content" character varying, "time_to_complete" bigint, "owner_id" uuid, "course_id" uuid, CONSTRAINT "PK_8d12ff38fcc62aaba2cab748772" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "subcategories" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying(255) NOT NULL, "courses_id" uuid, CONSTRAINT "UQ_d1a3a67c9c5d440edf414af1271" UNIQUE ("name"), CONSTRAINT "PK_793ef34ad0a3f86f09d4837007c" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "courses" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "students_count" integer NOT NULL DEFAULT '0', "teachers_count" integer NOT NULL DEFAULT '0', "owner_id" uuid, "category_id" uuid, "sub_category_id" uuid, CONSTRAINT "PK_3f70a487cc718ad8eda4e6d58c9" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "folders" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" text NOT NULL, "parent_folder_id" uuid, "owner_id" uuid, CONSTRAINT "PK_8578bd31b0e7f6d6c2480dbbca8" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "courses" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "students_count" integer NOT NULL DEFAULT '0', "teachers_count" integer NOT NULL DEFAULT '0', "owner_id" uuid, "category_id" uuid, "sub_category_id" uuid, "folder_id" uuid, CONSTRAINT "PK_3f70a487cc718ad8eda4e6d58c9" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TYPE "public"."users_role_enum" AS ENUM('STUDENT', 'TEACHER')`);
         await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "first_name" character varying, "last_name" character varying NOT NULL, "role" "public"."users_role_enum" NOT NULL DEFAULT 'STUDENT', "email" character varying NOT NULL, "password" character varying NOT NULL, CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "user_settings" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "is_email_verified" boolean NOT NULL DEFAULT false, "user_id" uuid NOT NULL, CONSTRAINT "PK_00f004f5922a0744d174530d639" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "folders" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" text NOT NULL, "parent_folder_id" uuid, "owner_id" uuid, CONSTRAINT "PK_8578bd31b0e7f6d6c2480dbbca8" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "courses_students" ("course_id" uuid NOT NULL, "student_id" uuid NOT NULL, CONSTRAINT "PK_473bdf2ac31c6afe82d00435e14" PRIMARY KEY ("course_id", "student_id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_373fad2fd5b550031938f5afe1" ON "courses_students" ("course_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_38ccc15459cb8777aadacbf7dc" ON "courses_students" ("student_id") `);
@@ -33,11 +32,12 @@ export class ChangeSubcategories1747124673942 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "tasks" ADD CONSTRAINT "FK_0631c1eb8316f8af361cf14eb85" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "tasks" ADD CONSTRAINT "FK_a1146c8fe67a3e4812d89643838" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "subcategories" ADD CONSTRAINT "FK_c124198df78d0245262a2a6ec1a" FOREIGN KEY ("courses_id") REFERENCES "courses"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "folders" ADD CONSTRAINT "FK_4ef163a27ebad84f1171e74dd0c" FOREIGN KEY ("parent_folder_id") REFERENCES "folders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "folders" ADD CONSTRAINT "FK_ecee72de3b100ef0bbebe47f3c4" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "courses" ADD CONSTRAINT "FK_8e2bcdb457d982b1dc39e5e0edb" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "courses" ADD CONSTRAINT "FK_e4c260fe6bb1131707c4617f745" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "courses" ADD CONSTRAINT "FK_2b137ebe387f745917904944816" FOREIGN KEY ("sub_category_id") REFERENCES "subcategories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "folders" ADD CONSTRAINT "FK_4ef163a27ebad84f1171e74dd0c" FOREIGN KEY ("parent_folder_id") REFERENCES "folders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "folders" ADD CONSTRAINT "FK_ecee72de3b100ef0bbebe47f3c4" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "courses" ADD CONSTRAINT "FK_3c3705fcaf954ec45a47501dcc7" FOREIGN KEY ("folder_id") REFERENCES "folders"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "courses_students" ADD CONSTRAINT "FK_373fad2fd5b550031938f5afe1f" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
         await queryRunner.query(`ALTER TABLE "courses_students" ADD CONSTRAINT "FK_38ccc15459cb8777aadacbf7dc1" FOREIGN KEY ("student_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "courses_teachers" ADD CONSTRAINT "FK_8fc5c9e1a42bfadf1448b55234b" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
@@ -49,11 +49,12 @@ export class ChangeSubcategories1747124673942 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "courses_teachers" DROP CONSTRAINT "FK_8fc5c9e1a42bfadf1448b55234b"`);
         await queryRunner.query(`ALTER TABLE "courses_students" DROP CONSTRAINT "FK_38ccc15459cb8777aadacbf7dc1"`);
         await queryRunner.query(`ALTER TABLE "courses_students" DROP CONSTRAINT "FK_373fad2fd5b550031938f5afe1f"`);
-        await queryRunner.query(`ALTER TABLE "folders" DROP CONSTRAINT "FK_ecee72de3b100ef0bbebe47f3c4"`);
-        await queryRunner.query(`ALTER TABLE "folders" DROP CONSTRAINT "FK_4ef163a27ebad84f1171e74dd0c"`);
+        await queryRunner.query(`ALTER TABLE "courses" DROP CONSTRAINT "FK_3c3705fcaf954ec45a47501dcc7"`);
         await queryRunner.query(`ALTER TABLE "courses" DROP CONSTRAINT "FK_2b137ebe387f745917904944816"`);
         await queryRunner.query(`ALTER TABLE "courses" DROP CONSTRAINT "FK_e4c260fe6bb1131707c4617f745"`);
         await queryRunner.query(`ALTER TABLE "courses" DROP CONSTRAINT "FK_8e2bcdb457d982b1dc39e5e0edb"`);
+        await queryRunner.query(`ALTER TABLE "folders" DROP CONSTRAINT "FK_ecee72de3b100ef0bbebe47f3c4"`);
+        await queryRunner.query(`ALTER TABLE "folders" DROP CONSTRAINT "FK_4ef163a27ebad84f1171e74dd0c"`);
         await queryRunner.query(`ALTER TABLE "subcategories" DROP CONSTRAINT "FK_c124198df78d0245262a2a6ec1a"`);
         await queryRunner.query(`ALTER TABLE "tasks" DROP CONSTRAINT "FK_a1146c8fe67a3e4812d89643838"`);
         await queryRunner.query(`ALTER TABLE "tasks" DROP CONSTRAINT "FK_0631c1eb8316f8af361cf14eb85"`);
@@ -70,11 +71,10 @@ export class ChangeSubcategories1747124673942 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."IDX_38ccc15459cb8777aadacbf7dc"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_373fad2fd5b550031938f5afe1"`);
         await queryRunner.query(`DROP TABLE "courses_students"`);
-        await queryRunner.query(`DROP TABLE "folders"`);
-        await queryRunner.query(`DROP TABLE "user_settings"`);
         await queryRunner.query(`DROP TABLE "users"`);
         await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
         await queryRunner.query(`DROP TABLE "courses"`);
+        await queryRunner.query(`DROP TABLE "folders"`);
         await queryRunner.query(`DROP TABLE "subcategories"`);
         await queryRunner.query(`DROP TABLE "tasks"`);
         await queryRunner.query(`DROP TABLE "task_files"`);

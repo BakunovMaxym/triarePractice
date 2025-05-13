@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskEntity } from './entities/task.entity';
@@ -108,15 +108,16 @@ export class TaskService {
     if (!task) {
       throw new NotFoundException(`Task with name ${id} not found`);
     }
-    // console.log(task)
     return task;
   }
 
-  async updateById(id: Uuid, files: Array<Express.Multer.File>, updateTaskDto: UpdateTaskDto): Promise<SingleTaskDto> {
+  async updateById(id: Uuid, files: Array<Express.Multer.File>, updateTaskDto: UpdateTaskDto, teacherId: Uuid): Promise<SingleTaskDto> {
     const task = await this.findOne(id);
 
     if (!task) throw new NotFoundException
 
+    if(!task.course.teachers.some((teach => teach.id === teacherId)))
+      throw new ForbiddenException
 
     if (task.fileContent.length !== 0) {
       let filesToKeepIds: string[] = [];
@@ -128,9 +129,6 @@ export class TaskService {
 
       for (const file of task.fileContent) {
         if (!filesToKeepIds.includes(file.fileId)) {
-          // console.log(`remove ${file.fileId}`)
-          // await this.taskFileService.remove(file.fileId)
-
           this.googleDriveService.deleteFile(file.fileId);
           await this.taskFileRepository.delete(file.fileId);
 
@@ -150,10 +148,6 @@ export class TaskService {
         })
       );
 
-      // if(updateTaskDto.fileContents){
-
-      // }
-
       const fileEntities = uploadedMeta.map(meta =>
         this.taskFileRepository.create({ ...meta, task })
       );
@@ -171,27 +165,30 @@ export class TaskService {
       task.fileContent = savedFiles;
     }
 
-    // console.log("task.fileContent")
-    // console.log(task.fileContent)
-
     const updatedTask = await this.taskRepository.save(task);
 
     return new SingleTaskDto(updatedTask)
   }
 
-  async deleteByid(id: Uuid) {
+  async deleteByid(id: Uuid, userId: Uuid) {
     const task = await this.findOne(id)
-
+    
     if (!task)
-      return new NotFoundException("Завдання не знайдено")
+      throw new NotFoundException("Завдання не знайдено")
 
-    // console.log(task);
+    if(!task.course.teachers.some((teach => teach.id === userId)))
+      throw new ForbiddenException
 
-    if (task.fileContent.length !== 0)
+    if (task.fileContent?.length !== 0)
       for (const file of task.fileContent) {
-        await this.googleDriveService.deleteFile(file.fileId);
+        this.googleDriveService.deleteFile(file.fileId);
         await this.taskFileRepository.delete(file.fileId);
-        // this.taskFileService.remove(file.fileId)
+      }
+
+      if(task.userTasks.length !== 0){
+        task.userTasks.forEach(userTask => {
+          this.userTaskService.deleteByid(userTask.id)
+        })
       }
 
     const delres = this.taskRepository.delete(task.id)

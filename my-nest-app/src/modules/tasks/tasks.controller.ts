@@ -76,6 +76,7 @@ export class TasksController {
 
   @Get('/tasks/:id')
   @ApiOperation({ summary: 'Отримати задання за айді' })
+  @Auth([RoleType.TEACHER])
   @ApiParam({
     name: 'id',
     description: 'Унікальне айді завдання',
@@ -94,23 +95,23 @@ export class TasksController {
   }
 
   @Patch('/tasks/:id')
+  @Auth([RoleType.TEACHER])
   @UseInterceptors(FilesInterceptor('file', 100, { storage: multer.memoryStorage() }))
   async updateByName(
     @Param('id') id: Uuid,
     @Body() dto: any,
     @UploadedFiles() files: Express.Multer.File[],
+    @AuthUser() teacher: UserEntity
   ): Promise<SingleTaskDto> {
     if (dto.fileContents && typeof dto.fileContents === 'string')
       dto.fileContents = JSON.parse(dto.fileContents);
-
-    console.log("dto")
-    console.log(dto)
-    return this.taskService.updateById(id, files, dto);
+    return this.taskService.updateById(id, files, dto, teacher.id);
   }
 
 
   @Delete('/tasks/:id')
   @ApiOperation({ summary: 'Видалити завдання за айді' })
+  @Auth([RoleType.TEACHER])
   @ApiParam({
     name: 'id',
     description: 'Унікальне айді завдання',
@@ -121,7 +122,8 @@ export class TasksController {
   @HttpCode(204)
   deleteById(
     @Param('id') id: Uuid,
+    @AuthUser() teacher: UserEntity
   ) {
-    return this.taskService.deleteByid(id);
+    return this.taskService.deleteByid(id, teacher.id);
   }
 }

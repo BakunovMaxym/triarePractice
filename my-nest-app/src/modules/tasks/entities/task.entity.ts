@@ -31,5 +31,5 @@ export class TaskEntity extends AbstractEntity {
   comments!: Relation<Comment[]>;
 
   @OneToMany(() => UserTask, (userTask) => userTask.task)
-  userTasks!: Relation<UserTask>;
+  userTasks!: Relation<UserTask[]>;
 }

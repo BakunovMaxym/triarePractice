@@ -192,4 +192,20 @@ export class UserTasksService {
     return new SingleUserTaskDto(updatedUserTask)
   }
 
+  async deleteByid(id: Uuid) {
+    const userTask = await this.findOne(id, RoleType.TEACHER)
+
+    if (!userTask)
+      return new NotFoundException("Завдання студента не знайдено")
+
+    if (userTask.fileContent?.length !== 0)
+      for (const file of userTask.fileContent) {
+        this.googleDriveService.deleteFile(file.fileId);
+        await this.userTaskFileRepository.delete(file.fileId);
+      }
+      
+    const delres = this.userTaskFileRepository.delete(userTask.id)
+
+    return delres;
+  }
 }
