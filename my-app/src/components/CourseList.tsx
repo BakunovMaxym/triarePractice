@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getCourses, getFolders, createFolder, moveCourseToFolder } from '../api';
+import { getCourses, getFolders, createFolder, moveCourseToFolder, deleteFolder as apiDeleteFolder } from '../api';
 import { CreateCourseForm } from './CreateCourseForm';
+import { FolderList } from './FolderList';
+import { CourseItem } from './CourseItem';
 
 export function CourseList({
   token,
@@ -27,28 +29,41 @@ export function CourseList({
     getFolders(token)
       .then(foldersFromApi => {
         setFolders(foldersFromApi);
-        // console.log('Fetched folders:', foldersFromApi); // Для дебагу
       })
       .catch(() => setFolders([]));
   }, [token]);
 
+  // Допоміжна функція для отримання id курсів, які знаходяться в папках
+  const getCourseIdsInFolders = (foldersList: any[]) => {
+    const ids = new Set<string>();
+    foldersList.forEach(folder => {
+      if (Array.isArray(folder.childCourses)) {
+        folder.childCourses.forEach((c: any) => {
+          if (typeof c === 'object' && c.id) ids.add(c.id);
+          else if (typeof c === 'string') ids.add(c);
+        });
+      }
+    });
+    return ids;
+  };
+
   const fetchCourses = useCallback(() => {
-    getCourses(token)
-      .then(data => {
-        // Use the correct structure returned by backend
-        const allCourses = [
-          ...(data.ownerCourses || []),
-          ...(data.teacherCourses || []),
-          ...(data.studentCourses || []),
-        ];
-        const uniqueCourses = Array.from(
-          new Map(allCourses.map(c => [c.id, c])).values()
-        );
-        setCourses(uniqueCourses);
-        setError(null); // clear error on success
-      })
-      .catch(() => setError('Failed to load courses'));
-    fetchFolders();
+    Promise.all([getCourses(token), getFolders(token)]).then(([data, foldersFromApi]) => {
+      setFolders(foldersFromApi);
+      const allCourses = [
+        ...(data.ownerCourses || []),
+        ...(data.teacherCourses || []),
+        ...(data.studentCourses || []),
+      ];
+      const uniqueCourses = Array.from(
+        new Map(allCourses.map(c => [c.id, c])).values()
+      );
+      // Фільтруємо курси, які вже є в папках
+      const courseIdsInFolders = getCourseIdsInFolders(foldersFromApi);
+      const filteredCourses = uniqueCourses.filter(c => !courseIdsInFolders.has(c.id));
+      setCourses(filteredCourses);
+      setError(null);
+    }).catch(() => setError('Failed to load courses'));
   }, [token, fetchFolders]);
 
   useEffect(() => {
@@ -81,10 +96,22 @@ export function CourseList({
     try {
       await moveCourseToFolder(token, folderId, courseId);
       setShowFolderPopup(null);
-      // Оновлюємо папки після переміщення
-      await fetchFolders();
-      // Додаємо оновлення selectedFolder та folderCourses після fetchFolders
-      setFolders((prev) => {
+      // Оновлюємо папки у стані без перезавантаження
+      setFolders(prev => prev.map(f => {
+        if (f.id === folderId) {
+          // Додаємо курс до childCourses, якщо його там ще немає
+          const childCourses = Array.isArray(f.childCourses) ? [...f.childCourses] : [];
+          if (!childCourses.some((c: any) => (typeof c === 'object' ? c.id : c) === courseId)) {
+            childCourses.push(courseId);
+          }
+          return { ...f, childCourses };
+        }
+        return f;
+      }));
+      // Видаляємо курс зі списку courses
+      setCourses(prev => prev.filter(c => c.id !== courseId));
+      // Оновлюємо selectedFolder, якщо треба
+      setFolders(prev => {
         const updated = prev.find(f => f.id === folderId);
         if (selectedFolder && selectedFolder.id === folderId && updated) {
           setSelectedFolder(updated);
@@ -92,17 +119,6 @@ export function CourseList({
         }
         return prev;
       });
-      // Додатково: якщо selectedFolder відкритий, оновити його після fetchFolders
-      setTimeout(() => {
-        setFolders((prev) => {
-          const updated = prev.find(f => f.id === folderId);
-          if (selectedFolder && selectedFolder.id === folderId && updated) {
-            setSelectedFolder(updated);
-            setFolderCourses(updated.childCourses || []);
-          }
-          return prev;
-        });
-      }, 200); // невелика затримка для гарантії оновлення
     } catch {
       setFolderError('Failed to move course');
     } finally {
@@ -130,22 +146,53 @@ export function CourseList({
     try {
       // Передаємо ownerId як третій аргумент
       const folder = await createFolder(token, newFolderName.trim(), userId, [courseId]);
-      await moveCourseToFolder(token, folder.id, courseId);
       setShowFolderPopup(null);
       setNewFolderName('');
-      await fetchFolders();
-      setTimeout(() => {
-        setFolders((prev) => {
-          const updated = prev.find(f => f.id === folder.id);
-          if (selectedFolder && selectedFolder.id === folder.id && updated) {
-            setSelectedFolder(updated);
-            setFolderCourses(updated.childCourses || []);
-          }
-          return prev;
-        });
-      }, 200);
+      // Додаємо нову папку у стан
+      setFolders(prev => [...prev, folder]);
+      // Видаляємо курс зі списку courses
+      setCourses(prev => prev.filter(c => c.id !== courseId));
     } catch {
       setFolderError('Failed to create folder or move course');
+    } finally {
+      setMoving(false);
+    }
+  };
+
+  // Додаємо функцію для видалення папки
+  const deleteFolder = async (folderId: string) => {
+    setMoving(true);
+    setFolderError(null);
+    try {
+      await apiDeleteFolder(token, folderId);
+      const deletedFolder = folders.find(f => f.id === folderId);
+      let coursesToReturn: any[] = [];
+      if (deletedFolder && Array.isArray(deletedFolder.childCourses)) {
+        if (typeof deletedFolder.childCourses[0] === 'object') {
+          coursesToReturn = deletedFolder.childCourses;
+        } else {
+          const allCourses = [
+            ...(courses || []),
+            ...(folders.flatMap(f => Array.isArray(f.childCourses) ? f.childCourses : []))
+          ];
+          coursesToReturn = deletedFolder.childCourses
+            .map((id: string) => allCourses.find(c => c.id === id))
+            .filter(Boolean);
+        }
+      }
+      setCourses(prev => {
+        const ids = new Set(prev.map(c => c.id));
+        const toAdd = coursesToReturn.filter(c => !ids.has(c.id));
+        return [...prev, ...toAdd];
+      });
+      setFolders(prev => prev.filter(f => f.id !== folderId));
+      if (selectedFolder && selectedFolder.id === folderId) {
+        setSelectedFolder(null);
+        setFolderCourses([]);
+      }
+      fetchCourses();
+    } catch {
+      setFolderError('Failed to delete folder');
     } finally {
       setMoving(false);
     }
@@ -157,7 +204,6 @@ export function CourseList({
       {isTeacher && <CreateCourseForm token={token} onCreated={fetchCourses} />}
       {error && <div style={{ color: 'red' }}>{error}</div>}
 
-      {/* If a folder is selected, display its contents */}
       {selectedFolder ? (
         <div>
           <button onClick={() => setSelectedFolder(null)} style={{ marginBottom: 12 }}>← Back to all courses</button>
@@ -175,110 +221,35 @@ export function CourseList({
         </div>
       ) : (
         <>
-          {/* List of folders with view button */}
-          <div style={{ marginBottom: 16 }}>
-            <b>Folders:</b>
-            <ul>
-              {folders.length === 0 && <li>No folders found.</li>}
-              {folders.map(folder => (
-                <li key={folder.id}>
-                  {folder.name}{' '}
-                  <button onClick={() => handleViewFolder(folder)}>
-                    View
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Use FolderList component */}
+          <FolderList
+            folders={folders}
+            onViewFolder={handleViewFolder}
+            onDeleteFolder={deleteFolder}
+            moving={moving}
+          />
           <ul>
             {courses.length === 0 && <li>No courses found.</li>}
+            <b>Courses:</b>
             {courses.map(course => (
-              <li key={course.id} style={{ marginBottom: 8 }}>
-                <button onClick={() => onSelectCourse(course.id)}>
-                  {course.name}
-                </button>
-                {/* Move to Folder button for all users */}
-                <button
-                  style={{ marginLeft: 8 }}
-                  onClick={() => {
-                    setShowFolderPopup(course.id);
-                    setFolderError(null);
-                    setNewFolderName('');
-                    fetchFolders();
-                  }}
-                >
-                  Move to Folder
-                </button>
-                {/* Popup for folder selection/creation */}
-                {showFolderPopup === course.id && (
-                  <div
-                    style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      width: '100vw',
-                      height: '100vh',
-                      background: 'rgba(0,0,0,0.2)',
-                      zIndex: 1000,
-                    }}
-                    onClick={() => setShowFolderPopup(null)}
-                  >
-                    <div
-                      style={{
-                        background: '#fff',
-                        padding: 24,
-                        borderRadius: 8,
-                        maxWidth: 350,
-                        margin: '100px auto',
-                        position: 'relative',
-                      }}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <h4>Move "{course.name}" to Folder</h4>
-                      {folderError && <div style={{ color: 'red' }}>{folderError}</div>}
-                      <div>
-                        <b>Select existing folder:</b>
-                        <ul style={{ height: 300, overflow: "scroll" }}>
-                          {folders.length === 0 && <li>No folders found.</li>}
-                          {folders.map(folder => (
-                            <li key={folder.id}>
-                              <button
-                                disabled={moving}
-                                onClick={() => handleMoveCourse(course.id, folder.id)}
-                              >
-                                {folder.name}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div style={{ marginTop: 16 }}>
-                        <b>Or create new folder:</b>
-                        <input
-                          type="text"
-                          placeholder="New folder name"
-                          value={newFolderName}
-                          onChange={e => setNewFolderName(e.target.value)}
-                          disabled={moving}
-                          style={{ marginRight: 8 }}
-                        />
-                        <button
-                          disabled={moving}
-                          onClick={() => handleCreateAndMove(course.id)}
-                        >
-                          Create & Move
-                        </button>
-                      </div>
-                      <button
-                        style={{ position: 'absolute', top: 8, right: 8 }}
-                        onClick={() => setShowFolderPopup(null)}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </li>
+              <CourseItem
+                key={course.id}
+                course={course}
+                onSelectCourse={onSelectCourse}
+                folders={folders}
+                token={token}
+                userId={userId}
+                onMoveCourse={handleMoveCourse}
+                onCreateAndMove={handleCreateAndMove}
+                fetchFolders={fetchFolders}
+                moving={moving}
+                folderError={folderError}
+                setFolderError={setFolderError}
+                setNewFolderName={setNewFolderName}
+                newFolderName={newFolderName}
+                showFolderPopup={showFolderPopup}
+                setShowFolderPopup={setShowFolderPopup}
+              />
             ))}
           </ul>
         </>

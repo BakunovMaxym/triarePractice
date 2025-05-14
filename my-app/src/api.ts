@@ -214,4 +214,16 @@ export async function getUser(token: string, id: string) {
   return res.json();
 }
 
-export { }
+export async function deleteFolder(token: string, folderId: string) {
+  const res = await fetch(`${API_URL}/folder/${folderId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Failed to delete folder');
+  // Повертаємо пустий об'єкт, бо бекенд повертає 204 No Content
+  return {};
+}
+
+export {}
