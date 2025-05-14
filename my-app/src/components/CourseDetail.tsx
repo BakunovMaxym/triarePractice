@@ -21,18 +21,33 @@ export function CourseDetail({
   const fetchCourse = () => {
     getCourse(token, courseId)
       .then(setCourse)
-      .catch(() => setError('Failed to load course'));
+      .catch(() => setError('Не вдалося завантажити курс'));
   };
 
-  // Fetch user-tasks for each task if teacher
   useEffect(() => {
     fetchCourse();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, courseId]);
+
+  const formatTime = (seconds: number) => {
+  if (!seconds || seconds <= 0) return 'Не задано';
+
+  const days = Math.floor(seconds / (3600 * 24));
+  const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  let parts = [];
+  if (days > 0) parts.push(`${days} дн.`);
+  if (hours > 0) parts.push(`${hours} год.`);
+  if (minutes > 0) parts.push(`${minutes} хв.`);
+  if (secs > 0 && parts.length === 0) parts.push(`${secs} с.`); // показувати секунди, тільки якщо нічого іншого
+
+  return parts.join(' ');
+};
+
 
   useEffect(() => {
     if (isTeacher && course && Array.isArray(course.tasks)) {
-      // For each task, fetch user-tasks assigned to it
       Promise.all(
         course.tasks.map(async (task: any) => {
           const res = await fetch(`/task/${task.id}/user-tasks`, {
@@ -53,57 +68,71 @@ export function CourseDetail({
   }, [isTeacher, course, token]);
 
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
-  if (!course) return <div>Loading...</div>;
+  if (!course) return <div>Завантаження...</div>;
 
   const userId = course.owner?.id || '';
 
   return (
     <div>
-      <button onClick={onBack} style={{ marginBottom: 16 }}>Back</button>
-      <h2>{course.name}</h2>
-      <div style={{ marginBottom: 8 }}>
-        <strong>Owner:</strong> {course.owner?.firstName} {course.owner?.lastName}
+      <div style={{ flex: 2 }}>
+        <button onClick={onBack} style={{ marginBottom: 16 }}>Назад</button>
+        <h2>{course.name}</h2>
+        <div><strong>Категорія:</strong> {course.categoryName}</div>
+        <div><strong>Підкатегорія:</strong> {course.subCategoryName}</div>
+        <div><strong>Створено:</strong> {new Date(course.createdAt).toLocaleString()}</div>
+        <div><strong>Власник:</strong> {course.owner?.firstName} {course.owner?.lastName}</div>
+        <div><strong>Викладачі:</strong> {(course.teachers || []).map((t: any) => `${t.firstName} ${t.lastName}`).join(', ')}</div>
+
+        <h3 style={{ marginTop: 24 }}>Завдання</h3>
+        {isTeacher && <CreateTaskForm token={token} courseId={courseId} onCreated={fetchCourse} />}
+
+        {Array.isArray(course.tasks) && course.tasks.length > 0 ? (
+          <ul style={{ paddingLeft: 20 }}>
+            {course.tasks.map((task: any) => (
+              <li key={task.id} style={{ marginBottom: 24, border: "solid" }}>
+                <b>{task.name}</b>
+                <div><strong>Автор:</strong> {task.owner?.firstName} {task.owner?.lastName}</div>
+                <div><strong>Час на виконання:</strong> {formatTime(task.timeToComplete)}</div>
+
+                {isTeacher && userTasksByTask[task.id] && (
+                  <div style={{ marginTop: 8, background: '#f5f5fa', padding: 8, borderRadius: 6 }}>
+                    <strong>Призначено студентам:</strong>
+                    <ul style={{ marginTop: 4 }}>
+                      {userTasksByTask[task.id].length === 0 && <li>Немає призначених студентів</li>}
+                      {userTasksByTask[task.id].map((ut: any) => (
+                        <li key={ut.id}>
+                          {ut.user?.firstName} {ut.user?.lastName} — <b>{ut.status}</b>
+                          {ut.grade && <> | Оцінка: {ut.grade}</>}
+                          {ut.deadline && <> | Дедлайн: {new Date(ut.deadline).toLocaleString()}</>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* <TaskComments taskId={task.id} userId={userId} /> */}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div>Немає завдань для цього курсу.</div>
+        )}
       </div>
-      <div style={{ marginBottom: 8 }}>
-        <strong>Teachers:</strong>{' '}
-        {(course.teachers || []).map((t: any) => `${t.firstName} ${t.lastName}`).join(', ')}
+
+      <div style={{ flex: 1, background: '#f9f9f9', padding: 16, borderRadius: 8 }}>
+        <h3>Студенти</h3>
+        {course.students?.length ? (
+          <ul>
+            {course.students.map((s: any) => (
+              <li key={s.id}>
+                {s.firstName} {s.lastName}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div>Студентів ще не додано.</div>
+        )}
       </div>
-      <div style={{ marginBottom: 16 }}>
-        <strong>Students:</strong>{' '}
-        {(course.students || []).map((s: any) => `${s.firstName} ${s.lastName}`).join(', ')}
-      </div>
-      <h3>Tasks</h3>
-      {isTeacher && <CreateTaskForm token={token} courseId={courseId} onCreated={fetchCourse} />}
-      {Array.isArray(course.tasks) && course.tasks.length > 0 ? (
-        <ul>
-          {course.tasks.map((task: any) => (
-            <li key={task.id} style={{ marginBottom: 32 }}>
-              <b>{task.name}</b>
-              <div style={{ marginBottom: 8 }}>{task.textContent}</div>
-              {/* Teacher-only: show user-task info */}
-              {isTeacher && userTasksByTask[task.id] && (
-                <div style={{ margin: '8px 0', padding: '8px', background: '#f5f5fa', borderRadius: 6 }}>
-                  <strong>Assigned to:</strong>
-                  <ul>
-                    {userTasksByTask[task.id].length === 0 && <li>No students assigned</li>}
-                    {userTasksByTask[task.id].map((ut: any) => (
-                      <li key={ut.id}>
-                        {ut.user?.firstName} {ut.user?.lastName} — <b>{ut.status}</b>
-                        {/* Optionally show grade if available: */}
-                        {ut.grade && <> | Grade: {ut.grade}</>}
-                        {ut.deadline && <> | Deadline: {ut.deadline}</>}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <TaskComments taskId={task.id} userId={userId} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div>No tasks for this course.</div>
-      )}
     </div>
   );
 }
