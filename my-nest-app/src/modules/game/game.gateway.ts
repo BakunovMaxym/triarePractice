@@ -64,7 +64,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const token = await this.authService.createAccessToken({ user: inGameUser })
 
     const loginPayload: LoginPayloadDto = { user: inGameUser, token }
-    this.server.to(game.id).emit('gameCreated', game);
+
+    const curentGame: GameDto = await this.gameService.findOne(game.id)
+
+    this.server.to(game.id).emit('gameCreated', curentGame);
     socket.emit('roomJoined', loginPayload);
     console.log();
 
@@ -100,10 +103,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket.emit('error', {desription:'You are not allowed to kick users from the game'});
       return false;
     }
-    await this.gameService.kickFromGame(gameId, kickDto.playerId)
+    await this.gameService.kickFromGame(gameId, kickDto.playerId);
 
-    socket.leave(gameId);
     this.server.to(gameId).emit('Kicked', kickDto.playerId);
+    
+    (await this.server.sockets.fetchSockets()).forEach((socke) => {
+      if(socke.rooms.has(kickDto.playerId)){
+        socke.leave(gameId);
+      }
+    })
     return true;
   }
 
@@ -148,14 +156,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async startGame(@ConnectedSocket() socket: Socket, @AuthUser() user: UserDto){
     const gameId = user.game.id;
     
-    const game: GameDto = await this.gameService.findOne(gameId);
+    let game: GameDto = await this.gameService.findOne(gameId);
     if (user.role !== RoleType.HOST || game.status !== GameStatuses.WITING_PLAYERS) {
       socket.emit('error', {desription: 'You can not start the game'});
+      return false;
     }
 
     const turnOrder = await this.gameService.startGame(game)
     this.server.to(gameId).emit('gameStarted', turnOrder);
+    game = await this.gameService.findOne(gameId);
     this.gameService.StartTurn(game);
+    return true;
+
   }
 
   @UseGuards(WsAuthGuard)

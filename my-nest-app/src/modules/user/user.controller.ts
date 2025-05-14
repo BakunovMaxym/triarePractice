@@ -5,7 +5,7 @@ import {
   HttpStatus,
 
 } from '@nestjs/common';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
 import { ApiPageResponse } from '../../decorators/api-page-response.decorator.ts';
@@ -38,6 +38,7 @@ export class UserController {
     description: 'Get users list',
     type: UserDto,
   })
+  @ApiParam({name: 'id', type: String})
   getUser(@UUIDParam('id') userId: Uuid): Promise<UserDto> {
     return this.userService.getUser(userId);
   }

@@ -32,30 +32,57 @@
         }
 
         #startGame {
-            visibility: hidden;
+            display: block;
         }
 
-        #game {
-            visibility: hidden;
+        #Game {
+            display: none;
+
         }
 
         #yourTurn {
-            visibility: hidden;
+            display: none;
+        }
+
+        #OtherUsers,
+        #Yourproperties,
+        #propertieses {
+            display: flex;
+            flex-direction: row;
+            column-gap: 5px;
+        }
+
+        #Yourproperties div,
+        #OtherUsers div,
+        #propertieses div {
+            border: solid;
+            padding: 5px;
         }
     </style>
 </head>
 
 <body>
     <h1>Socket.IO Тестер Гри</h1>
+    <p>game Id:</p>
+    <button onclick=copyGameId()> copyId </button>
     <p id="gameId"></p>
+    <br>
+    <p>UserId:</p>
+    <button onclick=copyUserId()> copyId </button>
+
     <p id="UserId"></p>
-
+    <br>
+    <p>money:</p>
     <p id="money"></p>
-    <p id="propertieses"></p>
-    <p id="Yourproperties"></p>
-
-    <p id="OtherUsers"></p>
-
+    <br>
+    <p>propertieses:</p>
+    <div id="propertieses"></div>
+    <br>
+    <p>Yourproperties:</p>
+    <div id="Yourproperties"></div>
+    <br>
+    <p>OtherUsers:</p>
+    <div id="OtherUsers"></div>
 
     <div class="section">
         <h2>Підключення</h2>
@@ -103,13 +130,17 @@
         </div>
         <div class="section">
             <h2>старт гри</h2>
-
             <button id="startGameBtn">старт гри</button>
         </div>
 
     </div>
 
-    <div>
+    <div id="Game">
+        <p>TurnOrder:</p>
+        <p id="TurnOrder"></p>
+        <div id="YourTurn">
+
+        </div>
 
     </div>
 
@@ -121,10 +152,283 @@
     <script>
         let socket;
         let latestToken = null;
-        let hasReconnectedWithToken = false;
 
+        const tokenFromStorage = sessionStorage.getItem('token')
+        if (tokenFromStorage) {
+            latestToken = tokenFromStorage
+        }
+
+        let hasReconnectedWithToken = false;
         let game = null;
         let curentUser = null;
+        function copyGameId() {
+            navigator.clipboard.writeText(game.id)
+        }
+        function copyUserId() {
+            navigator.clipboard.writeText(curentUser.id)
+        }
+
+        function updateTexts() {
+            document.getElementById('gameId').textContent = '';
+            document.getElementById('UserId').textContent = '';
+            document.getElementById('money').textContent = '';
+            document.getElementById('propertieses').textContent = '';
+            document.getElementById('Yourproperties').textContent = '';
+            document.getElementById('OtherUsers').textContent = '';
+
+            if (curentUser && curentUser.id !== undefined) {
+                document.getElementById('UserId').textContent = curentUser.id;
+                document.getElementById('money').textContent = curentUser.money;
+            }
+
+            if (game && game.id !== undefined) {
+                document.getElementById('gameId').textContent = game.id;
+            }
+
+            let usersDiv = document.getElementById('OtherUsers');
+            if (usersDiv && game && Array.isArray(game.users)) {
+                usersDiv.innerHTML = '';
+                game.users.forEach(user => {
+                    if (user && user.id !== undefined) {
+                        let div = document.createElement('div');
+
+                        let buttom = document.createElement('button')
+                        buttom.textContent = "copy id"
+                        buttom.addEventListener('click', () => {
+                            navigator.clipboard.writeText(user.id)
+                        })
+                        div.appendChild(buttom)
+
+
+                        let name = document.createElement('p')
+                        name.textContent = "name: " + user.username
+                        div.appendChild(name)
+
+                        let money = document.createElement('p')
+                        money.textContent = 'money: ' + user.money
+                        div.appendChild(money)
+
+                        let role = document.createElement('p')
+                        role.textContent = 'role: ' + user.role
+                        div.appendChild(role)
+
+                        let inJail = document.createElement('p')
+                        inJail.textContent = 'in jail: ' + user.inJail
+                        div.appendChild(inJail)
+
+                        let getOutOfJailCard = document.createElement('p')
+                        getOutOfJailCard.textContent = 'getOutOfJail: ' + user.getOutOfJailCard
+                        div.appendChild(getOutOfJailCard)
+
+                        let JailTime = document.createElement('p')
+                        JailTime.textContent = 'jailTime: ' + user.JailTime
+                        div.appendChild(JailTime)
+
+                        if (user.properties) {
+                            let properties = document.createElement('ul')
+                            user.properties.forEach((properti) => {
+                                let li = document.createElement('li')
+                                li.textContent = properti.property.name
+                                properties.appendChild(li);
+                            })
+
+                            div.appendChild(properties)
+                        }
+
+
+                        usersDiv.appendChild(div);
+                    }
+                });
+            }
+
+            let turnorderText = document.getElementById('TurnOrder');
+            if (turnorderText && game && Array.isArray(game.turnOrder)) {
+                turnorderText.textContent = '';
+                game.turnOrder.forEach(element => {
+                    if (element !== undefined) {
+                        turnorderText.textContent += element + ' , ';
+                    }
+                });
+            }
+
+            let propertDiv = document.getElementById('propertieses');
+            if (propertDiv && game && Array.isArray(game.propertys)) {
+                propertDiv.innerHTML = '';
+                game.propertys.forEach(property => {
+                    if (property && property.id !== undefined) {
+                        let div = document.createElement('div');
+
+                        let buttom = document.createElement('button')
+                        buttom.textContent = "copy id"
+                        buttom.addEventListener('click', () => {
+                            navigator.clipboard.writeText(property.id)
+                        })
+                        div.appendChild(buttom)
+
+
+                        let name = document.createElement('p')
+                        name.textContent = "name: " + property.property.name
+                        div.appendChild(name)
+
+                        let type = document.createElement('p')
+                        type.textContent = "type: " + property.property.type
+                        div.appendChild(type)
+
+                        let propertyType = document.createElement('p')
+                        propertyType.textContent = "status: " + property.propertyType
+                        div.appendChild(propertyType)
+
+                        if (property.owner) {
+                            let owner = document.createElement('p')
+                            owner.textContent = "owner: " + property.owner.name
+                            div.appendChild(owner)
+                        }
+
+
+                        let upgradeCount = document.createElement('p')
+                        upgradeCount.textContent = "upgradeCount: " + property.upgradeCount
+                        div.appendChild(upgradeCount)
+
+                        let price = document.createElement('p')
+                        price.textContent = "price: " + property.property.price
+                        div.appendChild(price)
+
+                        let street = document.createElement('p')
+                        street.textContent = "street: " + property.property.street
+                        div.appendChild(street)
+
+                        let upgradePrice = document.createElement('p')
+                        upgradePrice.textContent = "upgradePrice: " + property.property.upgradePrice
+                        div.appendChild(upgradePrice)
+
+                        let rent = document.createElement('p')
+                        rent.textContent = "rent: " + property.property.rent
+                        div.appendChild(rent)
+
+                        let rentAllStreet = document.createElement('p')
+                        rentAllStreet.textContent = "rentAllStreet: " + property.property.rentAllStreet
+                        div.appendChild(rentAllStreet)
+
+                        let rentWithOneHouse = document.createElement('p')
+                        rentWithOneHouse.textContent = "rentWithOneHouse: " + property.property.rentWithOneHouse
+                        div.appendChild(rentWithOneHouse)
+
+                        let rentWithTwoHouse = document.createElement('p')
+                        rentWithTwoHouse.textContent = "rentWithTwoHouse: " + property.property.rentWithTwoHouse
+                        div.appendChild(rentWithTwoHouse)
+
+                        let rentWithThreeHouse = document.createElement('p')
+                        rentWithThreeHouse.textContent = "rentWithThreeHouse: " + property.property.rentWithThreeHouse
+                        div.appendChild(rentWithThreeHouse)
+
+                        let rentWithFourHouse = document.createElement('p')
+                        rentWithFourHouse.textContent = "rentWithFourHouse: " + property.property.rentWithFourHouse
+                        div.appendChild(rentWithFourHouse)
+
+                        let rentWithHotel = document.createElement('p')
+                        rentWithHotel.textContent = "rentWithHotel: " + property.property.rentWithHotel
+                        div.appendChild(rentWithHotel)
+
+                        propertDiv.appendChild(div);
+                    }
+                });
+            }
+
+            let yourpropertDiv = document.getElementById('Yourproperties');
+            if (yourpropertDiv && curentUser && Array.isArray(curentUser.propertys)) {
+                yourpropertDiv.innerHTML = '';
+                curentUser.properties.forEach(property => {
+                    if (property && property.id !== undefined) {
+                        let div = document.createElement('div');
+
+                        let buttom = document.createElement('button')
+                        buttom.textContent = "copy id"
+                        buttom.addEventListener('click', () => {
+                            navigator.clipboard.writeText(property.id)
+                        })
+                        div.appendChild(buttom)
+
+
+                        let name = document.createElement('p')
+                        name.textContent = "name: " + property.property.name
+                        div.appendChild(name)
+
+                        let type = document.createElement('p')
+                        type.textContent = "type: " + property.property.type
+                        div.appendChild(type)
+
+                        let propertyType = document.createElement('p')
+                        propertyType.textContent = "status: " + property.propertyType
+                        div.appendChild(propertyType)
+
+                        if (property.owner) {
+                            let owner = document.createElement('p')
+                            owner.textContent = "owner: " + property.owner.name
+                            div.appendChild(owner)
+                        }
+
+
+                        let upgradeCount = document.createElement('p')
+                        upgradeCount.textContent = "upgradeCount: " + property.upgradeCount
+                        div.appendChild(upgradeCount)
+
+                        let price = document.createElement('p')
+                        price.textContent = "price: " + property.property.price
+                        div.appendChild(price)
+
+                        let street = document.createElement('p')
+                        street.textContent = "street: " + property.property.street
+                        div.appendChild(street)
+
+                        let upgradePrice = document.createElement('p')
+                        upgradePrice.textContent = "upgradePrice: " + property.property.upgradePrice
+                        div.appendChild(upgradePrice)
+
+                        let rent = document.createElement('p')
+                        rent.textContent = "rent: " + property.property.rent
+                        div.appendChild(rent)
+
+                        let rentAllStreet = document.createElement('p')
+                        rentAllStreet.textContent = "rentAllStreet: " + property.property.rentAllStreet
+                        div.appendChild(rentAllStreet)
+
+                        let rentWithOneHouse = document.createElement('p')
+                        rentWithOneHouse.textContent = "rentWithOneHouse: " + property.property.rentWithOneHouse
+                        div.appendChild(rentWithOneHouse)
+
+                        let rentWithTwoHouse = document.createElement('p')
+                        rentWithTwoHouse.textContent = "rentWithTwoHouse: " + property.property.rentWithTwoHouse
+                        div.appendChild(rentWithTwoHouse)
+
+                        let rentWithThreeHouse = document.createElement('p')
+                        rentWithThreeHouse.textContent = "rentWithThreeHouse: " + property.property.rentWithThreeHouse
+                        div.appendChild(rentWithThreeHouse)
+
+                        let rentWithFourHouse = document.createElement('p')
+                        rentWithFourHouse.textContent = "rentWithFourHouse: " + property.property.rentWithFourHouse
+                        div.appendChild(rentWithFourHouse)
+
+                        let rentWithHotel = document.createElement('p')
+                        rentWithHotel.textContent = "rentWithHotel: " + property.property.rentWithHotel
+                        div.appendChild(rentWithHotel)
+
+                        yourpropertDiv.appendChild(div);
+                    }
+                });
+            }
+        
+            if(game.status === 'waiting_players'){
+                document.getElementById('startGame').style.display = 'block';
+                document.getElementById('Game').style.display = 'none';
+            }
+            else{
+                document.getElementById('startGame').style.display = 'none';
+                document.getElementById('Game').style.display = 'block';
+            }
+            
+            
+        }
+
 
 
 
@@ -139,7 +443,12 @@
         document.getElementById('connectBtn').addEventListener('click', () => {
             const serverUrl = document.getElementById('serverUrl').value;
             socket = io(serverUrl, { transports: ['websocket'] });
-
+            if (latestToken) {
+                socket.auth = { token: latestToken };  // Wrap in an object!
+                socket.disconnect().connect();
+                hasReconnectedWithToken = true;
+                socket.emit('me')
+            }
             socket.on('connect', () => log('Підключено до сервера'));
             socket.on('disconnect', () => log('Відключено від сервера'));
 
@@ -147,6 +456,7 @@
                 log('roomJoined: ' + JSON.stringify(data));
                 if (data.token && data.token.accessToken) {
                     latestToken = data.token.accessToken;
+                    sessionStorage.setItem('token', latestToken)
                 }
                 if (!hasReconnectedWithToken) {
                     log('👉 Setting auth with token: ' + latestToken);
@@ -155,57 +465,93 @@
                     socket.disconnect().connect();
                     log('🔄 Reconnecting with token...');
                 }
-                curentUser = data.user.id
+                curentUser = data.user
+                updateTexts()
+
             });
             socket.on('gameCreated', data => {
                 log('gameCreated: ' + JSON.stringify(data))
                 game = data;
-                document.getElementById('gameId').textContent = game.id;
-                let propertiesText = document.getElementById('propertieses');
-                game.propertys.forEach(element => {
-                    propertiesText.textContent += element.property.id + ' , ';
-                });
+                updateTexts()
+
 
             });
             socket.on('userJoined', data => {
                 log('userJoined: ' + JSON.stringify(data))
                 game = data.curentGame;
-                let usersText = document.getElementById('OtherUsers');
-                data.curentGame.users.forEach(element => {
-                    propertiesText.usersText += element.id + ' , ';
-                });
+                console.log(data)
+                updateTexts()
+
             });
             socket.on('userLeft', data => {
                 log('userLeft: ' + JSON.stringify(data));
                 game.users = game.users.filter((user) => user.id !== data);
-                let usersText = document.getElementById('OtherUsers');
-                usersText.textContent = '';
-                game.users.forEach(element => {
-                    usersText.usersText += element.id + ' , ';
-                });
+                updateTexts()
             });
             socket.on('Kicked', data => {
                 log('Kicked: ' + data)
                 game.users = game.users.filter((user) => user.id !== data);
-                let usersText = document.getElementById('OtherUsers');
-                usersText.textContent = '';
-                game.users.forEach(element => {
-                    usersText.usersText += element.id + ' , ';
-                });
+                if (curentUser.id === data) {
+                    latestToken = null;
+                    hasReconnectedWithToken = false;
+                    game = null;
+                    curentUser = null;
+                }
+                updateTexts()
             });
-            socket.on('Leave', data => log('Leave: ' + data));
-            socket.on('error', data => log('Error: ' + data.description));
-            socket.on('hello', data => log('hello: ' + data));
+            socket.on('Leave', data => {
+                log('Leave: ' + data);
+                socket.disconnect();
+                latestToken = null;
+                hasReconnectedWithToken = false;
+                game = null;
+                curentUser = null;
+                updateTexts()
+
+
+            });
+            socket.on('error', data => {
+                log('Error: ' + data.description)
+                alert(data.description)
+            });
+            socket.on('kaput', data => {
+                log('KAPUT: ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌')
+                socket.disconnect();
+                latestToken = null;
+                hasReconnectedWithToken = false;
+                game = null;
+                curentUser = null;
+                updateTexts()
+            });
+
+            socket.on('settingsChanged', data => {
+                log('settingsChanged: ' + JSON.stringify(data))
+                game.colection = data;
+            });
+            socket.on('gameStarted', data => {
+                log('gameStarted: ' + JSON.stringify(data))
+                game = data;
+                updateTexts()
+                socket.emit('me')
+
+
+
+                
+            });
+
+            socket.on('you', data => {
+                log('you: ' + JSON.stringify(data))
+                curentUser = data;
+                game = data.game;
+                updateTexts()
+            });
+
             socket.on('userpasive', data => log('userpasive: ' + data));
             socket.on('useractive', data => log('useractive: ' + data));
-            socket.on('kaput', data => log('KAPUT: ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌'));
-            socket.on('settingsChanged', data => log('settingsChanged: ' + JSON.stringify(data)));
-            socket.on('gameStarted', data => log('gameStarted: ' + JSON.stringify(data)));
-            socket.on('you', data => log('you: ' + JSON.stringify(data)));
-
 
 
         });
+
 
         document.getElementById('createGameBtn').addEventListener('click', () => {
             const username = document.getElementById('createUsername').value;
@@ -257,6 +603,8 @@
         document.getElementById('meBtn').addEventListener('click', () => {
 
             socket.emit('me');
+
+
             log('me: ');
         });
     </script>

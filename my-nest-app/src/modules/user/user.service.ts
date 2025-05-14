@@ -40,7 +40,19 @@ export class UserService {
         id: userId
       },
       relations: {
-        game: true
+        game: {
+          propertys: {
+            property: true
+          },
+          users: true,
+          colection: {
+            setings: true
+          }
+        },
+        properties:{
+          property: true,
+          owner: true,
+        }
       }
     });
 

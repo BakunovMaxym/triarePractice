@@ -48,7 +48,21 @@ export class GameService {
   ) { }
 
   getGame(id: Uuid) {
-    return this.gameRepository.findOneOrFail({ where: { id }, relations: { users: true } }).then((game) => { return game.toDto() });
+    return this.gameRepository.findOneOrFail({
+      where: {
+        id
+      },
+      relations: {
+        users: true,
+        propertys: {
+          property: true,
+          owner: true,
+        },
+        colection:{
+          setings: true
+        }
+      }
+    }).then((game) => { return game.toDto() });
   }
 
   async kickFromGame(gameId: Uuid, playerId: Uuid) {
@@ -121,6 +135,8 @@ export class GameService {
     return this.gameRepository.findOne({
       where: { id: id },
       relations: {
+        propertys: true,
+        users: true,
         colection: {
           setings: true,
         },
@@ -175,7 +191,7 @@ export class GameService {
   }
 
   async startGame(game: GameDto) {
-    game = await this.gameRepository.findOneOrFail({ where: { id: game.id }, relations: { users: true, colection: { propertyCards: true, chanceCards: true, comunityChests: true } } }).then((game) => game.toDto())
+    game = await this.gameRepository.findOneOrFail({ where: { id: game.id }, relations: { users: true, colection: { propertyCards: true, chanceCards: true, comunityChests: true, setings: true } } }).then((game) => game.toDto())
     game.status = GameStatuses.IN_PROGRESS;
 
     const turnOrder = await Promise.all(
@@ -185,6 +201,11 @@ export class GameService {
         return { user, diceRoll, total };
       })
     );
+
+    game.users.forEach((user) => {
+      user.money = game.colection.setings.starterMoney
+      this.userService.save(user)
+    })
 
     turnOrder.sort((a, b) => b.total - a.total);
 
@@ -199,6 +220,7 @@ export class GameService {
   }
 
   async StartTurn(game: GameDto) {
+    console.log(game)
     const user = game.users.filter((user) => user.id === game.turnOrder[(game.currentTurn % game.turnOrder.length)])[0];
     if (!user) {
       throw new NotFoundException('User not found')

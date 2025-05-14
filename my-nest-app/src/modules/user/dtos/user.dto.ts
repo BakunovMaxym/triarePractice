@@ -48,7 +48,7 @@ export class UserDto extends AbstractDto {
     this.game = user?.game.toDto();
     this.inJail = user.inJail;
     this.doublesCount = user.doublesCount;
-    this.getOutOfJailCard = this.getOutOfJailCard;
+    this.getOutOfJailCard = user.getOutOfJailCard;
     this.JailTime = user.JailTime;
   }
 }
