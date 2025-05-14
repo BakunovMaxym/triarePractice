@@ -147,7 +147,8 @@ export async function createFolder(token: string, name: string, ownerId: string,
   // Ensure all required fields are present and types are correct
   const body: any = { name, ownerId };
   if (parentFolderId) body.parentFolderId = parentFolderId;
-  if (courseIds) body.courseIds = courseIds;
+  // Always send courseIds as an array (default to empty array if not provided)
+  body.courseIds = Array.isArray(courseIds) ? courseIds : [];
   const res = await fetch(`${API_URL}/folder`, {
     method: 'POST',
     headers: {

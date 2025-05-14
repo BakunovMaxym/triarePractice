@@ -119,8 +119,8 @@ export function CourseList({
     setMoving(true);
     setFolderError(null);
     try {
-      // Передаємо ownerId як третій аргумент
-      const folder = await createFolder(token, newFolderName.trim(), userId);
+      // Always pass courseIds as an empty array
+      const folder = await createFolder(token, newFolderName.trim(), userId, undefined, []);
       await moveCourseToFolder(token, folder.id, courseId);
       setShowFolderPopup(null);
       setNewFolderName('');
