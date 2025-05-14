@@ -97,7 +97,7 @@ export function CourseDetail({
                   </ul>
                 </div>
               )}
-              <TaskComments taskId={task.id} userId={userId} />
+              <TaskComments taskId={task.id} userId={userId} token={token} />
             </li>
           ))}
         </ul>

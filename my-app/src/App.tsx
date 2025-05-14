@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
-import { CourseList } from './components/CourseList';
-import { CourseDetail } from './components/CourseDetail';
-import { CategoryList } from './components/CategoryList';
-import { SubCategoryList } from './components/SubCategoryList';
-import { UserTasks } from './components/UserTasks';
+import { NavBar } from './components/NavBar';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { CoursesPage } from './pages/CoursesPage';
+import { CourseDetailPage } from './pages/CourseDetailPage';
+import { UserTasksPage } from './pages/UserTasksPage';
 import './App.css';
 
 type Page =
@@ -82,53 +81,37 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <nav style={{ marginBottom: 24 }}>
-        {token ? (
-          <>
-            <button onClick={() => safeSetPage('courses')}>Courses</button>
-            <button onClick={() => safeSetPage('categories')}>Categories</button>
-            <button onClick={() => safeSetPage('subcategories')}>SubCategories</button>
-            <button onClick={() => safeSetPage('userTasks')}>My Tasks</button>
-            <button onClick={handleLogout}>Logout</button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => safeSetPage('login')}>Login</button>
-            <button onClick={() => safeSetPage('register')}>Register</button>
-          </>
-        )}
-      </nav>
-
-      {page === 'login' && <Login onLogin={handleLogin} />}
-      {page === 'register' && <Register onRegister={() => setPage('login')} />}
+      <NavBar
+        token={token}
+        onNavigate={(page: string) => safeSetPage(page as Page)}
+        onLogout={handleLogout}
+      />
+      {page === 'login' && <LoginPage onLogin={handleLogin} />}
+      {page === 'register' && <RegisterPage onRegister={() => setPage('login')} />}
       {page === 'courses' && token && userId && (
-        <CourseList
+        <CoursesPage
           token={token}
+          userId={userId}
+          isTeacher={isTeacher}
           onSelectCourse={(id) => {
             setSelectedCourseId(id);
             setPage('courseDetail');
           }}
-          isTeacher={isTeacher}
-          userId={userId}
         />
       )}
-
       {page === 'courseDetail' && token && selectedCourseId && (
         <React.Suspense fallback={<div>Loading course...</div>}>
-          <CourseDetail
+          <CourseDetailPage
             token={token}
             courseId={selectedCourseId}
-            onBack={() => setPage('courses')}
             isTeacher={isTeacher}
+            onBack={() => setPage('courses')}
           />
         </React.Suspense>
       )}
-      {page === 'categories' && token && <CategoryList />}
-      {page === 'subcategories' && token && <SubCategoryList />}
       {page === 'userTasks' && token && userId && (
-        <UserTasks token={token} userId={userId} />
+        <UserTasksPage token={token} userId={userId} />
       )}
-
     </div>
   );
 }

@@ -4,14 +4,17 @@ type Comment = {
   id: string;
   content: string;
   ownerId: string;
+  owner?: { firstName?: string; lastName?: string; email?: string };
 };
 
 export function TaskComments({
   taskId,
   userId,
+  token,
 }: {
   taskId: string;
   userId: string;
+  token: string;
 }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,12 +26,17 @@ export function TaskComments({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:3000/comments/task/${taskId}`);
-      if (!res.ok) throw new Error('Failed to fetch comments');
+      const res = await fetch(`http://localhost:3000/comments/task/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Failed to fetch comments: ${res.status} ${errText}`);
+      }
       const data = await res.json();
       setComments(data);
-    } catch (e) {
-      setError('Failed to load comments');
+    } catch (e: any) {
+      setError(e?.message || 'Failed to load comments');
     } finally {
       setLoading(false);
     }
@@ -37,7 +45,7 @@ export function TaskComments({
   useEffect(() => {
     fetchComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskId]);
+  }, [taskId, token]);
 
   async function handleAddComment(e: React.FormEvent) {
     e.preventDefault();
@@ -49,18 +57,41 @@ export function TaskComments({
         `http://localhost:3000/comments/comment/${taskId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ content: newComment, ownerId: userId }),
         }
       );
-      if (!res.ok) throw new Error('Failed to add comment');
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Failed to add comment: ${res.status} ${errText}`);
+      }
       setNewComment('');
       await fetchComments();
-    } catch (e) {
-      setError('Failed to add comment');
+    } catch (e: any) {
+      setError(e?.message || 'Failed to add comment');
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function renderUser(comment: Comment) {
+    if (comment.owner && (comment.owner.firstName || comment.owner.lastName)) {
+      return (
+        <b>
+          {comment.owner.firstName || ''} {comment.owner.lastName || ''}
+        </b>
+      );
+    }
+    if (comment.owner && comment.owner.email) {
+      return <b>{comment.owner.email}</b>;
+    }
+    if (comment.ownerId) {
+      return <b>{comment.ownerId.slice(0, 8)}</b>;
+    }
+    return <b>Unknown</b>;
   }
 
   return (
@@ -69,12 +100,12 @@ export function TaskComments({
       {loading ? (
         <div>Loading...</div>
       ) : error ? (
-        <div style={{ color: 'red' }}>{error}</div>
+        <div style={{ color: 'red', whiteSpace: 'pre-wrap' }}>{error}</div>
       ) : (
         <ul>
           {comments.map((c) => (
             <li key={c.id}>
-              <b>{c.ownerId.slice(0, 8)}:</b> {c.content}
+              {renderUser(c)}: {c.content}
             </li>
           ))}
         </ul>
