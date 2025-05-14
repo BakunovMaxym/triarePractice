@@ -1,6 +1,10 @@
 export enum PropertyType {
     STANDART = 'STANDART',
     FOURTYPE = 'FOURTYPE',
-    DiCETYPE = 'DiCETYP',
+    DiCETYPE = 'DICETYP',
+    PRISON = 'PRISON',
+    GO_TO_PRISON = 'GO_TO_PRISON',
+    CHANCHE = 'CHANCE',
+    COMUNITY_CHEST = 'COMUNITY_CHEST'
   }
   

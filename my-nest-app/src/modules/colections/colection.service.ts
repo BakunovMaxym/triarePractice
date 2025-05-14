@@ -29,6 +29,8 @@ export class ColectionService {
             relations:{
                 setings: true,
                 propertyCards: true,
+                chanceCards:true,
+                comunityChests:true
             }
         }).then((colections) => colections.map((colection) => colection.toDto()));
 
@@ -51,6 +53,8 @@ export class ColectionService {
             relations:{
                 setings: true,
                 propertyCards: true,
+                chanceCards:true,
+                comunityChests:true
             },
             where: {
                 id: ColectionId,

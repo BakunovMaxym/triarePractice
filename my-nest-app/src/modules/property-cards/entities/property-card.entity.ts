@@ -52,7 +52,6 @@ export class PropertyCardEntity extends AbstractEntity<PropertyCardDto>{
     @Column({nullable: true, type: 'integer'})
     rentWithTwoHouse!: number;
 
-
     @Column({nullable: true, type: 'integer'})
     rentWithThreeHouse!: number;
 

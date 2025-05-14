@@ -15,7 +15,7 @@ export class UserEntity extends AbstractEntity<UserDto> {
   @Column({ nullable: false, type: 'integer' })
   money!: number ;
 
-  @OneToMany(()=> PropertyEntity, (property) => property.owner)
+  @OneToMany(()=> PropertyEntity, (property) => property.owner, )
   properties!: Relation<PropertyEntity[]>;
 
   @ManyToOne(() => GameEntity, (game) => game.users)
@@ -24,5 +24,15 @@ export class UserEntity extends AbstractEntity<UserDto> {
   @Column({ nullable:false, type: 'enum', enum: RoleType, default: RoleType.USER })
   role!: RoleType
 
+  @Column({nullable:false, type:'boolean', default: false})
+  inJail!: Boolean;
 
+  @Column({nullable:false, type: 'integer', default: 0})
+  doublesCount!: number
+
+  @Column({nullable:false, type:'boolean', default: false})
+  getOutOfJailCard!: Boolean;
+
+  @Column({nullable:false, type:'integer', default: 0})
+  JailTime!: number;
 }

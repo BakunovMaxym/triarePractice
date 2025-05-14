@@ -61,6 +61,23 @@ export class PropertyService {
     });
   }
 
+  async getUserProperties(userId: Uuid){
+    return this.propertyRepository.find({
+      where:{
+        owner: {
+          id:userId
+        }  
+      },
+      relations:{
+        owner: true
+      }
+    })
+  }
+
+  async save(property: PropertyDto){
+    this.propertyRepository.save(property);
+  }
+
   
 
 

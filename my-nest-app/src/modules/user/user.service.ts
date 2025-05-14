@@ -47,9 +47,12 @@ export class UserService {
     if (!userEntity) {
       throw new UserNotFoundException();
     }
+    console.log("userentity", userEntity)
 
     return userEntity.toDto();
   }
 
-  
+  async save(user:UserDto){
+    await this.userRepository.save(user)
+  }
 }

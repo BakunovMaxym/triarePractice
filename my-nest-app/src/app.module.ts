@@ -25,6 +25,9 @@ import { PropertyCardsModule } from './modules/property-cards/property-cards.mod
 import { GameModule } from './modules/game/game.module';
 import { PropertyModule } from './modules/property/property.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ComunityChestModule } from './modules/comunity-chest/comunity-chest.module';
+import { ChanceCardsModule } from './modules/chance-cards/chance-cards.module';
+import { TurnsModule } from './modules/turns/turns.module';
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
 
@@ -99,6 +102,9 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
         prefix: 'fefefe:',
       }),
     }),
+    ComunityChestModule,
+    ChanceCardsModule,
+    TurnsModule,
 
   ],
   providers: [],

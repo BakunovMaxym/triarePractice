@@ -1,5 +1,6 @@
 import { AbstractDto } from '../../../common/dto/abstract.dto.ts';
 import {
+  BooleanField,
   EnumField,
   NumberField,
   StringFieldOptional,
@@ -16,8 +17,8 @@ export class UserDto extends AbstractDto {
   @StringFieldOptional({ nullable: false })
   username?: string;
 
-  @NumberField({ nullable: true })
-  money?: number;
+  @NumberField({ nullable: true, default: 0 })
+  money!: number;
 
   properties!: PropertyDto[];
 
@@ -26,7 +27,17 @@ export class UserDto extends AbstractDto {
   @EnumField(() => RoleType )
   role !: RoleType
 
+  @BooleanField()
+  inJail!: Boolean;
   
+  @NumberField()
+  doublesCount!: number
+
+  @BooleanField()
+  getOutOfJailCard!: Boolean;
+  
+  @NumberField()
+  JailTime!: number;
 
   constructor(user: UserEntity) {
     super(user);
@@ -35,6 +46,9 @@ export class UserDto extends AbstractDto {
     this.role = user.role;
     this.properties = user.properties?.map((property) => property.toDto());
     this.game = user?.game.toDto();
-    
+    this.inJail = user.inJail;
+    this.doublesCount = user.doublesCount;
+    this.getOutOfJailCard = this.getOutOfJailCard;
+    this.JailTime = user.JailTime;
   }
 }

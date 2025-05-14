@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule} from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { UserModule } from '../user/user.module.ts';
@@ -35,6 +35,6 @@ import { ApiConfigService } from '../../shared/services/api-config.service.ts';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, PublicStrategy,WsJwtService],
-  exports: [ AuthService,WsJwtService, JwtModule],
+  exports: [ AuthService, WsJwtService, JwtModule],
 })
 export class AuthModule {}

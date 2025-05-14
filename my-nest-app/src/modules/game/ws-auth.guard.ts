@@ -1,6 +1,8 @@
 import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
+import type { UserDto } from 'modules/user/dtos/user.dto';
+import type { Socket } from 'socket.io';
 
 @Injectable()
 export class WsAuthGuard implements CanActivate {
@@ -24,6 +26,25 @@ export class WsAuthGuard implements CanActivate {
       console.log("no bueno")
 
       throw new WsException('Invalid or expired token');
+    }
+  }
+
+  GetUser(client: Socket): UserDto | null {
+
+    const token = client.handshake?.auth.token;
+
+    if (!token) {
+      return null;
+
+    }
+    try {
+      const user = this.jwtService.verify(token);
+      
+
+      return user.user;
+    } catch {
+      return null;
+      
     }
   }
 }

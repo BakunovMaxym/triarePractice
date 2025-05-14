@@ -6,9 +6,11 @@ import { PropertyCardEntity } from './entities/property-card.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import type { PropertyCardDto } from './dto/property-card.dto';
 
 @Injectable()
 export class PropertyCardsService{
+  
 
   constructor(
     @InjectRepository(PropertyCardEntity)
@@ -64,9 +66,9 @@ export class PropertyCardsService{
     });
   }
 
-  async findByColectionId(id: Uuid) {
+  async findByColectionId(id: Uuid): Promise<PropertyCardDto[]> {
 
-    const cachedResylt = await this.cacheManager.get(`propertyCardsOfColecion:${id}`)
+    const cachedResylt: PropertyCardDto[] | undefined = await this.cacheManager.get(`propertyCardsOfColecion:${id}`);
     if (cachedResylt) {
       return cachedResylt;
     }
@@ -79,13 +81,31 @@ export class PropertyCardsService{
         throw new NotFoundException('Property cards not found');
       }
       
-      const result = propertyCards.map((propertyCard) => propertyCard.toDto())
+      const result: PropertyCardDto[] = propertyCards.map((propertyCard) => propertyCard.toDto())
 
       this.cacheManager.set(`propertyCardsOfColecion:${id}`, result, 60*60*1000)
       return result;
     });
   }
 
+  async clone(from: Uuid, to: Uuid) {
+    const propertyCards = await this.findByColectionId(from);
+    this.cacheManager.del('colections');
+
+    this.cacheManager.del(`colection:${from}`);
+    this.cacheManager.del(`colectionSmall:${from}`);
+    this.cacheManager.del(`propertyCardsOfColecion:${from}`);
+    
+    propertyCards.forEach(async card => {
+        let cloned: CreatePropertyCardDto & {id?: Uuid} = {...card, colection_id: to};
+        delete cloned.id;
+        await this.create(cloned);;
+    })
+
+    const savedCards = await this.findByColectionId(to);
+
+    return savedCards;
+}
   
   
 }
