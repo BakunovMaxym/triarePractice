@@ -27,4 +27,7 @@ export class Folder extends AbstractEntity<FolderDto> {
     @OneToMany(() => CourseEntity, (course) => course.folder, { cascade: true })
     childCourses?: Relation<CourseEntity[]>;
 
+    @Column('uuid', { array: true, nullable: true })
+    courseIds?: Uuid[];
+
 }
