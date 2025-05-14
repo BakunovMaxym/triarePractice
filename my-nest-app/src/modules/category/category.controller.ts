@@ -3,6 +3,7 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
+import { CategoryDto } from './dto/CategoryDto';
 
 @Controller('categories')
 export class CategoryController {
@@ -19,7 +20,7 @@ export class CategoryController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    async findAll(): Promise<CategoryEntity[]> {
+    async findAll(): Promise<CategoryDto[]> {
         return this.categoryService.findAll();
     }
 
@@ -27,7 +28,7 @@ export class CategoryController {
     @HttpCode(HttpStatus.OK)
     async findOne(
         @Param('name') name: string,
-    ): Promise<CategoryEntity> {
+    ): Promise<CategoryDto> {
         return this.categoryService.findOne(name);
     }
 

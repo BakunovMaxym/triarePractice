@@ -1,12 +1,15 @@
-import { AbstractDto } from '../../../common/dto/abstract.dto';
-import { StringField } from '../../../decorators/field.decorators';
-import type {SubCategoryEntity} from '../entities/sub-category.entity';
-export class SubCategoryDto extends AbstractDto {
+import { StringField, UUIDField } from '../../../decorators/field.decorators';
+import type { SubCategoryEntity } from '../entities/sub-category.entity';
+export class SubCategoryDto {
+
+  @UUIDField()
+  id!: Uuid
+
   @StringField()
-  name?: string;
+  name!: string;
 
   constructor(subcategory: SubCategoryEntity) {
-    super(subcategory)
+    this.id = subcategory.id;
     this.name = subcategory.name;
   }
 }

@@ -1,20 +1,14 @@
 import { StringField } from "../../../decorators/field.decorators";
-import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateCourseDto {
-    @ApiProperty({ description: "course's name" })
-    @StringField()
+    @StringField({ description: "course's name", maxLength: 254 })
     readonly name!: string;
 
-    // @ApiProperty({ description: "owner's id", nullable: true })
-    // @UUIDFieldOptional({ nullable: true })
     owner!: string;
 
-    @ApiProperty({ description: "course's category" })
-    @StringField()
+    @StringField({ description: "course's category", maxLength: 254 })
     readonly category!: string;
 
-    @ApiProperty({ description: "course's subCategory" })
-    @StringField()
+    @StringField({ description: "course's subCategory", maxLength: 254 })
     readonly subCategory!: string;
 }

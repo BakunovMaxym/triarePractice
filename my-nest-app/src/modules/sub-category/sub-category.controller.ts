@@ -12,11 +12,12 @@ import { SubCategoryService } from './sub-category.service';
 import { CreateSubCategoryDto } from './dto/create-sub-category.dto';
 import { UpdateSubCategoryDto } from './dto/update-sub-category.dto';
 import { SubCategoryEntity } from './entities/sub-category.entity';
+import { SubCategoryDto } from './dto/SubCategoryDto';
 
 @ApiTags('sub-categories')
 @Controller('sub-categories')
 export class SubCategoryController {
-  constructor(private readonly subCategoryService: SubCategoryService) {}
+  constructor(private readonly subCategoryService: SubCategoryService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new sub-category' })
@@ -30,7 +31,7 @@ export class SubCategoryController {
   @Get()
   @ApiOperation({ summary: 'Get all sub-categories' })
   @ApiResponse({ status: 200, description: 'List of sub-categories', type: [SubCategoryEntity] })
-  async findAll(): Promise<SubCategoryEntity[]> {
+  async findAll(): Promise<SubCategoryDto[]> {
     return await this.subCategoryService.findAll();
   }
 
@@ -40,8 +41,8 @@ export class SubCategoryController {
   @ApiResponse({ status: 200, description: 'The found sub-category', type: SubCategoryEntity })
   @ApiResponse({ status: 404, description: 'Sub-category not found' })
   async findOne(
-    @Param('name', ) name: string,
-  ): Promise<SubCategoryEntity> {
+    @Param('name',) name: string,
+  ): Promise<SubCategoryDto> {
     return await this.subCategoryService.findOne(name);
   }
 

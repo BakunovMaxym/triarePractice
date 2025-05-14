@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserTask } from './entities/user-task.entity';
@@ -13,6 +13,8 @@ import { RoleType } from '../../constants/role-type';
 import type { UserEntity } from 'modules/user/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CroneTaskService } from '../../modules/crone-task/crone-task.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class UserTasksService {
@@ -20,11 +22,23 @@ export class UserTasksService {
     private readonly googleDriveService: GoogleDriveService,
     private readonly mailService: MailerService,
     private readonly croneTaskService: CroneTaskService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @InjectRepository(UserTask)
     private readonly userTasksRepository: Repository<UserTask>,
     @InjectRepository(UserTaskFileEntity)
     private readonly userTaskFileRepository: Repository<UserTaskFileEntity>,
   ) { }
+
+  async deleteCache(taskey: string) {
+    const keys: string[] = await this.cacheManager.store.keys(taskey);
+
+    if (keys.length > 0) {
+      for (const key of keys) {
+        await this.cacheManager.store.del(key);
+      }
+    }
+  }
+
 
   async create(createDto: CreateUserTaskDto): Promise<UserTask> {
     const userTask = this.userTasksRepository.create(createDto);
@@ -45,22 +59,47 @@ export class UserTasksService {
     return savedUserTask;
   }
 
-  findAllToTask(taskId: Uuid): Promise<UserTask[]> {
-    return this.userTasksRepository.find({ where: { task: { id: taskId } } });
+  async findAllToTask(taskId: Uuid): Promise<UserTask[]> {
+    const cacheKey = `user-tasks:task:${taskId}`;
+    const cached: UserTask[] | undefined = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
+    const utasks = this.userTasksRepository.find({ where: { task: { id: taskId } } }) ?? [];
+
+    await this.cacheManager.set(cacheKey, utasks);
+
+    return utasks;
   }
 
-  findAllToStudent(studentId: Uuid, user: UserEntity): Promise<UserTask[]> {
+  async findAllToStudent(studentId: Uuid, user: UserEntity, courseId: Uuid): Promise<UserTask[]> {
     if (user.role !== RoleType.TEACHER && user.id !== studentId) throw new ForbiddenException
-    return this.userTasksRepository.find({ where: { student: { id: studentId } } });
+
+    const cacheKey = `user-tasks:student:${studentId}:${courseId}`;
+    const cached: UserTask[] | undefined = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
+    const utasks = this.userTasksRepository.find({ where: { student: { id: studentId }, task: { course: { id: courseId } } } }) ?? [];
+
+    await this.cacheManager.set(cacheKey, utasks);
+
+    return utasks
   }
 
   async findOne(id: Uuid, userRole: RoleType): Promise<SingleUserTaskDto> {
+    const cacheKey = `user-tasks:single:${id}:${userRole}`;
+    const cached: SingleUserTaskDto | undefined = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
     const found = await this.userTasksRepository.findOneOrFail({
       where: { id },
       relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
     });
 
-    return new SingleUserTaskDto(found, userRole === RoleType.TEACHER);
+    const singleUTaskDto = new SingleUserTaskDto(found, userRole === RoleType.TEACHER);
+
+    await this.cacheManager.set(cacheKey, singleUTaskDto);
+
+    return singleUTaskDto;
   }
 
   async grade(id: Uuid, grade: number): Promise<SingleUserTaskDto> {
@@ -83,6 +122,10 @@ export class UserTasksService {
     } catch (err) {
       console.log(err);
     }
+
+    await this.deleteCache(`user-task:task:${saved.task.id}`)
+    await this.deleteCache(`user-tasks:student:${saved.student.id}:${saved.task.course.id}`)
+    await this.deleteCache(`user-tasks:single:${saved.id}:*`)
 
     return new SingleUserTaskDto(saved);
   }
@@ -108,6 +151,10 @@ export class UserTasksService {
       console.log(err);
     }
 
+    await this.deleteCache(`user-task:task:${saved.task.id}`)
+    await this.deleteCache(`user-tasks:student:${saved.student.id}:${saved.task.course.id}`)
+    await this.deleteCache(`user-tasks:single:${saved.id}:*`)
+
     return new SingleUserTaskDto(saved);
   }
 
@@ -126,6 +173,11 @@ export class UserTasksService {
     if (found.deadline) this.croneTaskService.expireUserTask(found)
 
     const saved = await this.userTasksRepository.save(found);
+
+    await this.deleteCache(`user-task:task:${saved.task.id}`)
+    await this.deleteCache(`user-tasks:student:${saved.student.id}:${saved.task.course.id}`)
+    await this.deleteCache(`user-tasks:single:${saved.id}:*`)
+
     return new SingleUserTaskDto(saved);
   }
 
@@ -136,7 +188,7 @@ export class UserTasksService {
     });
     if (completeTaskDto.studentId !== found.student.id) throw new NotFoundException
 
-    if(found.status === TaskStatus.ASSIGNED || found.status === TaskStatus.SUBMITED || found.status === TaskStatus.SUBMITED_LATE) throw new ConflictException
+    if (found.status === TaskStatus.ASSIGNED || found.status === TaskStatus.SUBMITED || found.status === TaskStatus.SUBMITED_LATE) throw new ConflictException
 
     if (found.fileContent.length !== 0) {
       let filesToKeepIds: string[] = [];
@@ -191,6 +243,10 @@ export class UserTasksService {
 
     const updatedUserTask = await this.userTasksRepository.save(found);
 
+    await this.deleteCache(`user-task:task:${updatedUserTask.task.id}`)
+    await this.deleteCache(`user-tasks:student:${updatedUserTask.student.id}:${updatedUserTask.task.course.id}`)
+    await this.deleteCache(`user-tasks:single:${updatedUserTask.id}:*`)
+
     return new SingleUserTaskDto(updatedUserTask)
   }
 
@@ -205,8 +261,12 @@ export class UserTasksService {
         this.googleDriveService.deleteFile(file.fileId);
         await this.userTaskFileRepository.delete(file.fileId);
       }
-      
+
     const delres = this.userTaskFileRepository.delete(userTask.id)
+
+    await this.deleteCache(`user-task:task:${userTask.task.id}`)
+    await this.deleteCache(`user-tasks:student:${userTask.student.id}:${userTask.task.course.id}`)
+    await this.deleteCache(`user-tasks:single:${userTask.id}:*`)
 
     return delres;
   }

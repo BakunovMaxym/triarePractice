@@ -33,6 +33,7 @@ export class UserTasksController {
   @ApiResponse({ status: 200, description: 'List of user tasks', type: [UserTaskDto] })
   async findAllToTask(
     @Param('id') id: Uuid,
+
   ) {
     const userTasks = await this.userTasksService.findAllToTask(id);
     if (!userTasks) {
@@ -41,16 +42,18 @@ export class UserTasksController {
     return userTasks?.map(ut => new UserTaskDto(ut))
   }
 
-  @Get("/user-task/student/:id")
+  @Get("course/:cId/user-task/student/:id")
   @ApiParam({ name: "id", description: 'Унікальне айді студента', type: String })
+  @ApiParam({ name: "cId", description: 'Унікальне айді студента', type: String })
   @ApiOperation({ summary: 'Отримати всі UserTasks студента' })
   @Auth([])
   @ApiResponse({ status: 200, description: 'List of user tasks', type: [UserTaskDto] })
   async findAllToStudent(
     @Param('id') id: Uuid,
+    @Param('cId') cId: Uuid,
     @AuthUser() user: UserEntity
   ) {
-    const userTasks = await this.userTasksService.findAllToStudent(id, user);
+    const userTasks = await this.userTasksService.findAllToStudent(id, user, cId);
     if (!userTasks) {
       throw new NotFoundException
     }

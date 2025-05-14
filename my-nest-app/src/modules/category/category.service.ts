@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { CategoryEntity } from './entities/category.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { CategoryDto } from './dto/CategoryDto';
 
 @Injectable()
 export class CategoryService {
@@ -20,37 +21,36 @@ export class CategoryService {
         const category = this.categoryRepository.create(createCategoryDto);
         return this.categoryRepository.save(category);
     }
-    async findAll(): Promise<CategoryEntity[]> {
+    async findAll(): Promise<CategoryDto[]> {
         const cacheKey = `categories`;
-    
-        const cached = await this.cacheManager.get<CategoryEntity[]>(cacheKey);
+
+        const cached = await this.cacheManager.get<CategoryDto[]>(cacheKey);
         if (cached) return cached;
-    
+
         const categories = await this.categoryRepository.find({ relations: ['courses'] });
-        await this.cacheManager.set(cacheKey, categories);
-    
-        return categories;
+
+        const catDto = categories.map(cat => new CategoryDto(cat))
+        await this.cacheManager.set(cacheKey, catDto);
+
+        return catDto;
     }
-    async findOne(name: string): Promise<CategoryEntity> {
+    async findOne(name: string): Promise<CategoryDto> {
         const cacheKey = `category:${name}`;
 
-        const cached = await this.cacheManager.get<CategoryEntity>(cacheKey);
-        if (cached) {
-            // Always fetch from DB to ensure a real entity is returned
-            const category = await this.categoryRepository.findOne({ where: { name }, relations: ['courses'] });
-            if (category) return category;
-            throw new Error(`Category with name ${name} not found`);
-        }
+        const cached = await this.cacheManager.get<CategoryDto>(cacheKey);
+        if (cached) return cached;
 
         const category = await this.categoryRepository.findOne({ where: { name }, relations: ['courses'] });
+
         if (!category) {
             throw new Error(`Category with name ${name} not found`);
         }
 
-        // Cache only the plain object, not the entity instance
-        await this.cacheManager.set(cacheKey, { ...category });
-        return category;
+        const categotyDto = new CategoryDto(category)
+        await this.cacheManager.set(cacheKey, categotyDto);
+        return categotyDto;
     }
+
     async update(name: string, updateCategoryDto: UpdateCategoryDto): Promise<CategoryEntity> {
         await this.cacheManager.store.del("categories");
         await this.cacheManager.store.del(`category:${name}`);

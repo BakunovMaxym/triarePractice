@@ -6,7 +6,7 @@ import { AbstractEntity } from '../../../common/abstract.entity';
 
 @Entity({ name: 'categories' })
 @UseDto(CategoryDto)
-export class CategoryEntity extends AbstractEntity<CategoryDto> {
+export class CategoryEntity extends AbstractEntity {
   @Column({ nullable: false, type: 'varchar', length: 255, unique: true })
   name!: string;
 

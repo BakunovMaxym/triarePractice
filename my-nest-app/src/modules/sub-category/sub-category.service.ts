@@ -6,6 +6,7 @@ import { UpdateSubCategoryDto } from './dto/update-sub-category.dto';
 import { SubCategoryEntity } from './entities/sub-category.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { SubCategoryDto } from './dto/SubCategoryDto';
 
 @Injectable()
 export class SubCategoryService {
@@ -21,28 +22,21 @@ export class SubCategoryService {
     return this.subCategoryRepo.save(sub);
   }
 
-  async findAll(): Promise<SubCategoryEntity[]> {
+  async findAll(): Promise<SubCategoryDto[]> {
     const cacheKey = 'sub-categories';
-    const cached = await this.cacheManager.get<SubCategoryEntity[]>(cacheKey);
+    const cached = await this.cacheManager.get<SubCategoryDto[]>(cacheKey);
     if (cached) return cached;
 
     const subs = await this.subCategoryRepo.find({ relations: ['courses'] });
-    await this.cacheManager.set(cacheKey, subs);
-    return subs;
+    const subCatDto = subs.map(subCat => new SubCategoryDto(subCat))
+    await this.cacheManager.set(cacheKey, subCatDto);
+    return subCatDto;
   }
 
-  async findOne(name: string): Promise<SubCategoryEntity> {
+  async findOne(name: string): Promise<SubCategoryDto> {
     const cacheKey = `sub-category:${name}`;
-    const cached = await this.cacheManager.get<SubCategoryEntity>(cacheKey);
-    if (cached) {
-      // Always fetch from DB to ensure a real entity is returned
-      const sub = await this.subCategoryRepo.findOne({
-        where: { name },
-        relations: ['courses'],
-      });
-      if (sub) return sub;
-      throw new NotFoundException(`SubCategory #${name} not found`);
-    }
+    const cached = await this.cacheManager.get<SubCategoryDto>(cacheKey);
+    if (cached) return cached;
 
     const sub = await this.subCategoryRepo.findOne({
       where: { name },
@@ -51,8 +45,10 @@ export class SubCategoryService {
     if (!sub) {
       throw new NotFoundException(`SubCategory #${name} not found`);
     }
-    await this.cacheManager.set(cacheKey, { ...sub });
-    return sub;
+
+    const subCatDto = new SubCategoryDto(sub)
+    await this.cacheManager.set(cacheKey, subCatDto);
+    return subCatDto;
   }
 
   async update(name: string, dto: UpdateSubCategoryDto): Promise<SubCategoryEntity> {
