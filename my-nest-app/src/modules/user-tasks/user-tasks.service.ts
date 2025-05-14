@@ -136,6 +136,8 @@ export class UserTasksService {
     });
     if (completeTaskDto.studentId !== found.student.id) throw new NotFoundException
 
+    if(found.status === TaskStatus.ASSIGNED || found.status === TaskStatus.SUBMITED || found.status === TaskStatus.SUBMITED_LATE) throw new ConflictException
+
     if (found.fileContent.length !== 0) {
       let filesToKeepIds: string[] = [];
       if (completeTaskDto.fileContents) {

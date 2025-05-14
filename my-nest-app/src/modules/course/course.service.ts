@@ -4,7 +4,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { Transactional } from 'typeorm-transactional';
 import { CourseEntity } from './entities/course.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, type Repository } from 'typeorm';
+import { Brackets, SelectQueryBuilder, type Repository } from 'typeorm';
 import { UserEntity } from '../../modules/user/user.entity';
 import { CategoryEntity } from '../../modules/category/entities/category.entity';
 import { CourseInfoDto } from './dto/CurseInfoDto';
@@ -38,8 +38,20 @@ export class CourseService {
         private subCategoryRepository: Repository<SubCategoryEntity>,
     ) { }
 
-    async deleteCache(userId: Uuid) {
-        const keys: string[] = await this.cacheManager.store.keys(`courses:${userId}:*`);
+    async deleteCacheForAll(userIds: Uuid[]) {
+        userIds?.forEach(async (userId) => {
+            const keys: string[] = await this.cacheManager.store.keys(`courses:allWithFilters:${userId}:*`);
+
+            if (keys.length > 0) {
+                for (const key of keys) {
+                    await this.cacheManager.store.del(key);
+                }
+            }
+        })
+    }
+
+    async deleteCacheForOne(courseId: Uuid) {
+        const keys: string[] = await this.cacheManager.store.keys(`courses:single:*:${courseId}`);
 
         if (keys.length > 0) {
             for (const key of keys) {
@@ -88,9 +100,7 @@ export class CourseService {
 
         await this.courseRepository.save(course);
 
-        await this.deleteCache(userId);
-
-        await this.cacheManager.del(`courses:all:${userId}:${JSON.stringify({})}`);
+        await this.deleteCacheForAll([userId]);
 
         return course;
     }
@@ -100,56 +110,84 @@ export class CourseService {
         teacherCourses: CourseInfoDto[];
         studentCourses: CourseInfoDto[];
     }> {
-        const cacheKey = `courses:all:${userId}:${JSON.stringify(filter)}`;
+        const cacheKey = `courses:allWithFilters:${userId}:${JSON.stringify(filter)}`;
 
-        const cached: {
+        const cached = await this.cacheManager.get<{
             ownerCourses: CourseInfoDto[];
             teacherCourses: CourseInfoDto[];
             studentCourses: CourseInfoDto[];
-        } | undefined = await this.cacheManager.get(cacheKey);
+        }>(cacheKey);
         if (cached) return cached;
 
-        const qb = this.courseRepository
+        // filters
+        const applyFilters = (qb: SelectQueryBuilder<CourseEntity>) => {
+            if (filter?.ownerId) {
+                qb.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
+            }
+            if (filter?.name) {
+                qb.andWhere('course.name = :name', { name: filter.name });
+            }
+            if (filter?.teacherId) {
+                qb.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
+            }
+            if (filter?.category) {
+                qb.andWhere('category.name = :category', { category: filter.category });
+            }
+            if (filter?.subCategory) {
+                qb.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
+            }
+            return qb;
+        };
+
+        // owner
+        const ownerQb = this.courseRepository
             .createQueryBuilder('course')
             .leftJoinAndSelect('course.owner', 'owner')
             .leftJoinAndSelect('course.teachers', 'teacher')
             .leftJoinAndSelect('course.students', 'student')
             .leftJoinAndSelect('course.category', 'category')
             .leftJoinAndSelect('course.subCategory', 'subCategory')
-            .where('owner.id = :userId OR teacher.id = :userId OR student.id = :userId', { userId });
+            .where('owner.id = :userId', { userId });
+        applyFilters(ownerQb);
+        const ownerCourses = await ownerQb.getMany();
 
-        if (filter?.ownerId) {
-            qb.andWhere('owner.id = :ownerId', { ownerId: filter.ownerId });
-        }
-        if (filter?.name) {
-            qb.andWhere('course.name = :name', { name: filter.name });
-        }
-        if (filter?.teacherId) {
-            qb.andWhere('teacher.id = :teacherId', { teacherId: filter.teacherId });
-        }
-        if (filter?.category) {
-            qb.andWhere('category.name = :category', { category: filter.category });
-        }
-        if (filter?.subCategory) {
-            qb.andWhere('subCategory.name = :subCategory', { subCategory: filter.subCategory });
-        }
+        // teacher
+        const teacherQb = this.courseRepository
+            .createQueryBuilder('course')
+            .leftJoinAndSelect('course.owner', 'owner')
+            .leftJoinAndSelect('course.teachers', 'teacher')
+            .leftJoinAndSelect('course.students', 'student')
+            .leftJoinAndSelect('course.category', 'category')
+            .leftJoinAndSelect('course.subCategory', 'subCategory')
+            .where('teacher.id = :userId', { userId });
+        applyFilters(teacherQb);
+        const teacherCourses = await teacherQb.getMany();
 
-        const allCourses = await qb.getMany();
-        const courseDtos = allCourses.map(course => new CourseInfoDto(course));
+        // student
+        const studentQb = this.courseRepository
+            .createQueryBuilder('course')
+            .leftJoinAndSelect('course.owner', 'owner')
+            .leftJoinAndSelect('course.teachers', 'teacher')
+            .leftJoinAndSelect('course.students', 'student')
+            .leftJoinAndSelect('course.category', 'category')
+            .leftJoinAndSelect('course.subCategory', 'subCategory')
+            .where('student.id = :userId', { userId });
+        applyFilters(studentQb);
+        const studentCourses = await studentQb.getMany();
 
         const result = {
-            ownerCourses: courseDtos,
-            teacherCourses: [],
-            studentCourses: [],
+            ownerCourses: ownerCourses.map(c => new CourseInfoDto(c)),
+            teacherCourses: teacherCourses.map(c => new CourseInfoDto(c)),
+            studentCourses: studentCourses.map(c => new CourseInfoDto(c)),
         };
 
         await this.cacheManager.set(cacheKey, result);
-
         return result;
     }
 
+
     async findById(userId: Uuid, courseid: Uuid): Promise<SingleCourseInfoDto> {
-        const cacheKey = `courses:${userId}:${courseid}`;
+        const cacheKey = `courses:single:${userId}:${courseid}`;
 
         const cached: SingleCourseInfoDto | undefined = await this.cacheManager.get(cacheKey);
         if (cached) return cached;
@@ -178,17 +216,17 @@ export class CourseService {
             throw new NotFoundException("Не вдалось знайти ваш курс")
         }
 
-        await this.cacheManager.set(cacheKey, course);
+        const findedDto = new SingleCourseInfoDto(course);
+        await this.cacheManager.set(cacheKey, findedDto);
 
-        return new SingleCourseInfoDto(course)
+        return findedDto
     }
 
 
     async update(id: Uuid, userId: Uuid, updateCourseDto: UpdateCourseDto): Promise<CourseEntity> {
-        await this.deleteCache(userId)
 
         const course = await this.courseRepository.findOne({
-            where: { id: id },
+            where: { id },
             relations: ["owner", "teachers", "students", "category", "subCategory", "tasks"]
         })
 
@@ -208,12 +246,20 @@ export class CourseService {
         }
 
         Object.assign(course, updateCourseDto)
-        await this.courseRepository.save(course)
+        const savedCourse = await this.courseRepository.save(course)
+
+        const users: Uuid[] = [];
+
+        users.push(savedCourse.owner.id)
+        users.push(...savedCourse.teachers.map(t => t.id))
+        users.push(...savedCourse.students.map(s => s.id))
+        await this.deleteCacheForAll(users)
+        await this.deleteCacheForOne(id)
+
         return course;
     }
 
     async addTeacher(courseId: Uuid, teacherId: Uuid): Promise<SingleCourseInfoDto> {
-        await this.deleteCache(teacherId)
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
@@ -238,11 +284,18 @@ export class CourseService {
 
         const savedCourse = await this.courseRepository.save(course);
 
+        const users: Uuid[] = [];
+
+        users.push(savedCourse.owner.id)
+        users.push(...savedCourse.teachers.map(t => t.id))
+        users.push(...savedCourse.students.map(s => s.id))
+        await this.deleteCacheForAll(users)
+        await this.deleteCacheForOne(courseId)
+
         return new SingleCourseInfoDto(savedCourse);
     }
 
     async addStudent(courseId: Uuid, studentId: Uuid): Promise<SingleCourseInfoDto> {
-        await this.deleteCache(studentId)
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
@@ -271,13 +324,13 @@ export class CourseService {
         })
 
         const savedCourse = await this.courseRepository.save(course);
+        await this.deleteCacheForAll([studentId])
+        await this.deleteCacheForOne(courseId)
 
         return new SingleCourseInfoDto(savedCourse);
     }
 
     async deleteTeacher(courseId: Uuid, callerId: Uuid, teacher: Uuid) {
-        await this.deleteCache(callerId)
-        await this.deleteCache(teacher)
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
@@ -304,14 +357,20 @@ export class CourseService {
 
         course.teachers = course.teachers.filter(t => t.id !== teacher);
 
+        const savedCourse = await this.courseRepository.save(course);
 
-        await this.courseRepository.save(course);
+        const users: Uuid[] = [];
+
+        users.push(savedCourse.owner.id)
+        users.push(...savedCourse.teachers.map(t => t.id))
+        users.push(...savedCourse.students.map(s => s.id))
+        await this.deleteCacheForAll(users)
+        await this.deleteCacheForOne(courseId)
+
         return true;
     }
 
     async deleteStudent(courseId: Uuid, callerId: Uuid, student: Uuid) {
-        await this.deleteCache(callerId)
-        await this.deleteCache(student)
 
         const course = await this.courseRepository.findOne({
             where: { id: courseId },
@@ -343,6 +402,8 @@ export class CourseService {
 
         course.students = course.students.filter(s => s.id !== student);
 
+        await this.deleteCacheForAll([student])
+        await this.deleteCacheForOne(courseId)
 
         await this.courseRepository.save(course);
         return true;

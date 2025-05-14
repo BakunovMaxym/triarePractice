@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskEntity } from './entities/task.entity';
@@ -14,6 +14,8 @@ import { TaskFileEntity } from '../../modules/task-file/entities/task-file.entit
 import { UserTasksService } from '../../modules/user-tasks/user-tasks.service';
 import { TaskStatus } from '../../constants/status-type';
 import { Transactional } from 'typeorm-transactional';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 // import { TaskFileService } from '../../modules/task-file/task-file.service';
 
 @Injectable()
@@ -21,7 +23,8 @@ export class TaskService {
   constructor(
     private readonly googleDriveService: GoogleDriveService,
     private readonly userTaskService: UserTasksService,
-    // private readonly taskFileService: TaskFileService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+
     @InjectRepository(TaskEntity)
     private taskRepository: Repository<TaskEntity>,
     @InjectRepository(UserEntity)
@@ -32,11 +35,22 @@ export class TaskService {
     private taskFileRepository: Repository<TaskFileEntity>,
   ) { }
 
+
+  async deleteCache(key: string) {
+    const keys: string[] = await this.cacheManager.store.keys(key);
+
+    if (keys.length > 0) {
+      for (const key of keys) {
+        await this.cacheManager.store.del(key);
+      }
+    }
+  }
+
   @Transactional()
   async create(createTaskDto: CreateTaskDto): Promise<SingleTaskDto> {
-    const owner: UserEntity = await this.userRepository.findOneOrFail({ where: { id: createTaskDto.ownerId } });
+    const owner = await this.userRepository.findOne({ where: { id: createTaskDto.ownerId } });
     if (!owner) throw new NotFoundException(`Користувача не існує`);
-    const course: CourseEntity = await this.courseRepository.findOneOrFail({ where: { id: createTaskDto.courseId }, relations: { students: true } });
+    const course = await this.courseRepository.findOne({ where: { id: createTaskDto.courseId }, relations: { students: true } });
     if (!course) throw new NotFoundException(`Курсу не існує`);
 
     //save to google drive
@@ -81,33 +95,51 @@ export class TaskService {
     await this.taskFileRepository.save(fileEntities);
 
     const finalTask = await this.findOne(savedTask.id)
+
+    this.deleteCache(`courses:single:*:${finalTask.course.id}`)
+
     return new SingleTaskDto(finalTask);
   }
 
 
   async findAll(courseId: Uuid): Promise<TaskDto[]> {
+    const cacheKey = `tasks:allToCourse:${courseId}`;
+    const cached: TaskDto[] | undefined = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
     const tasks = this.taskRepository.find({
       where: { course: { id: courseId } },
       relations: ['owner', 'comments', 'userTasks'],
     });
-    return (await tasks).map(task => new TaskDto(task));
+    const tasksDto = (await tasks).map(task => new TaskDto(task))
+
+    await this.cacheManager.set(cacheKey, tasksDto);
+
+    return tasksDto;
   }
 
 
   async findOne(id: Uuid): Promise<TaskEntity> {
+    const cacheKey = `tasks:single:${id}`;
+    const cached: TaskEntity | undefined = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
     const task = await this.taskRepository.findOne({
       where: { id },
       relations: {
         userTasks: true,
         owner: true,
         comments: true,
-        fileContent: { task: true }
-
+        fileContent: { task: true },
+        course: { teachers: true },
       },
     });
     if (!task) {
       throw new NotFoundException(`Task with name ${id} not found`);
     }
+
+    await this.cacheManager.set(cacheKey, task);
+
     return task;
   }
 
@@ -116,7 +148,7 @@ export class TaskService {
 
     if (!task) throw new NotFoundException
 
-    if(!task.course.teachers.some((teach => teach.id === teacherId)))
+    if (!task.course.teachers?.some((teach => teach.id === teacherId)))
       throw new ForbiddenException
 
     if (task.fileContent.length !== 0) {
@@ -167,16 +199,20 @@ export class TaskService {
 
     const updatedTask = await this.taskRepository.save(task);
 
+    this.deleteCache(`courses:single:*:${updatedTask.course.id}`)
+    this.deleteCache(`tasks:allToCourse:*:${updatedTask.course.id}`)
+    this.deleteCache(`tasks:single:*:${updatedTask.id}`)
+
     return new SingleTaskDto(updatedTask)
   }
 
-  async deleteByid(id: Uuid, userId: Uuid) {
+  async deleteByid(id: Uuid, teacherId: Uuid) {
     const task = await this.findOne(id)
-    
+
     if (!task)
       throw new NotFoundException("Завдання не знайдено")
 
-    if(!task.course.teachers.some((teach => teach.id === userId)))
+    if (task.owner.id !== teacherId)
       throw new ForbiddenException
 
     if (task.fileContent?.length !== 0)
@@ -185,13 +221,17 @@ export class TaskService {
         await this.taskFileRepository.delete(file.fileId);
       }
 
-      if(task.userTasks.length !== 0){
-        task.userTasks.forEach(userTask => {
-          this.userTaskService.deleteByid(userTask.id)
-        })
-      }
+    if (task.userTasks.length !== 0) {
+      task.userTasks.forEach(userTask => {
+        this.userTaskService.deleteByid(userTask.id)
+      })
+    }
 
     const delres = this.taskRepository.delete(task.id)
+
+    this.deleteCache(`courses:single:*:${task.course.id}`)
+    this.deleteCache(`tasks:allToCourse:*:${task.course.id}`)
+    this.deleteCache(`tasks:single:*:${task.id}`)
 
     return delres;
   }

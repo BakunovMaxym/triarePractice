@@ -70,6 +70,7 @@ export class CategoryService {
     }
     async remove(name: string): Promise<void> {
         await this.cacheManager.store.del("categories");
+        await this.cacheManager.store.del(`category:${name}`);
         // Find by name to get the id
         const existing = await this.categoryRepository.findOne({ where: { name } });
         if (!existing) {

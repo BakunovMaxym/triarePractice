@@ -137,7 +137,7 @@ export class UserTasksController {
   }
 
   @Patch('/user-task/:id/complete')
-  @Auth([RoleType.STUDENT])
+  @Auth([])
   @UseInterceptors(FilesInterceptor('file', 100, { storage: multer.memoryStorage() }))
   async completeTask(
     @Param('id') id: Uuid,
