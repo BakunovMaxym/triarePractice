@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class RemakeUserMakeSetingsAndColections1747209704718 implements MigrationInterface {
     name = 'RemakeUserMakeSetingsAndColections1747209704718'

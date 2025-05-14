@@ -8,7 +8,7 @@ import { SubCategoryList } from './components/SubCategoryList';
 import { UserTasks } from './components/UserTasks';
 import './App.css';
 
-type Page = 
+type Page =
   | 'login'
   | 'register'
   | 'courses'
@@ -21,6 +21,10 @@ export default function App() {
   const [token, setToken] = useState<string | null>(() => {
     // Try to restore token from localStorage on first load
     return localStorage.getItem('token');
+  });
+  const [userId, setUserId] = useState<string | null>(() => {
+    // Try to restore token from localStorage on first load
+    return localStorage.getItem('userId');
   });
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [isTeacher, setIsTeacher] = useState<boolean>(true); // You may want to set this from user info
@@ -39,16 +43,21 @@ export default function App() {
       localStorage.setItem('token', token);
     } else {
       localStorage.removeItem('token');
+      localStorage.removeItem('userId');
     }
   }, [token]);
+
   React.useEffect(() => {
     localStorage.setItem('page', page);
   }, [page]);
 
-  const handleLogin = (token: string) => {
+  const handleLogin = (token: string, userId: string) => {
     setToken(token);
+    setUserId(userId);
+    localStorage.setItem('userId', userId);
     setPage('courses');
   };
+
 
   const handleLogout = () => {
     setToken(null);
@@ -92,7 +101,7 @@ export default function App() {
 
       {page === 'login' && <Login onLogin={handleLogin} />}
       {page === 'register' && <Register onRegister={() => setPage('login')} />}
-      {page === 'courses' && token && (
+      {page === 'courses' && token && userId && (
         <CourseList
           token={token}
           onSelectCourse={(id) => {
@@ -100,8 +109,10 @@ export default function App() {
             setPage('courseDetail');
           }}
           isTeacher={isTeacher}
+          userId={userId}
         />
       )}
+
       {page === 'courseDetail' && token && selectedCourseId && (
         <React.Suspense fallback={<div>Loading course...</div>}>
           <CourseDetail
@@ -114,9 +125,10 @@ export default function App() {
       )}
       {page === 'categories' && token && <CategoryList />}
       {page === 'subcategories' && token && <SubCategoryList />}
-      {page === 'userTasks' && token && (
-        <UserTasks token={token} userId={token} />
+      {page === 'userTasks' && token && userId && (
+        <UserTasks token={token} userId={userId} />
       )}
+
     </div>
   );
 }

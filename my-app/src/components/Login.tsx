@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../api';
 
-export function Login({ onLogin }: { onLogin: (token: string) => void }) {
+export function Login({ onLogin }: { onLogin: (token: string, userId: string) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +11,7 @@ export function Login({ onLogin }: { onLogin: (token: string) => void }) {
     setError(null);
     try {
       const data = await login(email, password);
-      onLogin(data.token.accessToken);
+      onLogin(data.token.accessToken, data.user.id); // <-- передаємо token та userId
     } catch (err) {
       setError('Invalid credentials');
     }
@@ -44,4 +44,4 @@ export function Login({ onLogin }: { onLogin: (token: string) => void }) {
   );
 }
 
-export {}
+export { };

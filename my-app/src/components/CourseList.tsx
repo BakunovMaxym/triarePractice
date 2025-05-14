@@ -116,11 +116,20 @@ export function CourseList({
       setFolderError('Folder name required');
       return;
     }
+    if (!userId) {
+      setFolderError('user id required');
+      return;
+    }
+    if (!courseId) {
+      setFolderError('user id required');
+      return;
+    }
+
     setMoving(true);
     setFolderError(null);
     try {
       // Передаємо ownerId як третій аргумент
-      const folder = await createFolder(token, newFolderName.trim(), userId);
+      const folder = await createFolder(token, newFolderName.trim(), userId, [courseId]);
       await moveCourseToFolder(token, folder.id, courseId);
       setShowFolderPopup(null);
       setNewFolderName('');
@@ -278,4 +287,4 @@ export function CourseList({
   );
 }
 
-export {}
+export { }

@@ -55,9 +55,19 @@ export class FolderService {
       throw new NotFoundException(`Owner with id ${createFolderDto.ownerId} not found`);
     }
 
+    let childCourses: CourseEntity[] = [];
+    if (createFolderDto.courseIds?.length) {
+      const foundCourses = await Promise.all(
+        createFolderDto.courseIds.map(courseId => this.courseRepository.findOneBy({ id: courseId }))
+      );
+      childCourses = foundCourses.filter(Boolean) as CourseEntity[];
+    }
+
+
     const folder = this.folderRepository.create({
       name: createFolderDto.name,
       parentFolder,
+      childCourses,
       owner,
     });
 

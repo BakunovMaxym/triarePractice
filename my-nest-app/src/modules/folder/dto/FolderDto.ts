@@ -19,7 +19,7 @@ export class FolderDto extends AbstractDto {
   @ApiProperty({ description: 'Child courses', type: () => [CourseNameDto], nullable: true })
   childCourses?: CourseNameDto[];
 
-  owner!: UserNameDto;
+  owner?: UserNameDto;
 
   constructor(folder: Folder) {
     super(folder);
@@ -27,7 +27,7 @@ export class FolderDto extends AbstractDto {
     this.parentFolder = folder.parentFolder ? new FolderDto(folder.parentFolder) : undefined;
     this.childFolders = folder.childFolders?.map((child) => new FolderDto(child));
     this.childCourses = folder.childCourses?.map((child) => new CourseNameDto(child));
-    this.owner = new UserNameDto(folder.owner);
+    this.owner = folder.owner ? new UserNameDto(folder.owner) : undefined;
 
   }
 }
