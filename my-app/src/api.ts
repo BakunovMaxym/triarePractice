@@ -95,7 +95,6 @@ export async function createCourse(token: string, data: { name: string; category
 }
 
 export async function createTask(token: string, courseId: string, data: FormData) {
-  // Use correct backend route: /courses/:id/tasks (plural "courses")
   const res = await fetch(`${API_URL}/courses/${courseId}/tasks`, {
     method: 'POST',
     headers: {
@@ -103,7 +102,16 @@ export async function createTask(token: string, courseId: string, data: FormData
     },
     body: data,
   });
-  if (!res.ok) throw new Error('Failed to create task');
+
+  if (!res.ok) {
+    let errorMsg = 'Failed to create task';
+    try {
+      const err = await res.json();
+      if (err?.message) errorMsg += `: ${JSON.stringify(err.message)}`;
+    } catch { }
+    throw new Error(errorMsg);
+  }
+
   return res.json();
 }
 

@@ -69,7 +69,6 @@ export class FolderService {
       parentFolder,
       childCourses,
       owner,
-      courseIds,
     });
 
     const savedFolder = await this.folderRepository.save(folder);

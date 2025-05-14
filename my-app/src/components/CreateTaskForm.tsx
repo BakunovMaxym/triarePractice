@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createTask } from '../api';
+import { createTask, CreatedTask } from '../api';
 
 export function CreateTaskForm({
   token,
@@ -8,7 +8,7 @@ export function CreateTaskForm({
 }: {
   token: string;
   courseId: string;
-  onCreated: () => void;
+  onCreated: (task: CreatedTask) => void;
 }) {
   const [form, setForm] = useState({ name: '', textContent: '' });
   const [time, setTime] = useState({ hours: '', minutes: '', seconds: '' });
@@ -37,7 +37,6 @@ export function CreateTaskForm({
       formData.append('name', form.name);
       formData.append('textContent', form.textContent);
 
-      // Convert hours, minutes, seconds to seconds
       const h = parseInt(time.hours) || 0;
       const m = parseInt(time.minutes) || 0;
       const s = parseInt(time.seconds) || 0;
@@ -51,11 +50,14 @@ export function CreateTaskForm({
           formData.append('file', file);
         });
       }
-      await createTask(token, courseId, formData);
+
+      const createdTask = await createTask(token, courseId, formData);
+
       setForm({ name: '', textContent: '' });
       setTime({ hours: '', minutes: '', seconds: '' });
       setFiles(null);
-      onCreated();
+
+      onCreated(createdTask);
     } catch (err) {
       setError('Failed to create task');
     } finally {
@@ -111,5 +113,3 @@ export function CreateTaskForm({
     </form>
   );
 }
-
-export {}

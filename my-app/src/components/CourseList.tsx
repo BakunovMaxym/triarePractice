@@ -238,7 +238,7 @@ export function CourseList({
                       {folderError && <div style={{ color: 'red' }}>{folderError}</div>}
                       <div>
                         <b>Select existing folder:</b>
-                        <ul>
+                        <ul style={{ height: 300, overflow: "scroll" }}>
                           {folders.length === 0 && <li>No folders found.</li>}
                           {folders.map(folder => (
                             <li key={folder.id}>
