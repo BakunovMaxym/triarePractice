@@ -35,13 +35,12 @@ export function CourseList({
   const fetchCourses = useCallback(() => {
     getCourses(token)
       .then(data => {
-        // Defensive: flatten arrays and filter out duplicates by id
+        // Use the correct structure returned by backend
         const allCourses = [
           ...(data.ownerCourses || []),
           ...(data.teacherCourses || []),
           ...(data.studentCourses || []),
         ];
-        // Remove duplicates by id
         const uniqueCourses = Array.from(
           new Map(allCourses.map(c => [c.id, c])).values()
         );
@@ -59,11 +58,21 @@ export function CourseList({
 
   // View folder and its courses (always use fresh data from folders state)
   const handleViewFolder = useCallback((folder: any) => {
-    // Знаходимо актуальну версію папки з оновленого списку
+    // Ensure folder.childCourses is always an array
     const freshFolder = folders.find((f) => f.id === folder.id) || folder;
+    // If childCourses is array of objects with .id, use as is; if it's array of ids, map to course objects
+    let folderCoursesArr = [];
+    if (Array.isArray(freshFolder.childCourses) && freshFolder.childCourses.length > 0) {
+      if (typeof freshFolder.childCourses[0] === 'object') {
+        folderCoursesArr = freshFolder.childCourses;
+      } else {
+        // childCourses is array of ids, map to course objects
+        folderCoursesArr = courses.filter(c => freshFolder.childCourses.includes(c.id));
+      }
+    }
     setSelectedFolder(freshFolder);
-    setFolderCourses(freshFolder.childCourses || []);
-  }, [folders]);
+    setFolderCourses(folderCoursesArr);
+  }, [folders, courses]);
 
   // Move course to selected folder
   const handleMoveCourse = async (courseId: string, folderId: string) => {
@@ -110,7 +119,7 @@ export function CourseList({
     setMoving(true);
     setFolderError(null);
     try {
-      // userId is required and must be passed
+      // Передаємо ownerId як третій аргумент
       const folder = await createFolder(token, newFolderName.trim(), userId);
       await moveCourseToFolder(token, folder.id, courseId);
       setShowFolderPopup(null);

@@ -26,10 +26,7 @@ export async function getCourses(token: string) {
   });
   if (!res.ok) throw new Error('Failed to fetch courses');
   const data = await res.json();
-  if (Array.isArray(data)) {
-    return { ownerCourses: data, teacherCourses: [], studentCourses: [] };
-  }
-  // Якщо бекенд повертає null або undefined, повертаємо порожні масиви
+  // Expect flat structure: { ownerCourses, teacherCourses, studentCourses }
   if (!data) {
     return { ownerCourses: [], teacherCourses: [], studentCourses: [] };
   }
@@ -146,8 +143,11 @@ export async function getFolders(token: string) {
   return await res.json();
 }
 
-export async function createFolder(token: string, name: string, ownerId: string) {
+export async function createFolder(token: string, name: string, ownerId: string, parentFolderId?: string, courseIds?: string[]) {
+  // Ensure all required fields are present and types are correct
   const body: any = { name, ownerId };
+  if (parentFolderId) body.parentFolderId = parentFolderId;
+  if (courseIds) body.courseIds = courseIds;
   const res = await fetch(`${API_URL}/folder`, {
     method: 'POST',
     headers: {
@@ -156,7 +156,15 @@ export async function createFolder(token: string, name: string, ownerId: string)
     },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error('Failed to create folder');
+  if (!res.ok) {
+    // Try to extract error details for debugging
+    let errorMsg = 'Failed to create folder';
+    try {
+      const err = await res.json();
+      if (err && err.message) errorMsg += `: ${JSON.stringify(err.message)}`;
+    } catch {}
+    throw new Error(errorMsg);
+  }
   return res.json();
 }
 
