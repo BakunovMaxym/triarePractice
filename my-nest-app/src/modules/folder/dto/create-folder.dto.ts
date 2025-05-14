@@ -19,7 +19,7 @@ export class CreateFolderDto {
         example: ['550e8400-e29b-41d4-a716-446655440000'],
     })
     @UUIDField({ each: true })
-    courseIds!: Uuid[];
+    courseIds?: Uuid[] = [];
 
     @ApiProperty({
         description: 'Owner user ID',

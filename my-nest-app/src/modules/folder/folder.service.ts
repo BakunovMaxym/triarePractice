@@ -69,6 +69,7 @@ export class FolderService {
       parentFolder,
       childCourses,
       owner,
+      courseIds,
     });
 
     const savedFolder = await this.folderRepository.save(folder);
@@ -107,22 +108,22 @@ export class FolderService {
     if (!folder) throw new NotFoundException(`Folder with id ${parentId} not found`);
 
     if (childCourseId) {
-
       const course = await this.courseRepository.findOne({ where: { id: childCourseId } });
       if (!course) throw new NotFoundException(`Course with id ${childCourseId} not found`);
       course.folder = folder;
       await this.courseRepository.save(course);
-
-
     }
 
     if (childName) {
       const child = this.folderRepository.create({ name: childName, parentFolder: folder });
       await this.folderRepository.save(child);
-
     }
 
-    const updatedFolder = await this.folderRepository.findOneOrFail({ where: { id: parentId }, relations: { childCourses: true, childFolders: true } })
+    // Always fetch with all required relations before returning
+    const updatedFolder = await this.folderRepository.findOneOrFail({
+      where: { id: parentId },
+      relations: ['owner', 'childCourses', 'childFolders', 'parentFolder'],
+    });
     return new FolderDto(updatedFolder);
   }
 }
