@@ -69,6 +69,7 @@ export function CreateTaskForm({
       if (files) {
         Array.from(files).forEach(file => {
           formData.append('file', file);
+          console.log(file)
         });
       }
 

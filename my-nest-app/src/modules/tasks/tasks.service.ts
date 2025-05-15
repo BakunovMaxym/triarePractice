@@ -61,6 +61,7 @@ export class TaskService {
           if ('buffer' in file) {
             const stream = new PassThrough();
             stream.end(file.buffer);
+            console.log(file.originalname)
             return this.googleDriveService.uploadFile(stream, file.originalname, file.mimetype);
           } else {
             return file;
@@ -129,7 +130,7 @@ export class TaskService {
       relations: {
         userTasks: true,
         owner: true,
-        comments: {owner: true},
+        comments: { owner: true },
         fileContent: { task: true },
         course: { teachers: true },
       },

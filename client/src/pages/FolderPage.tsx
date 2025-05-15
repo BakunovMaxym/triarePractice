@@ -40,6 +40,7 @@ export function FolderPage({
           },
         });
         const data = await res.json();
+        console.log(data)
         setFolder(data);
       } catch (err) {
         console.error('Failed to fetch folder:', err);

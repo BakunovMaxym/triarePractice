@@ -19,12 +19,12 @@ export class FolderService {
 
   async findAll(): Promise<FolderDto[]> {
     const folders = await this.folderRepository.find({
-      relations: [
-        'parentFolder',
-        'childFolders',
-        'childCourses',
-        'owner',
-      ],
+      relations: {
+        parentFolder: true,
+        childFolders: true,
+        childCourses: true,
+        owner: true
+      }
     });
     return folders.map(f => new FolderDto(f));
   }
@@ -32,12 +32,17 @@ export class FolderService {
   async findOne(id: Uuid): Promise<FolderDto> {
     const folder = await this.folderRepository.findOne({
       where: { id },
-      relations: ['parentFolder', 'childFolders', 'childCourses',
-        'owner'],
+      relations: {
+        parentFolder: true,
+        childFolders: true,
+        childCourses: true,
+        owner: true
+      }
     });
     if (!folder) {
       throw new NotFoundException(`Folder with id ${id} not found`);
     }
+    console.log(folder)
     return new FolderDto(folder);
   }
 
