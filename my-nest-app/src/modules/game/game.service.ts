@@ -508,7 +508,7 @@ export class GameService {
     }
     else {
       user.money += cost;
-      this.server.to(user.id).emit('InvoiceComplete', { type: 'InvoiceComplete', id: invoiceId, description: "not enough money" })
+      this.server.to(user.id).emit('InvoiceComplete', { id: invoiceId, description: "not enough money" })
       this.userService.save(user);
     }
   }

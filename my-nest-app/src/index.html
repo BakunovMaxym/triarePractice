@@ -44,6 +44,7 @@
             display: none;
         }
 
+        #invoices,
         #OtherUsers,
         #Yourproperties,
         #propertieses {
@@ -52,6 +53,7 @@
             column-gap: 5px;
         }
 
+        #invoices div,
         #Yourproperties div,
         #OtherUsers div,
         #propertieses div {
@@ -138,10 +140,40 @@
     <div id="Game">
         <p>TurnOrder:</p>
         <p id="TurnOrder"></p>
-        <div id="YourTurn">
 
+        <div id="invoices"></div>
+
+        <div id="YourTurn">
+            <div class="section">
+                <h2>throw dice</h2>
+                <button onclick=ThrowDice()>throw dice</button>
+            </div>
+            <div class="section">
+                <h2>land on property</h2>
+                <label>ID земельної ділянки: <input type="text" id="LandOnPropertyText"></label>
+
+                <button onclick=LandOnPropety()>land on property</button>
+            </div>
+            <div class="section">
+                <h2>upgrade</h2>
+                <label>ID земельної ділянки: <input type="text" id="UpgradePropertyText"></label>
+
+                <button onclick=UpgradeProperty()>upgrade</button>
+            </div>
+            <div class="section">
+                <h2>get our of jail</h2>
+                <button onclick=UseGetOutofJailCard()>get our of jail</button>
+            </div>
+            <div class="section">
+                <h2>end turn </h2>
+                <button onclick=EndTurn()>end turn</button>
+            </div>
         </div>
 
+        <div class="section">
+            <h2>отримати себе</h2>
+            <button id="meBtn">give up</button>
+        </div>
     </div>
 
     <div class="section">
@@ -161,6 +193,10 @@
         let hasReconnectedWithToken = false;
         let game = null;
         let curentUser = null;
+        let invoices = [];
+        let pendingInvoce = null;
+
+
         function copyGameId() {
             navigator.clipboard.writeText(game.id)
         }
@@ -416,21 +452,100 @@
                     }
                 });
             }
-        
-            if(game.status === 'waiting_players'){
+
+            if (game.status === 'waiting_players') {
                 document.getElementById('startGame').style.display = 'block';
                 document.getElementById('Game').style.display = 'none';
             }
-            else{
+            else {
                 document.getElementById('startGame').style.display = 'none';
                 document.getElementById('Game').style.display = 'block';
             }
-            
-            
+            let invocesDiv = document.getElementById('Yourproperties');
+            if (invocesDiv && invoices && Array.isArray(invoices)) {
+                invocesDiv.innerHTML = '';
+                invoices.forEach(invoice => {
+                    if (invoice) {
+                        let div = document.createElement('div');
+
+                        let buttom = document.createElement('button')
+                        buttom.textContent = "copy id"
+                        buttom.addEventListener('click', () => {
+                            navigator.clipboard.writeText(invoice.id)
+                        })
+                        div.appendChild(buttom)
+
+                        let id = document.createElement('p')
+                        id.textContent = "id: " + invoice.id
+                        div.appendChild(id)
+
+                        let name = document.createElement('p')
+                        name.textContent = "name: " + invoice.name
+                        div.appendChild(name)
+
+                        let cost = document.createElement('p')
+                        cost.textContent = "cost: " + invoice.cost
+                        div.appendChild(cost)
+
+                        if (invoice.cost > 0) {
+                            let button = document.createElement('button')
+                            button.textContent = "getMoney"
+                            button.addEventListener('click', () => {
+                                socket.emit('PayInvoice', { cost: invoice.cost, invoiceId: invoice.id })
+                            })
+                            div.appendChild(button)
+                        }
+                        else {
+                            let button = document.createElement('button')
+                            button.textContent = "pay up"
+                            button.addEventListener('click', () => {
+                                socket.emit('PayInvoice', { cost: invoice.cost, invoiceId: invoice.id })
+                            })
+                            div.appendChild(button)
+                        }
+
+                        invocesDiv.appendChild(div);
+                    }
+                });
+            }
+
+
+
         }
 
 
+        function UseGetOutofJailCard() {
+            socket.emit('UseGetOutofJailCard');
+        }
 
+        function UpgradeProperty() {
+            pendingInvoce = {
+                id: crypto.randomUUID(), cost: data.property.property.cost, name: 'upgrade property', onCompleteMessage: 'you have bought ' + data.property.property, function: () => {
+                    socket.emit("UpgradeProperty", { peopertyId: data.property.id });
+                }
+            }
+
+        }
+
+        function ThrowDice() {
+            socket.emit('ThrowDice');
+        }
+
+        function LandOnPropety() {
+            const propertyId = document.getElementById('LandOnPropertyText').value
+            socket.emit('LandOnProperty', { propertyId })
+        }
+
+        function EndTurn() {
+            if (invoices.length === 0 && pendingInvoce === null) {
+                socket.emit('EndTurn')
+            }
+        }
+        function GiveUp() {
+
+            socket.emit('GiveUp')
+
+        }
 
         function log(message) {
             const logs = document.getElementById('logs');
@@ -536,7 +651,7 @@
 
 
 
-                
+
             });
 
             socket.on('you', data => {
@@ -548,6 +663,113 @@
 
             socket.on('userpasive', data => log('userpasive: ' + data));
             socket.on('useractive', data => log('useractive: ' + data));
+
+            socket.on('YourTurn', data => {
+                log('YourTurn: ' + data)
+                myTyrn = true;
+                updateTexts()
+            });
+
+            socket.on('GoToJail', data => {
+                log('GoToJail: ' + data)
+                alert('you go to jail')
+                socket.emit('me')
+            });
+
+            socket.on('JailTime', data => {
+                log('JailTime: ' + data)
+                socket.emit('me')
+            });
+
+            socket.on('Invoice', data => {
+                log('Invoice: ' + data)
+                invoices.push({ id: crypto.randomUUID(), cost: data.cost, name: data.type })
+            });
+
+            socket.on('ChanceCard', data => {
+                log('ChanceCard: ' + data)
+                alert('ChanceCard\n ' + data.description)
+
+            });
+
+            socket.on('GetOutOfJailCard', data => {
+                log('GetOutOfJailCard: ' + data)
+                socket.emit('me')
+            });
+
+            socket.on('GetOutOfJailCardFull', data => {
+                log('GetOutOfJailCardFull: ' + data)
+                alert('you got full getoutofjail cards')
+            });
+
+            socket.on('GoToProperty', data => {
+                log('GoToProperty: ' + data)
+                alert('you move to ' + data.property)
+            });
+
+            socket.on('ChoseDestination', data => {
+                log('ChoseDestination: ' + data)
+
+                log('CanBuy: ' + data)
+                const result = confirm('do yo want to move')
+
+                if (result) {
+                    pendingInvoce = { id: crypto.randomUUID(), cost: data.property.property.cost, name: 'move', onCompleteMessage: 'you can move ' }
+                }
+            });
+
+            socket.on('ComunityCard', data => {
+                log('ComunityCard: ' + data)
+                alert('cmunity card\n ' + data.description)
+            });
+
+            socket.on('CanBuy', data => {
+                log('CanBuy: ' + data)
+                const result = confirm('do yo want to buy ' + data.property.property.name)
+
+                if (result) {
+                    pendingInvoce = {
+                        id: crypto.randomUUID(), cost: data.property.property.cost, name: 'buy property', onCompleteMessage: 'you have bought ' + data.property.property, function: () => {
+                            socket.emit("BuyProperty", { peopertyId: data.property.id });
+                        }
+                    }
+                }
+
+            });
+
+            socket.on('InvoiceComplete', data => {
+                log('InvoiceComplete: ' + data)
+
+                if (data.id === pendingInvoce) {
+                    pendingInvoce = null;
+                    alert(pendingInvoce.onCompleteMessage + '\n cost ' + pendingInvoce.cost)
+
+                    if (pendingInvoce.function) {
+                        pendingInvoce.function();
+                    }
+                }
+
+
+                invoices = invoices.filter((invoice) => invoice.id !== data.id);
+                updateTexts()
+            });
+
+            socket.on('PropertyBought', data => {
+                log('PropertyBought: ' + data)
+                alert('you bought ' + data.property.property.name)
+            });
+
+            socket.on('propertyUpgraded', data => {
+                log('propertyUpgraded: ' + data)
+                alert('you upgraded ' + data.property.property.name)
+            });
+
+            socket.on('userLost', data => {
+                log('userLost: ' + data)
+                alert('user lost:  ' + data.user.username)
+            });
+
+
 
 
         });
