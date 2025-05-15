@@ -61,8 +61,8 @@ export class TaskService {
           if ('buffer' in file) {
             const stream = new PassThrough();
             stream.end(file.buffer);
-            console.log(file.originalname)
-            return this.googleDriveService.uploadFile(stream, file.originalname, file.mimetype);
+            const correctedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+            return this.googleDriveService.uploadFile(stream, correctedName, file.mimetype);
           } else {
             return file;
           }
@@ -139,7 +139,6 @@ export class TaskService {
       throw new NotFoundException(`Task with name ${id} not found`);
     }
 
-    console.log(task);
     await this.cacheManager.set(cacheKey, task);
 
     return task;
@@ -178,7 +177,8 @@ export class TaskService {
         files.map(file => {
           const stream = new PassThrough();
           stream.end(file.buffer);
-          return this.googleDriveService.uploadFile(stream, file.originalname, file.mimetype);
+          const correctedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+          return this.googleDriveService.uploadFile(stream, correctedName, file.mimetype);
         })
       );
 

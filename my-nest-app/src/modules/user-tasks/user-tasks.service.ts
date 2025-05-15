@@ -15,6 +15,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { CroneTaskService } from '../../modules/crone-task/crone-task.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserTasksService {
@@ -62,28 +63,35 @@ export class UserTasksService {
   async findAllToTask(taskId: Uuid): Promise<UserTask[]> {
     const cacheKey = `user-tasks:task:${taskId}`;
     const cached: UserTask[] | undefined = await this.cacheManager.get(cacheKey);
-    if (cached) return cached;
+    if (cached && Array.isArray(cached)) {
+      return plainToInstance(UserTask, cached);
+    }
 
     const utasks = this.userTasksRepository.find({ where: { task: { id: taskId } } }) ?? [];
 
     await this.cacheManager.set(cacheKey, utasks);
-
     return utasks;
   }
 
   async findAllToStudent(studentId: Uuid, user: UserEntity, courseId: Uuid): Promise<UserTask[]> {
-    if (user.role !== RoleType.TEACHER && user.id !== studentId) throw new ForbiddenException
+    if (user.role !== RoleType.TEACHER && user.id !== studentId) throw new ForbiddenException;
 
     const cacheKey = `user-tasks:student:${studentId}:${courseId}`;
     const cached: UserTask[] | undefined = await this.cacheManager.get(cacheKey);
-    if (cached) return cached;
+    if (cached) return plainToInstance(UserTask, cached);
 
-    const utasks = this.userTasksRepository.find({ where: { student: { id: studentId }, task: { course: { id: courseId } } } }) ?? [];
+    const utasks = await this.userTasksRepository.find({
+      where: {
+        student: { id: studentId },
+        task: { course: { id: courseId } },
+      },
+    }) ?? [];
+    console.log(utasks)
+    await this.cacheManager.set(cacheKey, instanceToPlain(utasks));
 
-    await this.cacheManager.set(cacheKey, utasks);
-
-    return utasks
+    return utasks;
   }
+
 
   async findOne(id: Uuid, userRole: RoleType): Promise<SingleUserTaskDto> {
     const cacheKey = `user-tasks:single:${id}:${userRole}`;

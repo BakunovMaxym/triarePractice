@@ -5,10 +5,12 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { CoursesPage } from './pages/CoursesPage';
 import { CourseDetailPage } from './pages/CourseDetailPage';
-import { UserTasksPage } from './pages/UserTasksPage';
+import { TaskUserTasksPage } from './pages/UserTasksPage';
 import './App.css';
 import { FolderPage } from './pages/FolderPage';
-import { TaskDetailPage } from './pages/TaskDetailPage';
+import { TaskDetailPage } from './pages/TaskTaskDetailPage';
+import { StudentTasksPage } from './pages/StudentTasksPage';
+import { UserTaskDetailPage } from './pages/UserTaskDetailPage';
 
 function AppContent() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
@@ -105,9 +107,23 @@ function AppContent() {
             <Navigate to="/login" />
           )
         } />
-        <Route path="/userTasks" element={
-          token && userId ? (
-            <UserTasksPage token={token} userId={userId} />
+        <Route path="/user-tasks/task/:taskId" element={
+          token ? (
+            <TaskUserTasksPage token={token} onBack={() => navigate('/courses')} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        } />
+        <Route path="/user-task/course/:courseId/user/:studentId" element={
+          token ? (
+            <StudentTasksPage token={token} onBack={() => navigate('/courses')} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        } />
+        <Route path="/user-task/:userTaskId" element={
+          token ? (
+            <UserTaskDetailPage token={token} isTeacher={isTeacher} onBack={() => navigate('/courses')} />
           ) : (
             <Navigate to="/login" />
           )

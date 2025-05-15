@@ -12,17 +12,17 @@ export class UserTaskDto {
   @EnumField(() => TaskStatus)
   status!: TaskStatus;
 
-  @DateFieldOptional({nullable: true})
+  @DateFieldOptional({ nullable: true })
   deadline!: Date | null;
 
-  @DateFieldOptional({nullable: true})
+  @DateFieldOptional({ nullable: true })
   completeTimestamp!: Date | undefined;
 
   student!: UserNameDto;
 
   task!: TaskNameDto;
 
-  @NumberFieldOptional({nullable: true})
+  @NumberFieldOptional({ nullable: true, minimum: 0, maximum: 100 })
   grade?: number | null;
 
   constructor(userTask: UserTask) {

@@ -30,7 +30,7 @@ type Task = {
     comments: Comment[];
 };
 
-export function TaskDetailPage({ token, isTeacher, onBack }: { token: string, isTeacher: boolean, onBack: () => void; }) {
+export function TaskDetailPage({ token, isTeacher, onBack }: { token: string, isTeacher: boolean, onBack: () => void, }) {
     const { taskId } = useParams<{ taskId: string }>();
     const navigate = useNavigate();
     const [task, setTask] = useState<Task | null>(null);
@@ -115,38 +115,38 @@ export function TaskDetailPage({ token, isTeacher, onBack }: { token: string, is
             </p>
             <p>{task.textContent}</p>
 
-                {task.fileContent.map((f) => (
-                    <div
-                        key={f.fileId}
+            {task.fileContent.map((f) => (
+                <div
+                    key={f.fileId}
+                    style={{
+                        border: "1px solid #ccc",
+                        borderRadius: 4,
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        marginBottom: 15,
+                    }}
+                >
+                    <iframe
+                        src={f.fileUrl.replace("/view", "/preview")}
+                        title={f.fileName}
                         style={{
-                            border: "1px solid #ccc",
-                            borderRadius: 4,
-                            overflow: "hidden",
-                            display: "flex",
-                            flexDirection: "column",
-                            marginBottom: 15,
+                            width: "100%",
+                            height: "400px",
+                            border: 0,
                         }}
-                    >
-                        <iframe
-                            src={f.fileUrl.replace("/view", "/preview")}
-                            title={f.fileName}
-                            style={{
-                                width: "100%",
-                                height: "400px",
-                                border: 0,
-                            }}
-                        />
-                        <div style={{ padding: 8 }}>
-                            <a href={f.fileUrl} target="_blank" rel="noopener noreferrer">
-                                Відкрити "{f.fileName}" в Google Drive
-                            </a>
-                        </div>
+                    />
+                    <div style={{ padding: 8 }}>
+                        <a href={f.fileUrl} target="_blank" rel="noopener noreferrer">
+                            Відкрити "{f.fileName}" в Google Drive
+                        </a>
                     </div>
-                ))}
+                </div>
+            ))}
 
 
             <button
-                onClick={() => navigate(`/user-tasks/${task.id}`)}
+                onClick={() => navigate(`/user-tasks/task/${task.id}`, { state: { taskName: task.name } })}
                 style={{
                     margin: '24px 0',
                     padding: '8px 16px',
@@ -162,26 +162,26 @@ export function TaskDetailPage({ token, isTeacher, onBack }: { token: string, is
 
             <section style={{ marginTop: 32 }}>
                 <h3>Коментарі</h3>
-                {task.comments.length === 0 
-                ? <p>Секція коментарів порожня.</p> 
-                : <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {task.comments.map((c) => (
-                        <li
-                            key={c.id}
-                            style={{
-                                borderBottom: '1px solid #eee',
-                                padding: '8px 0',
-                            }}
-                        >
-                            <small>{c.owner.firstName} {c.owner.lastName}</small>
-                            <p style={{ margin: 5 }}>{c.content}</p>
-                            <small style={{ color: '#666' }}>
-                                {new Date(c.createdAt).toLocaleString()}
-                            </small>
-                        </li>
-                    ))}
-                </ul>
-}
+                {task.comments.length === 0
+                    ? <p>Секція коментарів порожня.</p>
+                    : <ul style={{ listStyle: 'none', padding: 0 }}>
+                        {task.comments.map((c) => (
+                            <li
+                                key={c.id}
+                                style={{
+                                    borderBottom: '1px solid #eee',
+                                    padding: '8px 0',
+                                }}
+                            >
+                                <small>{c.owner.firstName} {c.owner.lastName}</small>
+                                <p style={{ margin: 5 }}>{c.content}</p>
+                                <small style={{ color: '#666' }}>
+                                    {new Date(c.createdAt).toLocaleString()}
+                                </small>
+                            </li>
+                        ))}
+                    </ul>
+                }
                 <form onSubmit={handleCommentSubmit} style={{ marginTop: 16 }}>
                     <textarea
                         value={newComment}

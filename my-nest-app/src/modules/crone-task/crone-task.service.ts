@@ -22,13 +22,23 @@ export class CroneTaskService {
       return;
     }
 
-    const job = new CronJob(userTask.deadline, async () => {
-      const task = await this.userTaskRepository.findOneByOrFail({ id: userTask.id })
+    const now = new Date();
+    const deadlineDate = new Date(userTask.deadline);
+
+    if (deadlineDate <= now) {
+      console.log(`Deadline for task ${userTask.id} is in the past and cannot schedule a CronJob.`);
+      return;
+    }
+
+    const job = new CronJob(deadlineDate, async () => {
+      const task = await this.userTaskRepository.findOneByOrFail({ id: userTask.id });
+
       if (!task.deadline) {
         console.log('Deadline is undefined for userTask:', task.id);
         return;
       }
-      if ((task.status === TaskStatus.ACCEPTED || task.status === TaskStatus.REJECTED) && task.deadline <= new Date()) {
+
+      if ((task.status === TaskStatus.ACCEPTED || task.status === TaskStatus.REJECTED) && new Date(task.deadline) <= new Date()) {
         task.status = TaskStatus.EXPIRED;
 
         try {
@@ -36,20 +46,23 @@ export class CroneTaskService {
             to: `${task.student.email}`,
             subject: "Протерміноване завдання",
             html: `
-                            <h1>${task.task.course.name}</h1>
-                            <p>Ви протермінували завдання <strong>${task.task.name}</strong>, виконайте його та швидше здавайте</p>`
-          })
+            <h1>${task.task.course.name}</h1>
+            <p>Ви протермінували завдання <strong>${task.task.name}</strong>, виконайте його та швидше здавайте</p>`
+          });
         } catch (err) {
           console.log(err);
         }
+
         await this.userTaskRepository.save(task);
       }
+
       this.schedulerRegistry.deleteCronJob(`deadline-${userTask.id}`);
-    })
+    });
 
     this.schedulerRegistry.addCronJob(`deadline-${userTask.id}`, job);
     job.start();
   }
+
 
   @Cron('0 0 0 * * *', {
     name: 'task-remainder',

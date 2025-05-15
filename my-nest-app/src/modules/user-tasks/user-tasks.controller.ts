@@ -44,7 +44,7 @@ export class UserTasksController {
 
   @Get("course/:cId/user-task/student/:id")
   @ApiParam({ name: "id", description: 'Унікальне айді студента', type: String })
-  @ApiParam({ name: "cId", description: 'Унікальне айді студента', type: String })
+  @ApiParam({ name: "cId", description: 'Унікальне айді курса', type: String })
   @ApiOperation({ summary: 'Отримати всі UserTasks студента' })
   @Auth([])
   @ApiResponse({ status: 200, description: 'List of user tasks', type: [UserTaskDto] })

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getCourse } from '../api';
 import { CreateTaskForm } from './CreateTaskForm';
 import { TaskComments } from './TaskComments';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatTime } from '../utils/formatTime';
 
 export function CourseDetail({
@@ -19,6 +19,7 @@ export function CourseDetail({
   const [course, setCourse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [userTasksByTask, setUserTasksByTask] = useState<Record<string, any[]>>({});
+  const navigate = useNavigate();
 
   const fetchCourse = () => {
     getCourse(token, courseId)
@@ -30,7 +31,7 @@ export function CourseDetail({
     fetchCourse();
   }, [token, courseId]);
 
-  
+
 
 
   useEffect(() => {
@@ -116,7 +117,13 @@ export function CourseDetail({
         {course.students?.length ? (
           <ul>
             {course.students.map((s: any) => (
-              <li key={s.id}>
+              <li key={s.id}
+                onClick={() => navigate(`/user-tasks/course/${course.id}/user/${s.id}`, { state: { courseId: course.id, studentId: s.id } })}
+                style={{
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                }}
+              >
                 {s.firstName} {s.lastName}
               </li>
             ))}
