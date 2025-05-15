@@ -8,29 +8,49 @@ export function FolderList({ folders, onViewFolder, onDeleteFolder, moving }: {
 }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <b>Folders:</b>
-      <ul>
-        {folders.length === 0 && <li>No folders found.</li>}
+      <b>Папки:</b>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: 16,
+        marginTop: 12,
+      }}>
+        {folders.length === 0 && <div>Папок не знайдено.</div>}
         {folders.map(folder => (
-          <li key={folder.id}>
-            {folder.name}{' '}
-            <button onClick={() => onViewFolder(folder)}>
-              View
-            </button>
-            <button
-              style={{ marginLeft: 8, color: 'red' }}
-              disabled={moving}
-              onClick={() => {
-                if (window.confirm(`Delete folder "${folder.name}"?`)) {
-                  onDeleteFolder(folder.id);
-                }
-              }}
-            >
-              Delete
-            </button>
-          </li>
+          <div
+            key={folder.id}
+            style={{
+              background: '#f1f3f6',
+              borderRadius: 8,
+              padding: 16,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              minHeight: 90,
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>{folder.name}</div>
+            <div style={{ marginTop: 'auto', display: 'flex', gap: 8 }}>
+              <button onClick={() => onViewFolder(folder)}>
+                Переглянути
+              </button>
+              <button
+                style={{ color: 'red' }}
+                disabled={moving}
+                onClick={async () => {
+                  if (window.confirm(`Видалити папку "${folder.name}"?`)) {
+                    await onDeleteFolder(folder.id);
+                    window.location.reload();
+                  }
+                }}
+              >
+                Видалити
+              </button>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

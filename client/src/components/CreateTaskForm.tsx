@@ -117,33 +117,33 @@ export function CreateTaskForm({
           type="number"
           min="0"
           step="1"
-          placeholder="hh"
+          placeholder="год"
           value={time.hours}
           onChange={handleTimeChange}
           style={styles.timeInput}
-        /> h
+        /> год
         <input
           name="minutes"
           type="number"
           min="0"
           max="59"
           step="1"
-          placeholder="mm"
+          placeholder="хв"
           value={time.minutes}
           onChange={handleTimeChange}
           style={styles.timeInput}
-        /> m
+        /> хв
         <input
           name="seconds"
           type="number"
           min="0"
           max="59"
           step="1"
-          placeholder="ss"
+          placeholder="сек"
           value={time.seconds}
           onChange={handleTimeChange}
           style={styles.timeInput}
-        /> s
+        /> сек
       </div>
 
       <label style={styles.label}>Прикріпити файли:</label>
@@ -183,7 +183,7 @@ export function CreateTaskForm({
 
 
       <button type="submit" disabled={loading} style={styles.button}>
-        {loading ? 'Creating...' : 'Create Task'}
+        {loading ? 'Створення...' : 'Створити завдання'}
       </button>
     </form>
   );

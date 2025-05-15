@@ -96,9 +96,9 @@ export function TaskComments({
 
   return (
     <div className="TaskComments">
-      <h4>Comments</h4>
+      <h4>Коментарі</h4>
       {loading ? (
-        <div>Loading...</div>
+        <div>Завантаження...</div>
       ) : error ? (
         <div style={{ color: 'red', whiteSpace: 'pre-wrap' }}>{error}</div>
       ) : (
@@ -114,12 +114,12 @@ export function TaskComments({
         <input
           type="text"
           value={newComment}
-          placeholder="Add a comment..."
+          placeholder="Додати коментар..."
           onChange={(e) => setNewComment(e.target.value)}
           disabled={submitting}
         />
         <button type="submit" disabled={submitting || !newComment.trim()}>
-          Add
+          Додати
         </button>
       </form>
     </div>

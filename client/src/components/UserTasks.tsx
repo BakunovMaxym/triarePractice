@@ -29,7 +29,7 @@ export function UserTasks({ token, userId }: { token: string; userId: string }) 
     setError(null);
     getUserTasks(token)
       .then(setTasks)
-      .catch(() => setError('Failed to load user tasks'))
+      .catch(() => setError('Не вдалося завантажити завдання користувача'))
       .finally(() => setLoading(false));
   };
 
@@ -49,12 +49,12 @@ export function UserTasks({ token, userId }: { token: string; userId: string }) 
       const res = await fetch(`http://localhost:3000/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('Failed to fetch task details');
+      if (!res.ok) throw new Error('Не вдалося отримати деталі завдання');
       const details = await res.json();
       setShownTaskDetails(d => ({ ...d, [taskId]: details }));
       fetchTasks();
     } catch {
-      setError('Failed to assign or fetch task');
+      setError('Не вдалося призначити або отримати завдання');
     } finally {
       setAssigning(a => ({ ...a, [taskId]: false }));
     }
@@ -62,35 +62,35 @@ export function UserTasks({ token, userId }: { token: string; userId: string }) 
 
   return (
     <div>
-      <h3>Your Assigned Tasks</h3>
+      <h3>Ваші призначені завдання</h3>
       {loading ? (
-        <div>Loading...</div>
+        <div>Завантаження...</div>
       ) : error ? (
         <div style={{ color: 'red' }}>{error}</div>
       ) : (
         <ul>
           {tasks.map((t) => (
             <li key={t.id} style={{ marginBottom: 16 }}>
-              <b>{t.task?.name || t.task?.id || 'Task'}:</b> {t.status}
-              {t.deadline && <> (Deadline: {t.deadline})</>}
+              <b>{t.task?.name || t.task?.id || 'Завдання'}:</b> {t.status}
+              {t.deadline && <> (Дедлайн: {t.deadline})</>}
               {!shownTaskDetails[t.task?.id || ''] ? (
                 <button
                   style={{ marginLeft: 8 }}
                   disabled={assigning[t.task?.id || '']}
                   onClick={() => t.task?.id && handleGetTask(t.task.id)}
                 >
-                  {assigning[t.task?.id || ''] ? 'Loading...' : 'Get Task'}
+                  {assigning[t.task?.id || ''] ? 'Завантаження...' : 'Отримати завдання'}
                 </button>
               ) : null}
               {/* Show task details if fetched */}
               {shownTaskDetails[t.task?.id || ''] && (
                 <div style={{ marginTop: 8, paddingLeft: 16 }}>
                   <div>
-                    <strong>Description:</strong> {shownTaskDetails[t.task?.id || '']?.textContent}
+                    <strong>Опис:</strong> {shownTaskDetails[t.task?.id || '']?.textContent}
                   </div>
                   {shownTaskDetails[t.task?.id || '']?.fileContent?.length ? (
                     <div>
-                      <strong>Files:</strong>
+                      <strong>Файли:</strong>
                       <ul>
                         {shownTaskDetails[t.task?.id || '']?.fileContent?.map(f => (
                           <li key={f.fileName}>

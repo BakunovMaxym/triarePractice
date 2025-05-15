@@ -43,7 +43,7 @@ export function FolderPage({
         console.log(data)
         setFolder(data);
       } catch (err) {
-        console.error('Failed to fetch folder:', err);
+        console.error('Не вдалося завантажити папку:', err);
       }
     };
 
@@ -62,30 +62,66 @@ export function FolderPage({
       {folder.childFolders.length > 0 && (
         <div>
           <h3>Дочірні папки:</h3>
-          <ul>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 16,
+            marginTop: 12,
+          }}>
             {folder.childFolders.map((f) => (
-              <li key={f.id}>
+              <div
+                key={f.id}
+                style={{
+                  background: '#f1f3f6',
+                  borderRadius: 8,
+                  padding: 16,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  minHeight: 90,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>{f.name}</div>
                 <button onClick={() => navigate(`/folders/${f.id}`)}>
-                  {f.name}
+                  Переглянути
                 </button>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
       {folder.childCourses.length > 0 && (
         <div>
           <h3>Курси:</h3>
-          <ul>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+            marginTop: 12,
+          }}>
             {folder.childCourses.map((course) => (
-              <li key={course.id}>
+              <div
+                key={course.id}
+                style={{
+                  background: '#f1f3f6',
+                  borderRadius: 8,
+                  padding: 16,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  minHeight: 90,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>{course.name}</div>
                 <button onClick={() => navigate(`/courses/${course.id}`)}>
-                  {course.name}
+                  Переглянути
                 </button>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>

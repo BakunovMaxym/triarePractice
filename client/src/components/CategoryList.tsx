@@ -25,20 +25,20 @@ export function CategoryList() {
     fetchCategories();
   }, []);
 
-  if (loading) return <div>Loading categories...</div>;
+  if (loading) return <div>Завантаження категорій...</div>;
   if (error) return <div style={{ color: 'red', padding: '10px' }}>{error}</div>;
-  if (categories.length === 0) return <div>No categories found.</div>;
+  if (categories.length === 0) return <div>Категорій не знайдено.</div>;
 
   return (
     <div>
-      <h2>Categories</h2>
+      <h2>Категорії</h2>
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {categories.map((cat) => (
           <li key={cat.id || cat.name} style={{ margin: '10px 0', padding: '10px', border: '1px solid #ddd' }}>
             <strong>{cat.name}</strong>
             {cat.courses && (
               <div style={{ fontSize: '0.9em', marginTop: '4px', color: '#666' }}>
-                Courses: {cat.courses.length}
+                Курсів: {cat.courses.length}
               </div>
             )}
           </li>

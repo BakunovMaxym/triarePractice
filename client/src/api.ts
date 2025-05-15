@@ -241,12 +241,29 @@ export async function deleteFolder(token: string, folderId: string) {
   const res = await fetch(`${API_URL}/folder/${folderId}`, {
     method: 'DELETE',
     headers: {
-      Authorization: `Bearer ${token}`,
-    },
+      Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to delete folder');
   // Повертаємо пустий об'єкт, бо бекенд повертає 204 No Content
   return {};
+}
+
+export async function joinCourseAsStudent(token: string, courseId: string) {
+  const res = await fetch(`http://localhost:3000/course/${courseId}/join`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Не вдалося приєднатися до курсу');
+  return res.json();
+}
+
+export async function joinCourseAsTeacher(token: string, courseId: string) {
+  const res = await fetch(`http://localhost:3000/course/${courseId}/at/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Не вдалося приєднатися як вчитель');
+  return res.json();
 }
 
 export {}
