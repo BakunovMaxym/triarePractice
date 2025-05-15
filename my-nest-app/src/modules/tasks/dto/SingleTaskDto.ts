@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { StringField } from '../../../decorators/field.decorators';
-import type { Comment } from 'modules/comment/entities/comment.entity';
 import type { TaskEntity } from '../entities/task.entity';
 import { TaskDto } from './TaskDto';
 import { TaskFileDto } from '../../../modules/task-file/dto/TaskFileDto';
+import { CommentDto } from '../../../modules/comment/dto/CommentDto';
 
 export class SingleTaskDto extends TaskDto {
     @ApiProperty({
@@ -24,12 +24,12 @@ export class SingleTaskDto extends TaskDto {
     @ApiProperty({
         description: 'Коментарі',
     })
-    comments!: Comment[];
+    comments!: CommentDto[];
 
     constructor(task: TaskEntity) {
         super(task)
         this.textContent = task.textContent;
         this.fileContent = task.fileContent?.map(file => new TaskFileDto(file));
-        this.comments = task.comments;
+        this.comments = task.comments?.map(comment => new CommentDto(comment)) || [];
     }
 }

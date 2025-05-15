@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { getCourse } from '../api';
 import { CreateTaskForm } from './CreateTaskForm';
 import { TaskComments } from './TaskComments';
+import { Link } from 'react-router-dom';
+import { formatTime } from '../utils/formatTime';
 
 export function CourseDetail({
   token,
@@ -28,22 +30,7 @@ export function CourseDetail({
     fetchCourse();
   }, [token, courseId]);
 
-  const formatTime = (seconds: number) => {
-  if (!seconds || seconds <= 0) return 'Не задано';
-
-  const days = Math.floor(seconds / (3600 * 24));
-  const hours = Math.floor((seconds % (3600 * 24)) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  let parts = [];
-  if (days > 0) parts.push(`${days} дн.`);
-  if (hours > 0) parts.push(`${hours} год.`);
-  if (minutes > 0) parts.push(`${minutes} хв.`);
-  if (secs > 0 && parts.length === 0) parts.push(`${secs} с.`); // показувати секунди, тільки якщо нічого іншого
-
-  return parts.join(' ');
-};
+  
 
 
   useEffect(() => {
@@ -89,10 +76,15 @@ export function CourseDetail({
         {Array.isArray(course.tasks) && course.tasks.length > 0 ? (
           <ul style={{ paddingLeft: 20 }}>
             {course.tasks.map((task: any) => (
-              <li key={task.id} style={{ marginBottom: 24, border: "solid" }}>
-                <b>{task.name}</b>
-                <div><strong>Автор:</strong> {task.owner?.firstName} {task.owner?.lastName}</div>
-                <div><strong>Час на виконання:</strong> {formatTime(task.timeToComplete)}</div>
+              <li key={task.id} style={{ marginBottom: 24, padding: 0, border: "solid", borderRadius: 6 }}>
+                <Link
+                  to={`/tasks/${task.id}`}
+                  style={{ textDecoration: "none", padding: 12, color: "inherit", display: "block" }}
+                >
+                  <b>{task.name}</b>
+                  <div><strong>Автор:</strong> {task.owner?.firstName} {task.owner?.lastName}</div>
+                  <div><strong>Час на виконання:</strong> {formatTime(task.timeToComplete)}</div>
+                </Link>
 
                 {isTeacher && userTasksByTask[task.id] && (
                   <div style={{ marginTop: 8, background: '#f5f5fa', padding: 8, borderRadius: 6 }}>
@@ -137,4 +129,4 @@ export function CourseDetail({
   );
 }
 
-export {}
+export { }

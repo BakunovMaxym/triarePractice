@@ -129,7 +129,7 @@ export class TaskService {
       relations: {
         userTasks: true,
         owner: true,
-        comments: true,
+        comments: {owner: true},
         fileContent: { task: true },
         course: { teachers: true },
       },
@@ -138,6 +138,7 @@ export class TaskService {
       throw new NotFoundException(`Task with name ${id} not found`);
     }
 
+    console.log(task);
     await this.cacheManager.set(cacheKey, task);
 
     return task;

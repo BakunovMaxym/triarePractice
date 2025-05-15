@@ -1,5 +1,28 @@
 const API_URL = 'http://localhost:3000';
 
+export interface CreatedTask {
+  id: string;
+  name: string;
+  owner: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  course: {
+    id: string;
+    name: string;
+  };
+  timeToComplete: string;
+  textContent: string;
+  fileContent: {
+    fileId: string;
+    fileName: string;
+    fileUrl: string;
+  }[];
+  comments: any[];
+}
+
+
 export async function login(email: string, password: string) {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',

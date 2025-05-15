@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom'; // імпортуємо useNavigate і useParams
 import { getCourses, getFolders, createFolder, moveCourseToFolder, deleteFolder as apiDeleteFolder } from '../api';
 import { CreateCourseForm } from './CreateCourseForm';
 import { FolderList } from './FolderList';
@@ -8,12 +9,12 @@ export function CourseList({
   token,
   onSelectCourse,
   isTeacher,
-  userId, // <-- add this prop
+  userId,
 }: {
   token: string;
   onSelectCourse: (id: string) => void;
   isTeacher?: boolean;
-  userId: string; // <-- add this prop
+  userId: string;
 }) {
   const [courses, setCourses] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,9 @@ export function CourseList({
   const [moving, setMoving] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState<any | null>(null);
   const [folderCourses, setFolderCourses] = useState<any[]>([]);
+
+  const navigate = useNavigate(); // для переходу по маршруту
+  const { courseId, folderId } = useParams(); // отримуємо параметри з URL
 
   const fetchFolders = useCallback(() => {
     getFolders(token)
@@ -64,7 +68,7 @@ export function CourseList({
       setCourses(filteredCourses);
       setError(null);
     }).catch(() => setError('Failed to load courses'));
-  }, [token, fetchFolders]);
+  }, [token]);
 
   useEffect(() => {
     fetchCourses();
@@ -73,21 +77,9 @@ export function CourseList({
 
   // View folder and its courses (always use fresh data from folders state)
   const handleViewFolder = useCallback((folder: any) => {
-    // Ensure folder.childCourses is always an array
-    const freshFolder = folders.find((f) => f.id === folder.id) || folder;
-    // If childCourses is array of objects with .id, use as is; if it's array of ids, map to course objects
-    let folderCoursesArr = [];
-    if (Array.isArray(freshFolder.childCourses) && freshFolder.childCourses.length > 0) {
-      if (typeof freshFolder.childCourses[0] === 'object') {
-        folderCoursesArr = freshFolder.childCourses;
-      } else {
-        // childCourses is array of ids, map to course objects
-        folderCoursesArr = courses.filter(c => freshFolder.childCourses.includes(c.id));
-      }
-    }
-    setSelectedFolder(freshFolder);
-    setFolderCourses(folderCoursesArr);
-  }, [folders, courses]);
+    // Перехід на папку по її ID
+    navigate(`/folders/${folder.id}`);
+  }, [navigate]);
 
   // Move course to selected folder
   const handleMoveCourse = async (courseId: string, folderId: string) => {
@@ -99,7 +91,6 @@ export function CourseList({
       // Оновлюємо папки у стані без перезавантаження
       setFolders(prev => prev.map(f => {
         if (f.id === folderId) {
-          // Додаємо курс до childCourses, якщо його там ще немає
           const childCourses = Array.isArray(f.childCourses) ? [...f.childCourses] : [];
           if (!childCourses.some((c: any) => (typeof c === 'object' ? c.id : c) === courseId)) {
             childCourses.push(courseId);
@@ -108,17 +99,8 @@ export function CourseList({
         }
         return f;
       }));
-      // Видаляємо курс зі списку courses
       setCourses(prev => prev.filter(c => c.id !== courseId));
-      // Оновлюємо selectedFolder, якщо треба
-      setFolders(prev => {
-        const updated = prev.find(f => f.id === folderId);
-        if (selectedFolder && selectedFolder.id === folderId && updated) {
-          setSelectedFolder(updated);
-          setFolderCourses(updated.childCourses || []);
-        }
-        return prev;
-      });
+      setSelectedFolder(null);
     } catch {
       setFolderError('Failed to move course');
     } finally {
@@ -132,25 +114,14 @@ export function CourseList({
       setFolderError('Folder name required');
       return;
     }
-    if (!userId) {
-      setFolderError('user id required');
-      return;
-    }
-    if (!courseId) {
-      setFolderError('user id required');
-      return;
-    }
 
     setMoving(true);
     setFolderError(null);
     try {
-      // Передаємо ownerId як третій аргумент
       const folder = await createFolder(token, newFolderName.trim(), userId, [courseId]);
       setShowFolderPopup(null);
       setNewFolderName('');
-      // Додаємо нову папку у стан
       setFolders(prev => [...prev, folder]);
-      // Видаляємо курс зі списку courses
       setCourses(prev => prev.filter(c => c.id !== courseId));
     } catch {
       setFolderError('Failed to create folder or move course');
@@ -159,38 +130,13 @@ export function CourseList({
     }
   };
 
-  // Додаємо функцію для видалення папки
   const deleteFolder = async (folderId: string) => {
     setMoving(true);
     setFolderError(null);
     try {
       await apiDeleteFolder(token, folderId);
-      const deletedFolder = folders.find(f => f.id === folderId);
-      let coursesToReturn: any[] = [];
-      if (deletedFolder && Array.isArray(deletedFolder.childCourses)) {
-        if (typeof deletedFolder.childCourses[0] === 'object') {
-          coursesToReturn = deletedFolder.childCourses;
-        } else {
-          const allCourses = [
-            ...(courses || []),
-            ...(folders.flatMap(f => Array.isArray(f.childCourses) ? f.childCourses : []))
-          ];
-          coursesToReturn = deletedFolder.childCourses
-            .map((id: string) => allCourses.find(c => c.id === id))
-            .filter(Boolean);
-        }
-      }
-      setCourses(prev => {
-        const ids = new Set(prev.map(c => c.id));
-        const toAdd = coursesToReturn.filter(c => !ids.has(c.id));
-        return [...prev, ...toAdd];
-      });
       setFolders(prev => prev.filter(f => f.id !== folderId));
-      if (selectedFolder && selectedFolder.id === folderId) {
-        setSelectedFolder(null);
-        setFolderCourses([]);
-      }
-      fetchCourses();
+      setSelectedFolder(null);
     } catch {
       setFolderError('Failed to delete folder');
     } finally {
@@ -204,10 +150,10 @@ export function CourseList({
       {isTeacher && <CreateCourseForm token={token} onCreated={fetchCourses} />}
       {error && <div style={{ color: 'red' }}>{error}</div>}
 
-      {selectedFolder ? (
+      {folderId ? (
         <div>
-          <button onClick={() => setSelectedFolder(null)} style={{ marginBottom: 12 }}>← Back to all courses</button>
-          <h3>Folder: {selectedFolder.name}</h3>
+          <button onClick={() => navigate('/courses')} style={{ marginBottom: 12 }}>← Back to all courses</button>
+          <h3>Folder: {selectedFolder?.name}</h3>
           <ul>
             {folderCourses.length === 0 && <li>No courses in this folder.</li>}
             {folderCourses.map(course => (
@@ -221,7 +167,6 @@ export function CourseList({
         </div>
       ) : (
         <>
-          {/* Use FolderList component */}
           <FolderList
             folders={folders}
             onViewFolder={handleViewFolder}
@@ -230,7 +175,6 @@ export function CourseList({
           />
           <ul>
             {courses.length === 0 && <li>No courses found.</li>}
-            <b>Courses:</b>
             {courses.map(course => (
               <CourseItem
                 key={course.id}
@@ -241,7 +185,6 @@ export function CourseList({
                 userId={userId}
                 onMoveCourse={handleMoveCourse}
                 onCreateAndMove={handleCreateAndMove}
-                fetchFolders={fetchFolders}
                 moving={moving}
                 folderError={folderError}
                 setFolderError={setFolderError}
@@ -249,6 +192,7 @@ export function CourseList({
                 newFolderName={newFolderName}
                 showFolderPopup={showFolderPopup}
                 setShowFolderPopup={setShowFolderPopup}
+                fetchFolders={fetchFolders}
               />
             ))}
           </ul>
@@ -257,5 +201,3 @@ export function CourseList({
     </div>
   );
 }
-
-export { }

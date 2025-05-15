@@ -48,7 +48,8 @@ export class CommentService {
     });
     const savedUser = await this.commentsRepo.save(comment);
 
-    this.deleteCache(`tasks:single:*:${savedUser.task.id}`)
+    console.log(`tasks:single:${savedUser.task.id}`);
+    this.deleteCache(`tasks:single:${savedUser.task.id}`)
     this.deleteCache(`comments:${savedUser.task.id}`)
 
     return new CommentDto(savedUser)

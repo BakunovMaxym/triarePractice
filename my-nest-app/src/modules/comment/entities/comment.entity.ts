@@ -9,10 +9,9 @@ import { TaskEntity } from '../../tasks/entities/task.entity';
 import { AbstractEntity } from '../../../common/abstract.entity';
 import { UserEntity } from '../../../modules/user/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import type { CommentDto } from '../dto/CommentDto';
 
 @Entity({ name: 'comments' })
-export class Comment extends AbstractEntity<CommentDto> {
+export class Comment extends AbstractEntity {
 
   @ApiProperty({ description: 'Comment content', format: 'string' })
   @Column('text')
