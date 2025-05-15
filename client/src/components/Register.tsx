@@ -7,7 +7,7 @@ export function Register({ onRegister }: { onRegister: () => void }) {
     lastName: '',
     email: '',
     password: '',
-    role: 'STUDENT', // default role
+    role: 'STUDENT',
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -22,33 +22,33 @@ export function Register({ onRegister }: { onRegister: () => void }) {
       await register(form);
       onRegister();
     } catch (err) {
-      setError('Registration failed');
+      setError('Не вдалося зареєструватися');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Register</h2>
+      <h2>Реєстрація</h2>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <div>
-        <input name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} required />
+        <input name="firstName" placeholder="Ім'я" value={form.firstName} onChange={handleChange} required />
       </div>
       <div>
-        <input name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} required />
+        <input name="lastName" placeholder="Прізвище" value={form.lastName} onChange={handleChange} required />
       </div>
       <div>
-        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+        <input name="email" type="email" placeholder="Електронна пошта" value={form.email} onChange={handleChange} required />
       </div>
       <div>
-        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
+        <input name="password" type="password" placeholder="Пароль" value={form.password} onChange={handleChange} required />
       </div>
       <div>
         <select name="role" value={form.role} onChange={handleChange} required>
-          <option value="STUDENT">Student</option>
-          <option value="TEACHER">Teacher</option>
+          <option value="STUDENT">Студент</option>
+          <option value="TEACHER">Викладач</option>
         </select>
       </div>
-      <button type="submit" onClick={handleSubmit}>Register</button>
+      <button type="submit" onClick={handleSubmit}>Зареєструватися</button>
     </form>
   );
 }

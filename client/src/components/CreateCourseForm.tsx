@@ -48,29 +48,29 @@ export function CreateCourseForm({ token, onCreated }: { token: string; onCreate
 
   return (
     <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-      <h3>Create Course</h3>
+      <h3>Створити курс</h3>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <label>
-        Course Name:
+        Назва курсу:
         <input value={name} onChange={e => setName(e.target.value)} disabled={loading} required />
       </label>
       <label>
-        Category:
+        Категорія:
         <select
           value={category}
           onChange={e => setCategory(e.target.value)}
           disabled={loading}
           required
         >
-          <option value="">Select category</option>
+          <option value="">Оберіть категорію</option>
           {categories.map((cat: any) => (
             <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
           ))}
-          <option value="new">Add new...</option>
+          <option value="new">Додати нову...</option>
         </select>
         {category === 'new' && (
           <input
-            placeholder="New category name"
+            placeholder="Назва нової категорії"
             value={newCategory}
             onChange={e => setNewCategory(e.target.value)}
             disabled={loading}
@@ -79,22 +79,22 @@ export function CreateCourseForm({ token, onCreated }: { token: string; onCreate
         )}
       </label>
       <label>
-        SubCategory:
+        Підкатегорія:
         <select
           value={subCategory}
           onChange={e => setSubCategory(e.target.value)}
           disabled={loading}
           required
         >
-          <option value="">Select subcategory</option>
+          <option value="">Оберіть підкатегорію</option>
           {subCategories.map((sub: any) => (
             <option key={sub.id || sub.name} value={sub.name}>{sub.name}</option>
           ))}
-          <option value="new">Add new...</option>
+          <option value="new">Додати нову...</option>
         </select>
         {subCategory === 'new' && (
           <input
-            placeholder="New subcategory name"
+            placeholder="Назва нової підкатегорії"
             value={newSubCategory}
             onChange={e => setNewSubCategory(e.target.value)}
             disabled={loading}
@@ -102,7 +102,7 @@ export function CreateCourseForm({ token, onCreated }: { token: string; onCreate
           />
         )}
       </label>
-      <button type="submit" disabled={loading}>Create Course</button>
+      <button type="submit" disabled={loading}>Створити курс</button>
     </form>
   );
 }

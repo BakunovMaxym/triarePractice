@@ -30,9 +30,6 @@ export function CourseDetail({
     fetchCourse();
   }, [token, courseId]);
 
-  
-
-
   useEffect(() => {
     if (isTeacher && course && Array.isArray(course.tasks)) {
       Promise.all(

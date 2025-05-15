@@ -19,12 +19,12 @@ export function CourseItem({
   setShowFolderPopup,
 }: any) {
   return (
-    <li style={{ marginBottom: 8 }}>
+    <>
       <button onClick={() => onSelectCourse(course.id)}>
-        {course.name}
+        Переглянути
       </button>
       <button
-        style={{ marginLeft: 8 }}
+        style={{ marginTop: 8 }}
         onClick={() => {
           setShowFolderPopup(course.id);
           setFolderError(null);
@@ -32,7 +32,7 @@ export function CourseItem({
           fetchFolders();
         }}
       >
-        Move to Folder
+        Перемістити у папку
       </button>
       {showFolderPopup === course.id && (
         <FolderPopup
@@ -48,6 +48,6 @@ export function CourseItem({
           userId={userId}
         />
       )}
-    </li>
+    </>
   );
 }

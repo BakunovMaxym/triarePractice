@@ -6,11 +6,13 @@ export function CoursesPage({
   userId,
   isTeacher,
   onSelectCourse,
+  key,
 }: {
   token: string;
   userId: string;
   isTeacher?: boolean;
   onSelectCourse: (id: string) => void;
+  key: string;
 }) {
   return (
     <CourseList
@@ -18,6 +20,7 @@ export function CoursesPage({
       userId={userId}
       isTeacher={isTeacher}
       onSelectCourse={onSelectCourse}
+      key={key}
     />
   );
 }

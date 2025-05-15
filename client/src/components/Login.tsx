@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../api';
 
-export function Login({ onLogin }: { onLogin: (token: string, userId: string) => void }) {
+export function Login({ onLogin }: { onLogin: (token: string, userId: string, role: string) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -11,20 +11,20 @@ export function Login({ onLogin }: { onLogin: (token: string, userId: string) =>
     setError(null);
     try {
       const data = await login(email, password);
-      onLogin(data.token.accessToken, data.user.id); // <-- передаємо token та userId
+      onLogin(data.token.accessToken, data.user.id, data.user.role); // додано передачу ролі
     } catch (err) {
-      setError('Invalid credentials');
+      setError('Невірні дані для входу');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
+      <h2>Вхід</h2>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <div>
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Електронна пошта"
           value={email}
           required
           onChange={e => setEmail(e.target.value)}
@@ -33,13 +33,13 @@ export function Login({ onLogin }: { onLogin: (token: string, userId: string) =>
       <div>
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Пароль"
           value={password}
           required
           onChange={e => setPassword(e.target.value)}
         />
       </div>
-      <button type="submit">Login</button>
+      <button type="submit">Увійти</button>
     </form>
   );
 }

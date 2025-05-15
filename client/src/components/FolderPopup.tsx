@@ -36,12 +36,12 @@ export function FolderPopup({
         }}
         onClick={e => e.stopPropagation()}
       >
-        <h4>Move "{course.name}" to Folder</h4>
+        <h4>Перемістити "{course.name}" у папку</h4>
         {folderError && <div style={{ color: 'red' }}>{folderError}</div>}
         <div>
-          <b>Select existing folder:</b>
+          <b>Оберіть існуючу папку:</b>
           <ul style={{ height: 300, overflow: "scroll" }}>
-            {folders.length === 0 && <li>No folders found.</li>}
+            {folders.length === 0 && <li>Папок не знайдено.</li>}
             {folders.map((folder: any) => (
               <li key={folder.id}>
                 <button
@@ -55,10 +55,10 @@ export function FolderPopup({
           </ul>
         </div>
         <div style={{ marginTop: 16 }}>
-          <b>Or create new folder:</b>
+          <b>Або створіть нову папку:</b>
           <input
             type="text"
-            placeholder="New folder name"
+            placeholder="Назва нової папки"
             value={newFolderName}
             onChange={e => setNewFolderName(e.target.value)}
             disabled={moving}
@@ -68,7 +68,7 @@ export function FolderPopup({
             disabled={moving}
             onClick={() => onCreateAndMove(course.id)}
           >
-            Create & Move
+            Створити і перемістити
           </button>
         </div>
         <button

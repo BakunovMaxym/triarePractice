@@ -10,7 +10,7 @@ export const formatTime = (seconds: number) => {
     if (days > 0) parts.push(`${days} дн.`);
     if (hours > 0) parts.push(`${hours} год.`);
     if (minutes > 0) parts.push(`${minutes} хв.`);
-    if (secs > 0 && parts.length === 0) parts.push(`${secs} с.`);
+    if (secs > 0 && parts.length === 0) parts.push(`${secs} сек.`);
 
     return parts.join(' ');
   };

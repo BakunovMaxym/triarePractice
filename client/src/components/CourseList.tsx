@@ -146,24 +146,42 @@ export function CourseList({
 
   return (
     <div>
-      <h2>Courses</h2>
+      <h2>Курси</h2>
       {isTeacher && <CreateCourseForm token={token} onCreated={fetchCourses} />}
       {error && <div style={{ color: 'red' }}>{error}</div>}
 
       {folderId ? (
         <div>
-          <button onClick={() => navigate('/courses')} style={{ marginBottom: 12 }}>← Back to all courses</button>
-          <h3>Folder: {selectedFolder?.name}</h3>
-          <ul>
-            {folderCourses.length === 0 && <li>No courses in this folder.</li>}
+          <button onClick={() => navigate('/courses')} style={{ marginBottom: 12 }}>← Назад до всіх курсів</button>
+          <h3>Папка: {selectedFolder?.name}</h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+            marginTop: 12,
+          }}>
+            {folderCourses.length === 0 && <div>У цій папці немає курсів.</div>}
             {folderCourses.map(course => (
-              <li key={course.id}>
+              <div
+                key={course.id}
+                style={{
+                  background: '#f1f3f6',
+                  borderRadius: 8,
+                  padding: 16,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  minHeight: 90,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>{course.name}</div>
                 <button onClick={() => onSelectCourse(course.id)}>
-                  {course.name}
+                  Переглянути
                 </button>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       ) : (
         <>
@@ -173,29 +191,65 @@ export function CourseList({
             onDeleteFolder={deleteFolder}
             moving={moving}
           />
-          <ul>
-            {courses.length === 0 && <li>No courses found.</li>}
+          <b>Курси:</b>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+            marginTop: 12,
+          }}>
+            {courses.length === 0 && <div>Курсів не знайдено.</div>}
             {courses.map(course => (
-              <CourseItem
+              <div
                 key={course.id}
-                course={course}
-                onSelectCourse={onSelectCourse}
-                folders={folders}
-                token={token}
-                userId={userId}
-                onMoveCourse={handleMoveCourse}
-                onCreateAndMove={handleCreateAndMove}
-                moving={moving}
-                folderError={folderError}
-                setFolderError={setFolderError}
-                setNewFolderName={setNewFolderName}
-                newFolderName={newFolderName}
-                showFolderPopup={showFolderPopup}
-                setShowFolderPopup={setShowFolderPopup}
-                fetchFolders={fetchFolders}
-              />
+                style={{
+                  background: '#f1f3f6',
+                  borderRadius: 8,
+                  padding: 16,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  minHeight: 90,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>{course.name}</div>
+                <button onClick={() => onSelectCourse(course.id)}>
+                  Переглянути
+                </button>
+                <button
+                  style={{ marginTop: 8 }}
+                  onClick={() => {
+                    setShowFolderPopup(course.id);
+                    setFolderError(null);
+                    setNewFolderName('');
+                    fetchFolders();
+                  }}
+                >
+                  Перемістити у папку
+                </button>
+                {showFolderPopup === course.id && (
+                  <CourseItem
+                    course={course}
+                    onSelectCourse={onSelectCourse}
+                    folders={folders}
+                    token={token}
+                    userId={userId}
+                    onMoveCourse={handleMoveCourse}
+                    onCreateAndMove={handleCreateAndMove}
+                    moving={moving}
+                    folderError={folderError}
+                    setFolderError={setFolderError}
+                    setNewFolderName={setNewFolderName}
+                    newFolderName={newFolderName}
+                    showFolderPopup={showFolderPopup}
+                    setShowFolderPopup={setShowFolderPopup}
+                    fetchFolders={fetchFolders}
+                  />
+                )}
+              </div>
             ))}
-          </ul>
+          </div>
         </>
       )}
     </div>

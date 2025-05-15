@@ -90,14 +90,14 @@ export function TaskDetailPage({ token, isTeacher, onBack }: { token: string, is
         }
     };
 
-    if (loading) return <div>Loading task…</div>;
+    if (loading) return <div>Завантаження завдання…</div>;
     if (error) return <div style={{ color: 'red' }}>{error}</div>;
     if (!task) return null;
 
     return (
         <div style={{ maxWidth: 800, margin: 'auto', padding: 24 }}>
             <button onClick={() => navigate(-1)} style={{ marginBottom: 16 }}>
-                ← Back
+                ← Назад
             </button>
 
             <h2>{task.name}</h2>
@@ -138,7 +138,7 @@ export function TaskDetailPage({ token, isTeacher, onBack }: { token: string, is
                         />
                         <div style={{ padding: 8 }}>
                             <a href={f.fileUrl} target="_blank" rel="noopener noreferrer">
-                                Відкрити "{f.fileName}" в Google Drive
+                                Відкрити "{f.fileName}" у Google Drive
                             </a>
                         </div>
                     </div>
@@ -188,7 +188,7 @@ export function TaskDetailPage({ token, isTeacher, onBack }: { token: string, is
                         onChange={(e) => setNewComment(e.target.value)}
                         rows={3}
                         style={{ width: '100%', padding: 8, borderRadius: 4 }}
-                        placeholder="Текст коментарю..."
+                        placeholder="Текст коментаря..."
                         required
                     />
                     {postError && (
