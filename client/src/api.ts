@@ -61,7 +61,9 @@ export async function getCourse(token: string, id: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch course');
-  return res.json();
+  const responce = await res.json();
+  console.log(responce);
+  return responce
 }
 
 export async function getCategories() {

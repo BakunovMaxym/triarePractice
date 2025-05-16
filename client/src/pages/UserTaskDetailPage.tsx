@@ -1,4 +1,4 @@
-import React, { useEffect, useState, FormEvent } from 'react';
+import React, { useEffect, useState, FormEvent, ChangeEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { formatTime } from '../utils/formatTime';
 
@@ -8,26 +8,21 @@ type FileContent = {
     fileUrl: string;
 };
 
+type TaskInfo = {
+    id: string;
+    name: string;
+    owner: { id: string; firstName: string; lastName: string };
+    course: { id: string; name: string };
+    timeToComplete: number;
+    textContent: string;
+    fileContent: FileContent[] | string[]; // string[] для студентів до прийняття
+};
+
 type Comment = {
     id: string;
     createdAt: string;
     content: string;
-    owner: {
-        id: string;
-        firstName: string;
-        lastName: string;
-    };
-};
-
-type TaskInfo = {
-    id: string;
-    name: string;
-    owner: { firstName: string; lastName: string };
-    course: { id: string; name: string };
-    timeToComplete: number;
-    textContent: string;
-    fileContent: FileContent[];
-    comments: Comment[];
+    owner: { id: string; firstName: string; lastName: string };
 };
 
 type UserTaskDetail = {
@@ -38,20 +33,35 @@ type UserTaskDetail = {
     student: { id: string; firstName: string; lastName: string };
     task: TaskInfo;
     grade: number | null;
-    fileContent: FileContent[]; // student attachments
+    fileContent: FileContent[]; // студентські файли
 };
 
-export function UserTaskDetailPage({ token, isTeacher, onBack }: { token: string; isTeacher: boolean; onBack: () => void; }) {
+export function UserTaskDetailPage({
+    token,
+    isTeacher,
+    onBack,
+}: {
+    token: string;
+    isTeacher: boolean;
+    onBack: () => void;
+}) {
     const { userTaskId } = useParams<{ userTaskId: string }>();
-    const navigate = useNavigate();
+    const nav = useNavigate();
+
     const [detail, setDetail] = useState<UserTaskDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [gradeValue, setGradeValue] = useState<number | undefined>(undefined);
+    // студентські стани
+    const [accepted, setAccepted] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [newFiles, setNewFiles] = useState<FileList | null>(null);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+
+    // викладацькі стани
+    const [gradeValue, setGradeValue] = useState<number | ''>('');
     const [grading, setGrading] = useState(false);
     const [gradeError, setGradeError] = useState<string | null>(null);
-
     const [rejecting, setRejecting] = useState(false);
     const [rejectError, setRejectError] = useState<string | null>(null);
 
@@ -62,13 +72,13 @@ export function UserTaskDetailPage({ token, isTeacher, onBack }: { token: string
                 const res = await fetch(`http://localhost:3000/user-task/${userTaskId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+                if (!res.ok) throw new Error(`Сервер відповів ${res.status}`);
                 const data: UserTaskDetail = await res.json();
                 setDetail(data);
-                // init gradeValue
-                if (data.grade !== null) setGradeValue(data.grade);
-            } catch (err: any) {
-                setError(err.message || 'Failed to load task detail');
+                // якщо студент і статус “Призначено” — він ще не прийняв
+                setAccepted(data.status !== 'Призначено');
+            } catch (e: any) {
+                setError(e.message);
             } finally {
                 setLoading(false);
             }
@@ -76,82 +86,108 @@ export function UserTaskDetailPage({ token, isTeacher, onBack }: { token: string
         if (userTaskId) fetchDetail();
     }, [userTaskId, token]);
 
+    // студент: прийняти завдання
+    const handleAccept = async () => {
+        if (!detail) return;
+        try {
+            const res = await fetch(`http://localhost:3000/user-task/${detail.id}/accept`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error(`Помилка ${res.status}`);
+            const updated: UserTaskDetail = await res.json();
+            setDetail(updated);
+            setAccepted(true);
+        } catch (e: any) {
+            setError(e.message);
+        }
+    };
+
+    // студент: виконати завдання
+    const handleNewFiles = (e: ChangeEvent<HTMLInputElement>) => setNewFiles(e.target.files);
+    const handleComplete = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!detail) return;
+        setUploading(true);
+        setUploadError(null);
+        try {
+            const fd = new FormData();
+            if (newFiles) Array.from(newFiles).forEach(f => fd.append('file', f));
+            const res = await fetch(
+                `http://localhost:3000/user-task/${detail.id}/complete`,
+                { method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: fd }
+            );
+            if (!res.ok) throw new Error(`Помилка ${res.status}`);
+            const upd: UserTaskDetail = await res.json();
+            setDetail(upd);
+        } catch (e: any) {
+            setUploadError(e.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    // викладач: оцінити
     const handleGrade = async () => {
         if (!detail) return;
         setGradeError(null);
         setGrading(true);
         try {
-            console.log(detail.id)
-            const res = await fetch(`http://localhost:3000/user-task/${detail.id}/grade`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ grade: gradeValue }),
-            });
-            console.log(res)
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-            const updated = await res.json();
-            setDetail(d => d ? { ...d, grade: updated.grade, status: updated.status ?? d.status } : d);
-        } catch (err: any) {
-            setGradeError(err.message || 'Failed to set grade');
+            const res = await fetch(
+                `http://localhost:3000/user-task/${detail.id}/grade`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ grade: gradeValue }),
+                }
+            );
+            if (!res.ok) throw new Error(`Сервер ${res.status}`);
+            const upd = await res.json();
+            setDetail(d => d ? { ...d, grade: upd.grade, status: upd.status } : d);
+        } catch (e: any) {
+            setGradeError(e.message);
         } finally {
             setGrading(false);
         }
     };
-
+    // викладач: відхилити
     const handleReject = async () => {
         if (!detail) return;
         setRejectError(null);
         setRejecting(true);
         try {
-            const res = await fetch(`http://localhost:3000/user-task/${detail.id}/reject`, {
-                method: 'PATCH',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-            const updated = await res.json();
-            setDetail(d => d ? { ...d, status: updated.status ?? 'Відхилено' } : d);
-        } catch (err: any) {
-            setRejectError(err.message || 'Failed to reject task');
+            const res = await fetch(
+                `http://localhost:3000/user-task/${detail.id}/reject`,
+                { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!res.ok) throw new Error(`Сервер ${res.status}`);
+            const upd = await res.json();
+            setDetail(d => d ? { ...d, status: upd.status } : d);
+        } catch (e: any) {
+            setRejectError(e.message);
         } finally {
             setRejecting(false);
-            setGradeValue(undefined)
         }
     };
 
-    if (loading) return <div>Loading…</div>;
+    if (loading) return <div>Завантаження…</div>;
     if (error) return <div style={{ color: 'red' }}>{error}</div>;
     if (!detail) return null;
 
     return (
-        <div style={{ maxWidth: 800, margin: 'auto', padding: 24 }}>
-            <button onClick={onBack} style={{ marginBottom: 16 }}>← Back</button>
-
+        <div style={{ padding: 24, maxWidth: 800, margin: 'auto' }}>
+            <button onClick={onBack}>← Назад</button>
             <h2>{detail.task.name}</h2>
-            <p><strong>Студент:</strong> {detail.student.firstName} {detail.student.lastName}</p>
             <p><strong>Курс:</strong> <Link to={`/courses/${detail.task.course.id}`}>{detail.task.course.name}</Link></p>
+            <p><strong>Студент:</strong> {detail.student.firstName} {detail.student.lastName}</p>
             <p><strong>Статус:</strong> {detail.status}</p>
-            <p><strong>Дедлайн:</strong> {detail.deadline ? new Date(detail.deadline).toLocaleString() : '—'}</p>
+            <p><strong>Дедлайн:</strong> {detail.deadline ?? '—'}</p>
+            <p><strong>Час:</strong> {formatTime(detail.task.timeToComplete)}</p>
             <p><strong>Час виконання:</strong> {detail.completeTimestamp ? new Date(detail.completeTimestamp).toLocaleString() : '—'}</p>
             <p><strong>Оцінка:</strong> {detail.grade !== null ? detail.grade : '—'}</p>
+            <p><strong>Опис завдання: </strong>{detail.task.textContent}</p>
 
-            <section style={{ marginTop: 24 }}>
-                <h3>Опис завдання</h3>
-                <p>{detail.task.textContent}</p>
-            </section>
-
-            <section style={{ marginTop: 24 }}>
-                <h3>Файли завдання</h3>
-                {detail.task.fileContent.map(f => (
-                    <div key={f.fileId} style={{ marginBottom: 16, border: '1px solid #ccc', borderRadius: 4 }}>
-                        <iframe src={f.fileUrl.replace('/view', '/preview')} title={f.fileName} style={{ width: '100%', height: 300, border: 0 }} />
-                        <div style={{ padding: 8 }}><a href={f.fileUrl} target="_blank" rel="noopener noreferrer">{f.fileName}</a></div>
-                    </div>
-                ))}
-            </section>
-
+            {/* файли завдання */}
             <section style={{ marginTop: 24 }}>
                 <h3>Файли студента</h3>
                 {detail.fileContent.length ? detail.fileContent.map(f => (
@@ -162,27 +198,46 @@ export function UserTaskDetailPage({ token, isTeacher, onBack }: { token: string
                 )) : <p>Студент не прикріпив файлів.</p>}
             </section>
 
-            {isTeacher && (
-                <section style={{ marginTop: 24, padding: 16, border: '1px solid #ddd', borderRadius: 4 }}>
-                    <h3>Оцінювання</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {
+                isTeacher ? (
+                    /* ==== Інтерфейс викладача ==== */
+                    <section style={{ marginTop: 24 }}>
+                        <h3>Оцінювання</h3>
                         <input
                             type="number"
-                            min={0}
-                            max={100}
+                            min={0} max={100}
                             value={gradeValue}
-                            onChange={e => setGradeValue(Number(e.target.value))}
-                            style={{ width: 80, padding: 4 }}
+                            onChange={e => setGradeValue(e.target.value === '' ? '' : +e.target.value)}
                         />
-                        <button onClick={handleGrade} disabled={grading} style={{ padding: '8px 16px', cursor: 'pointer' }}>{grading ? 'Збереження...' : 'Зберегти оцінку'}</button>
-                        {gradeError && <span style={{ color: 'red' }}>{gradeError}</span>}
-                    </div>
+                        <button onClick={handleGrade} disabled={grading}>
+                            {grading ? 'Збереження…' : 'Зберегти оцінку'}
+                        </button>
+                        {gradeError && <div style={{ color: 'red' }}>{gradeError}</div>}
 
-                    <h3 style={{ marginTop: 16 }}>Дії</h3>
-                    <button onClick={handleReject} disabled={rejecting} style={{ padding: '8px 16px', background: '#dc2626', color: '#fff', cursor: 'pointer' }}>{rejecting ? 'Обробка...' : 'Відхилити завдання'}</button>
-                    {rejectError && <div style={{ color: 'red', marginTop: 8 }}>{rejectError}</div>}
-                </section>
-            )}
-        </div>
+                        <h3>Дії</h3>
+                        <button onClick={handleReject} disabled={rejecting}>
+                            {rejecting ? '…' : 'Відхилити'}
+                        </button>
+                        {rejectError && <div style={{ color: 'red' }}>{rejectError}</div>}
+                    </section>
+                ) : (
+                    /* ==== Інтерфейс студента ==== */
+                    <section style={{ marginTop: 24 }}>
+                        {!accepted ? (
+                            <button onClick={handleAccept}>Прийняти завдання</button>
+                        ) : (
+                            <form onSubmit={handleComplete}>
+                                <h3>Завантажити виконані файли</h3>
+                                <input type="file" multiple onChange={handleNewFiles} />
+                                <button type="submit" disabled={uploading}>
+                                    {uploading ? 'Завантаження…' : 'Відправити виконання'}
+                                </button>
+                                {uploadError && <div style={{ color: 'red' }}>{uploadError}</div>}
+                            </form>
+                        )}
+                    </section>
+                )
+            }
+        </div >
     );
 }

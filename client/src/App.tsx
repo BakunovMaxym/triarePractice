@@ -54,7 +54,7 @@ function AppContent() {
   // Функція для приєднання до курсу як студент
   const handleJoinCourseAsStudent = async (courseId: string) => {
     if (!token) throw new Error('Не авторизовано');
-    const res = await fetch(`http://localhost:3000/course/${courseId}/join`, {
+    const res = await fetch(`http://localhost:3000/course/${courseId}/as`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -121,12 +121,13 @@ function AppContent() {
           )
         } />
         <Route path="/courses/:courseId" element={
-          token ? (
+          token && userId ? (
             <React.Suspense fallback={<div>Loading course...</div>}>
               <CourseDetailPage
                 token={token}
                 isTeacher={isTeacher}
                 onBack={() => navigate('/courses')}
+                userId={userId}
               />
             </React.Suspense>
           ) : (
@@ -147,10 +148,11 @@ function AppContent() {
           )
         } />
         <Route path="/tasks/:taskId" element={
-          token ? (
+          token && userId? (
             <React.Suspense fallback={<div>Loading course...</div>}>
               <TaskDetailPage
                 token={token}
+                userId={userId}
                 isTeacher={isTeacher}
                 onBack={() => navigate('/courses')}
               />
@@ -166,7 +168,7 @@ function AppContent() {
             <Navigate to="/login" />
           )
         } />
-        <Route path="/user-task/course/:courseId/user/:studentId" element={
+        <Route path="/user-tasks/course/:courseId/user/:studentId" element={
           token ? (
             <StudentTasksPage token={token} onBack={() => navigate('/courses')} />
           ) : (

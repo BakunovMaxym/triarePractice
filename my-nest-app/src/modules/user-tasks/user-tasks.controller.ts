@@ -57,6 +57,7 @@ export class UserTasksController {
     if (!userTasks) {
       throw new NotFoundException
     }
+    console.log(userTasks);
     return userTasks?.map(ut => new UserTaskDto(ut))
   }
 

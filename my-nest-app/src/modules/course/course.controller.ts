@@ -96,17 +96,6 @@ export class CourseController {
         return addedStudentCourse;
     }
 
-    @Post(':id/join')
-    @ApiParam({ name: "id", type: String })
-    @Auth([RoleType.STUDENT])
-    @ApiOkResponse({ description: "Joined the course as a student" })
-    async joinCourseAsStudent(
-        @Param("id") id: Uuid,
-        @AuthUser() student: UserEntity
-    ): Promise<void> {
-        await this.courseService.addStudent(id, student.id);
-    }
-
     @Delete(":id/dt/:tId")
     @ApiParam({ name: "id", type: String })
     @ApiParam({ name: "tId", type: String })

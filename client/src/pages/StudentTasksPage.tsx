@@ -51,8 +51,6 @@ export function StudentTasksPage({ token, onBack }: { token: string, onBack: () 
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log(courseId)
-        console.log(studentId)
         if (!courseId || !studentId) return;
 
         fetch(`http://localhost:3000/course/${courseId}/user-task/student/${studentId}`, {
@@ -67,6 +65,7 @@ export function StudentTasksPage({ token, onBack }: { token: string, onBack: () 
             })
             .then((data: UserTask[]) => {
                 setTasks(data);
+                console.log(data);
                 setLoading(false);
             })
             .catch((err) => {

@@ -205,8 +205,8 @@ export class CourseService {
             .andWhere(new Brackets(qb =>
                 qb.where('owner.id = :userId', { userId })
                     .orWhere('teacher.id = :userId', { userId })
-                    .orWhere('student.id = :userId', { userId })
-            ))
+                    .orWhere('EXISTS (SELECT 1 FROM courses_students cs WHERE cs.course_id = course.id AND cs.student_id = :userId)', { userId })
+            ));
 
 
 
@@ -218,7 +218,6 @@ export class CourseService {
 
         const findedDto = new SingleCourseInfoDto(course);
         await this.cacheManager.set(cacheKey, findedDto);
-
         return findedDto
     }
 

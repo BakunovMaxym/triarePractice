@@ -6,10 +6,12 @@ export function CourseDetailPage({
   token,
   isTeacher,
   onBack,
+  userId,
 }: {
   token: string;
   isTeacher?: boolean;
   onBack: () => void;
+  userId: string,
 }) {
   const { courseId } = useParams<{ courseId: string }>();
 
@@ -23,6 +25,7 @@ export function CourseDetailPage({
       courseId={courseId}
       isTeacher={isTeacher}
       onBack={onBack}
+      userId={userId}
     />
   );
 }

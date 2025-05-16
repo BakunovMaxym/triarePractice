@@ -202,8 +202,8 @@ export class TaskService {
     const updatedTask = await this.taskRepository.save(task);
 
     this.deleteCache(`courses:single:*:${updatedTask.course.id}`)
-    this.deleteCache(`tasks:allToCourse:*:${updatedTask.course.id}`)
-    this.deleteCache(`tasks:single:*:${updatedTask.id}`)
+    this.deleteCache(`tasks:allToCourse:${updatedTask.course.id}`)
+    this.deleteCache(`tasks:single:${updatedTask.id}`)
 
     return new SingleTaskDto(updatedTask)
   }
@@ -225,6 +225,7 @@ export class TaskService {
 
     if (task.userTasks.length !== 0) {
       task.userTasks.forEach(userTask => {
+        console.log(`delete usertask ${userTask.id}`);
         this.userTaskService.deleteByid(userTask.id)
       })
     }

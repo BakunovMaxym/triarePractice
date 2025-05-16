@@ -35,7 +35,10 @@ export class TaskDto {
   constructor(task: TaskEntity) {
     this.id = task.id;
     this.name = task.name;
-    this.owner = task.owner ? new UserNameDto(task.owner) : undefined;
+    this.owner =
+    task.owner && task.owner.id && task.owner.firstName && task.owner.lastName
+        ? new UserNameDto(task.owner)
+        : undefined;
     this.course = new CourseNameDto(task.course);
     this.timeToComplete = task.timeToComplete;
   }

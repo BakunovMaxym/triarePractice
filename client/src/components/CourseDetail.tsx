@@ -10,11 +10,13 @@ export function CourseDetail({
   courseId,
   onBack,
   isTeacher,
+  userId,
 }: {
   token: string;
   courseId: string;
   onBack: () => void;
   isTeacher?: boolean;
+  userId: string;
 }) {
   const [course, setCourse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,34 +33,8 @@ export function CourseDetail({
     fetchCourse();
   }, [token, courseId]);
 
-
-
-
-  useEffect(() => {
-    if (isTeacher && course && Array.isArray(course.tasks)) {
-      Promise.all(
-        course.tasks.map(async (task: any) => {
-          const res = await fetch(`/task/${task.id}/user-tasks`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) return [task.id, []];
-          const userTasks = await res.json();
-          return [task.id, userTasks];
-        })
-      ).then(results => {
-        const map: Record<string, any[]> = {};
-        results.forEach(([taskId, uts]) => {
-          map[taskId] = uts;
-        });
-        setUserTasksByTask(map);
-      });
-    }
-  }, [isTeacher, course, token]);
-
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
   if (!course) return <div>Завантаження...</div>;
-
-  const userId = course.owner?.id || '';
 
   return (
     <div>
@@ -87,23 +63,6 @@ export function CourseDetail({
                   <div><strong>Час на виконання:</strong> {formatTime(task.timeToComplete)}</div>
                 </Link>
 
-                {isTeacher && userTasksByTask[task.id] && (
-                  <div style={{ marginTop: 8, background: '#f5f5fa', padding: 8, borderRadius: 6 }}>
-                    <strong>Призначено студентам:</strong>
-                    <ul style={{ marginTop: 4 }}>
-                      {userTasksByTask[task.id].length === 0 && <li>Немає призначених студентів</li>}
-                      {userTasksByTask[task.id].map((ut: any) => (
-                        <li key={ut.id}>
-                          {ut.user?.firstName} {ut.user?.lastName} — <b>{ut.status}</b>
-                          {ut.grade && <> | Оцінка: {ut.grade}</>}
-                          {ut.deadline && <> | Дедлайн: {new Date(ut.deadline).toLocaleString()}</>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* <TaskComments taskId={task.id} userId={userId} /> */}
               </li>
             ))}
           </ul>
@@ -118,10 +77,11 @@ export function CourseDetail({
           <ul>
             {course.students.map((s: any) => (
               <li key={s.id}
-                onClick={() => navigate(`/user-tasks/course/${course.id}/user/${s.id}`, { state: { courseId: course.id, studentId: s.id } })}
+                onClick={() => (isTeacher || userId === s.id) && navigate(`/user-tasks/course/${course.id}/user/${s.id}`, { state: { courseId: course.id, studentId: s.id } })}
                 style={{
-                  cursor: 'pointer',
+                  cursor: (isTeacher || userId === s.id) ? 'pointer' : 'default',
                   transition: 'background-color 0.2s',
+                  backgroundColor: userId === s.id ? "#a9cbfe" : "#f1f3f6"
                 }}
               >
                 {s.firstName} {s.lastName}

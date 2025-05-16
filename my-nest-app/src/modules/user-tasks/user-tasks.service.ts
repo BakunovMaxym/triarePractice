@@ -57,6 +57,8 @@ export class UserTasksService {
       console.log(err);
     }
 
+    await this.deleteCache(`user-tasks:student:${savedUserTask.student.id}:${savedUserTask.task.course.id}`)
+    await this.deleteCache(`user-tasks:single:${savedUserTask.id}:*`)
     return savedUserTask;
   }
 
@@ -92,22 +94,25 @@ export class UserTasksService {
     return utasks;
   }
 
-
+  // @ts-ignore
   async findOne(id: Uuid, userRole: RoleType): Promise<SingleUserTaskDto> {
     const cacheKey = `user-tasks:single:${id}:${userRole}`;
     const cached: SingleUserTaskDto | undefined = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
-
-    const found = await this.userTasksRepository.findOneOrFail({
+    
+    const found = await this.userTasksRepository.findOne({
       where: { id },
       relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
     });
+
+    if(found) {
 
     const singleUTaskDto = new SingleUserTaskDto(found, userRole === RoleType.TEACHER);
 
     await this.cacheManager.set(cacheKey, singleUTaskDto);
 
     return singleUTaskDto;
+    }
   }
 
   async grade(id: Uuid, grade: number): Promise<SingleUserTaskDto> {

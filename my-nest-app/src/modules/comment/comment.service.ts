@@ -73,10 +73,23 @@ export class CommentService {
     return finalComments;
   }
 
-  async delete(id: Uuid): Promise<void> {
-    const res = await this.commentsRepo.delete({ id });
-    if (res.affected === 0) {
-      throw new NotFoundException(`Comment ${id} not found`);
-    }
+async delete(id: Uuid): Promise<void> {
+  const comment = await this.commentsRepo.findOne({
+    where: { id },
+    relations: ['task'],
+  });
+
+  if (!comment) {
+    throw new NotFoundException(`Comment ${id} not found`);
   }
+
+  const res = await this.commentsRepo.delete({ id });
+  if (res.affected === 0) {
+    throw new NotFoundException(`Comment ${id} not found`);
+  }
+
+  this.deleteCache(`tasks:single:${comment.task.id}`);
+  this.deleteCache(`comments:${comment.task.id}`);
+}
+
 }

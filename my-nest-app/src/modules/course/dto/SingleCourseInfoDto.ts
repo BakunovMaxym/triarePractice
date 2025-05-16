@@ -19,7 +19,7 @@ export class SingleCourseInfoDto extends CourseInfoDto {
             ? course.students.map((s: any) => new UserNameDto(s))
             : [];
         this.tasks = Array.isArray(course.tasks)
-            ? course.tasks?.map((t: any) => { console.log("taskcraeting"); return new TaskDto(t) })
+            ? course.tasks?.map((t: any) => { return new TaskDto(t) })
             : [];
     }
 
