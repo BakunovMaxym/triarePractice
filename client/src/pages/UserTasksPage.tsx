@@ -27,11 +27,17 @@ interface Student {
     lastName: string;
 }
 
+interface Task {
+    id: string;
+    name: string;
+}
+
 interface UserTask {
     id: string;
     status: TaskStatus;
     grade: number | null;
     student: Student;
+    task: Task;
 }
 
 export function TaskUserTasksPage({
@@ -103,7 +109,7 @@ export function TaskUserTasksPage({
                         {userTasks.map(task => (
                             <tr
                                 key={task.id}
-                                onClick={() => navigate(`/user-task/${task.id}`)}
+                                onClick={() => navigate(`/user-task/${task.task.id}/${task.student.id}`)}
                                 style={{
                                     cursor: 'pointer',
                                     transition: 'background-color 0.2s',

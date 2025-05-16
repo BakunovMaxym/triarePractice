@@ -55,7 +55,7 @@ export function CourseDetail({
             {course.tasks.map((task: any) => (
               <li key={task.id} style={{ marginBottom: 24, padding: 0, border: "solid", borderRadius: 6 }}>
                 <Link
-                  to={`/tasks/${task.id}`}
+                  to={isTeacher ? `/tasks/${task.id}` : `/user-task/${task.id}/${userId}`}
                   style={{ textDecoration: "none", padding: 12, color: "inherit", display: "block" }}
                 >
                   <b>{task.name}</b>

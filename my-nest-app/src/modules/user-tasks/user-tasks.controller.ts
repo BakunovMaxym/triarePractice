@@ -61,16 +61,18 @@ export class UserTasksController {
     return userTasks?.map(ut => new UserTaskDto(ut))
   }
 
-  @Get("/user-task/:id")
-  @ApiParam({ name: "id", description: 'Унікальне айді завдання користувача', type: String })
+  @Get("/user-task/:taskid/:userid")
+  @ApiParam({ name: "taskid", description: 'Унікальне айді завдання', type: String })
+  @ApiParam({ name: "userid", description: 'Унікальне айді користувача', type: String })
   @ApiOperation({ summary: 'Отримати один UserTask' })
   @Auth([])
   @ApiResponse({ status: 200, description: 'Single user tasks', type: [SingleUserTaskDto] })
   async findOne(
-    @Param('id') id: Uuid,
+    @Param('taskid') taskid: Uuid,
+    @Param('userid') userid: Uuid,
     @AuthUser() user: UserEntity
   ) {
-    const userTask = await this.userTasksService.findOne(id, user.role);
+    const userTask = await this.userTasksService.findOne(taskid, userid, user.role);
     if (!userTask) {
       throw new NotFoundException
     }

@@ -204,6 +204,7 @@ export class TaskService {
     this.deleteCache(`courses:single:*:${updatedTask.course.id}`)
     this.deleteCache(`tasks:allToCourse:${updatedTask.course.id}`)
     this.deleteCache(`tasks:single:${updatedTask.id}`)
+    await this.deleteCache(`user-tasks:single:*:${updatedTask.id}:*`)
 
     return new SingleTaskDto(updatedTask)
   }
@@ -226,7 +227,7 @@ export class TaskService {
     if (task.userTasks.length !== 0) {
       task.userTasks.forEach(userTask => {
         console.log(`delete usertask ${userTask.id}`);
-        this.userTaskService.deleteByid(userTask.id)
+        this.userTaskService.deleteByid(userTask.task.id, userTask.student.id)
       })
     }
 
@@ -235,6 +236,7 @@ export class TaskService {
     this.deleteCache(`courses:single:*:${task.course.id}`)
     this.deleteCache(`tasks:allToCourse:*:${task.course.id}`)
     this.deleteCache(`tasks:single:*:${task.id}`)
+    await this.deleteCache(`user-tasks:single:*:${task.id}:*`)
 
     return delres;
   }

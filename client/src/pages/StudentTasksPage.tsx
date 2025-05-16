@@ -103,7 +103,7 @@ export function StudentTasksPage({ token, onBack }: { token: string, onBack: () 
                         {tasks.map((ut) => (
                             <tr
                                 key={ut.id}
-                                onClick={() => navigate(`/user-task/${ut.id}`)}
+                                onClick={() => navigate(`/user-task/${ut.task.id}/${ut.student.id}`)}
                                 style={{
                                     cursor: 'pointer',
                                     transition: 'background-color 0.2s',

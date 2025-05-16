@@ -58,7 +58,9 @@ export class UserTasksService {
     }
 
     await this.deleteCache(`user-tasks:student:${savedUserTask.student.id}:${savedUserTask.task.course.id}`)
-    await this.deleteCache(`user-tasks:single:${savedUserTask.id}:*`)
+    await this.deleteCache(`user-tasks:single:${savedUserTask.student.id}:*:*`)
+    await this.deleteCache(`user-tasks:single:*:${savedUserTask.task.id}:*`)
+
     return savedUserTask;
   }
 
@@ -95,23 +97,23 @@ export class UserTasksService {
   }
 
   // @ts-ignore
-  async findOne(id: Uuid, userRole: RoleType): Promise<SingleUserTaskDto> {
-    const cacheKey = `user-tasks:single:${id}:${userRole}`;
+  async findOne(taskId: Uuid, userId: Uuid, userRole: RoleType): Promise<SingleUserTaskDto> {
+    const cacheKey = `user-tasks:single:${userId}:${taskId}:${userRole}`;
     const cached: SingleUserTaskDto | undefined = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
-    
+
     const found = await this.userTasksRepository.findOne({
-      where: { id },
+      where: { task: { id: taskId }, student: { id: userId } },
       relations: ['task', 'task.fileContent', 'task.comments', 'student', 'fileContent'],
     });
 
-    if(found) {
+    if (found) {
 
-    const singleUTaskDto = new SingleUserTaskDto(found, userRole === RoleType.TEACHER);
+      const singleUTaskDto = new SingleUserTaskDto(found, userRole === RoleType.TEACHER);
 
-    await this.cacheManager.set(cacheKey, singleUTaskDto);
+      await this.cacheManager.set(cacheKey, singleUTaskDto);
 
-    return singleUTaskDto;
+      return singleUTaskDto;
     }
   }
 
@@ -138,7 +140,8 @@ export class UserTasksService {
 
     await this.deleteCache(`user-task:task:${saved.task.id}`)
     await this.deleteCache(`user-tasks:student:${saved.student.id}:${saved.task.course.id}`)
-    await this.deleteCache(`user-tasks:single:${saved.id}:*`)
+    await this.deleteCache(`user-tasks:single:${saved.student.id}:*:*`)
+    await this.deleteCache(`user-tasks:single:*:${saved.task.id}:*`)
 
     return new SingleUserTaskDto(saved);
   }
@@ -166,7 +169,9 @@ export class UserTasksService {
 
     await this.deleteCache(`user-task:task:${saved.task.id}`)
     await this.deleteCache(`user-tasks:student:${saved.student.id}:${saved.task.course.id}`)
-    await this.deleteCache(`user-tasks:single:${saved.id}:*`)
+    await this.deleteCache(`user-tasks:single:*:${saved.task.id}:*`)
+    await this.deleteCache(`user-tasks:single:${saved.task.id}:*:*`)
+
 
     return new SingleUserTaskDto(saved);
   }
@@ -181,7 +186,7 @@ export class UserTasksService {
     if (found.status === TaskStatus.ACCEPTED) throw new ConflictException("Завдання вже прийнято")
 
     found.status = TaskStatus.ACCEPTED;
-    found.deadline = new Date(Date.now() + Number(found.task.timeToComplete));
+    found.deadline = new Date(Date.now() + Number(found.task.timeToComplete) * 1000);
 
     if (found.deadline) this.croneTaskService.expireUserTask(found)
 
@@ -189,7 +194,9 @@ export class UserTasksService {
 
     await this.deleteCache(`user-task:task:${saved.task.id}`)
     await this.deleteCache(`user-tasks:student:${saved.student.id}:${saved.task.course.id}`)
-    await this.deleteCache(`user-tasks:single:${saved.id}:*`)
+    await this.deleteCache(`user-tasks:single:${saved.student.id}:*:*`)
+    await this.deleteCache(`user-tasks:single:*:${saved.task.id}:*`)
+
 
     return new SingleUserTaskDto(saved);
   }
@@ -224,7 +231,8 @@ export class UserTasksService {
         files.map(file => {
           const stream = new PassThrough();
           stream.end(file.buffer);
-          return this.googleDriveService.uploadFile(stream, file.originalname, file.mimetype);
+          const correctedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+          return this.googleDriveService.uploadFile(stream, correctedName, file.mimetype);
         })
       );
 
@@ -258,13 +266,15 @@ export class UserTasksService {
 
     await this.deleteCache(`user-task:task:${updatedUserTask.task.id}`)
     await this.deleteCache(`user-tasks:student:${updatedUserTask.student.id}:${updatedUserTask.task.course.id}`)
-    await this.deleteCache(`user-tasks:single:${updatedUserTask.id}:*`)
+    await this.deleteCache(`user-tasks:single:${updatedUserTask.student.id}:*:*`)
+    await this.deleteCache(`user-tasks:single:*:${updatedUserTask.task.id}:*`)
+
 
     return new SingleUserTaskDto(updatedUserTask)
   }
 
-  async deleteByid(id: Uuid) {
-    const userTask = await this.findOne(id, RoleType.TEACHER)
+  async deleteByid(taskId: Uuid, userId: Uuid,) {
+    const userTask = await this.findOne(taskId, userId, RoleType.TEACHER)
 
     if (!userTask)
       return new NotFoundException("Завдання студента не знайдено")
@@ -279,7 +289,9 @@ export class UserTasksService {
 
     await this.deleteCache(`user-task:task:${userTask.task.id}`)
     await this.deleteCache(`user-tasks:student:${userTask.student.id}:${userTask.task.course.id}`)
-    await this.deleteCache(`user-tasks:single:${userTask.id}:*`)
+    await this.deleteCache(`user-tasks:single:${userTask.student.id}:*:*`)
+    await this.deleteCache(`user-tasks:single:*:${userTask.task.id}:*`)
+
 
     return delres;
   }

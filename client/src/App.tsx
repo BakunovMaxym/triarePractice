@@ -148,7 +148,7 @@ function AppContent() {
           )
         } />
         <Route path="/tasks/:taskId" element={
-          token && userId? (
+          token && userId ? (
             <React.Suspense fallback={<div>Loading course...</div>}>
               <TaskDetailPage
                 token={token}
@@ -175,7 +175,7 @@ function AppContent() {
             <Navigate to="/login" />
           )
         } />
-        <Route path="/user-task/:userTaskId" element={
+        <Route path="/user-task/:taskId/:userId" element={
           token ? (
             <UserTaskDetailPage token={token} isTeacher={isTeacher} onBack={() => navigate('/courses')} />
           ) : (
