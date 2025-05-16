@@ -22,7 +22,7 @@ export class UserDto extends AbstractDto {
 
   properties!: PropertyDto[];
 
-  game !: GameDto;
+  game !: GameDto ;
 
   @EnumField(() => RoleType )
   role !: RoleType
@@ -45,7 +45,9 @@ export class UserDto extends AbstractDto {
     this.money = user.money;
     this.role = user.role;
     this.properties = user.properties?.map((property) => property.toDto());
-    this.game = user?.game.toDto();
+    if(user.game){
+      this.game =  user.game.toDto();
+    }
     this.inJail = user.inJail;
     this.doublesCount = user.doublesCount;
     this.getOutOfJailCard = user.getOutOfJailCard;

@@ -13,6 +13,7 @@ import { SetingsModule } from '../../modules/setings/setings.module';
 import { GameController } from './game.controller';
 import { ChanceCardsModule } from '../../modules/chance-cards/chance-cards.module';
 import { ComunityChestModule } from '../../modules/comunity-chest/comunity-chest.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   providers: [GameGateway, GameService, WsAuthGuard],
@@ -25,6 +26,7 @@ import { ComunityChestModule } from '../../modules/comunity-chest/comunity-chest
     ChanceCardsModule,
     ComunityChestModule,
     UserModule,
+    EventEmitterModule,
     TypeOrmModule.forFeature([GameEntity]),
     ],
   controllers: [GameController],

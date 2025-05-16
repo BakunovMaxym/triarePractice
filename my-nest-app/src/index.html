@@ -141,6 +141,7 @@
         <p>TurnOrder:</p>
         <p id="TurnOrder"></p>
 
+        <p>invoices:</p>
         <div id="invoices"></div>
 
         <div id="YourTurn">
@@ -153,12 +154,6 @@
                 <label>ID земельної ділянки: <input type="text" id="LandOnPropertyText"></label>
 
                 <button onclick=LandOnPropety()>land on property</button>
-            </div>
-            <div class="section">
-                <h2>upgrade</h2>
-                <label>ID земельної ділянки: <input type="text" id="UpgradePropertyText"></label>
-
-                <button onclick=UpgradeProperty()>upgrade</button>
             </div>
             <div class="section">
                 <h2>get our of jail</h2>
@@ -196,6 +191,7 @@
         let invoices = [];
         let pendingInvoce = null;
 
+        let myTyrn = false;
 
         function copyGameId() {
             navigator.clipboard.writeText(game.id)
@@ -371,10 +367,11 @@
             }
 
             let yourpropertDiv = document.getElementById('Yourproperties');
-            if (yourpropertDiv && curentUser && Array.isArray(curentUser.propertys)) {
+            if (yourpropertDiv && curentUser && Array.isArray(curentUser.properties)) {
                 yourpropertDiv.innerHTML = '';
                 curentUser.properties.forEach(property => {
                     if (property && property.id !== undefined) {
+                        console.log('asdas')
                         let div = document.createElement('div');
 
                         let buttom = document.createElement('button')
@@ -448,6 +445,14 @@
                         rentWithHotel.textContent = "rentWithHotel: " + property.property.rentWithHotel
                         div.appendChild(rentWithHotel)
 
+                        let upgradeButton = document.createElement('button')
+                        upgradeButton.textContent = 'upgrade'
+                        upgradeButton.addEventListener('click', () => {
+                            UpgradeProperty(property)
+                        }
+                        )
+                        div.appendChild(upgradeButton);
+
                         yourpropertDiv.appendChild(div);
                     }
                 });
@@ -461,11 +466,12 @@
                 document.getElementById('startGame').style.display = 'none';
                 document.getElementById('Game').style.display = 'block';
             }
-            let invocesDiv = document.getElementById('Yourproperties');
-            if (invocesDiv && invoices && Array.isArray(invoices)) {
+            let invocesDiv = document.getElementById('invoices');
+            if (invocesDiv ) {
                 invocesDiv.innerHTML = '';
                 invoices.forEach(invoice => {
                     if (invoice) {
+                        console.log('asdd')
                         let div = document.createElement('div');
 
                         let buttom = document.createElement('button')
@@ -510,7 +516,14 @@
             }
 
 
-
+            if(game.turnOrder[game.currentTurn % game.turnOrder.length] === curentUser.id){
+                myTyrn = true
+            }
+            else{
+                myTyrn = false
+            }
+            let turnDiv = document.getElementById('YourTurn')
+            turnDiv.style.display = myTyrn ? 'block' : 'none'
         }
 
 
@@ -518,17 +531,26 @@
             socket.emit('UseGetOutofJailCard');
         }
 
-        function UpgradeProperty() {
+        function UpgradeProperty(property) {
             pendingInvoce = {
-                id: crypto.randomUUID(), cost: data.property.property.cost, name: 'upgrade property', onCompleteMessage: 'you have bought ' + data.property.property, function: () => {
-                    socket.emit("UpgradeProperty", { peopertyId: data.property.id });
+                id: crypto.randomUUID(),
+                cost: property.property.upgradePrice,
+                name: 'upgrade property',
+                onCompleteMessage: 'you have upgraded ' + property.property.name,
+                function: () => {
+                    socket.emit("UpgradeProperty", { peopertyId: property.id });
+                    console.log('upgrding propert')
                 }
             }
+
+            socket.emit('PayInvoice', { cost: pendingInvoce.cost, invoiceId: pendingInvoce.id })
+
 
         }
 
         function ThrowDice() {
             socket.emit('ThrowDice');
+            log('throwedDice')
         }
 
         function LandOnPropety() {
@@ -539,6 +561,8 @@
         function EndTurn() {
             if (invoices.length === 0 && pendingInvoce === null) {
                 socket.emit('EndTurn')
+                myTyrn = false;
+                updateTexts()
             }
         }
         function GiveUp() {
@@ -604,7 +628,7 @@
                 updateTexts()
             });
             socket.on('Kicked', data => {
-                log('Kicked: ' + data)
+                log('Kicked: ' + JSON.stringify(data))
                 game.users = game.users.filter((user) => user.id !== data);
                 if (curentUser.id === data) {
                     latestToken = null;
@@ -615,7 +639,7 @@
                 updateTexts()
             });
             socket.on('Leave', data => {
-                log('Leave: ' + data);
+                log('Leave: ' + JSON.stringify(data));
                 socket.disconnect();
                 latestToken = null;
                 hasReconnectedWithToken = false;
@@ -626,7 +650,7 @@
 
             });
             socket.on('error', data => {
-                log('Error: ' + data.description)
+                log('Error: ' + JSON.stringify(data))
                 alert(data.description)
             });
             socket.on('kaput', data => {
@@ -648,10 +672,6 @@
                 game = data;
                 updateTexts()
                 socket.emit('me')
-
-
-
-
             });
 
             socket.on('you', data => {
@@ -665,89 +685,129 @@
             socket.on('useractive', data => log('useractive: ' + data));
 
             socket.on('YourTurn', data => {
-                log('YourTurn: ' + data)
-                myTyrn = true;
+                log('YourTurn: ' + JSON.stringify(data))
+                if(data.user.id === curentUser.id){
+                    myTyrn = true;
+                    alert('yourTurn')
+                }
+                else{
+                    myTyrn = false;
+                }
+
                 updateTexts()
             });
 
             socket.on('GoToJail', data => {
-                log('GoToJail: ' + data)
+                log('GoToJail: ' + JSON.stringify(data))
                 alert('you go to jail')
                 socket.emit('me')
             });
 
             socket.on('JailTime', data => {
-                log('JailTime: ' + data)
+                log('JailTime: ' + JSON.stringify(data))
                 socket.emit('me')
             });
 
+            socket.on('diceRolled', data => {
+                log('diceRolled: ' + JSON.stringify(data))
+                let message = '';
+                if (data.user.id === curentUser.id) {
+                    message += 'you '
+                }
+                else {
+                    message += data.user.username + ' '
+                }
+                message += `have roled ${data.diceRoll.firstCube} and ${data.diceRoll.secondCube} `
+
+                if (data.diceRoll.boosterCube) {
+                    message += ` and ${data.diceRoll.secondCube} `
+                }
+
+                if (data.dable) {
+                    message += ` it's double `
+                }
+
+                alert(message)
+            });
+
             socket.on('Invoice', data => {
-                log('Invoice: ' + data)
+                log('Invoice: ' + JSON.stringify(data))
                 invoices.push({ id: crypto.randomUUID(), cost: data.cost, name: data.type })
             });
 
             socket.on('ChanceCard', data => {
-                log('ChanceCard: ' + data)
+                log('ChanceCard: ' + JSON.stringify(data))
                 alert('ChanceCard\n ' + data.description)
 
             });
 
             socket.on('GetOutOfJailCard', data => {
-                log('GetOutOfJailCard: ' + data)
+                log('GetOutOfJailCard: ' + JSON.stringify(data))
                 socket.emit('me')
             });
 
             socket.on('GetOutOfJailCardFull', data => {
-                log('GetOutOfJailCardFull: ' + data)
+                log('GetOutOfJailCardFull: ' + JSON.stringify(data))
                 alert('you got full getoutofjail cards')
             });
 
             socket.on('GoToProperty', data => {
-                log('GoToProperty: ' + data)
+                log('GoToProperty: ' + JSON.stringify(data))
                 alert('you move to ' + data.property)
             });
 
             socket.on('ChoseDestination', data => {
-                log('ChoseDestination: ' + data)
+                log('ChoseDestination: ' + JSON.stringify(data))
 
-                log('CanBuy: ' + data)
                 const result = confirm('do yo want to move')
 
                 if (result) {
                     pendingInvoce = { id: crypto.randomUUID(), cost: data.property.property.cost, name: 'move', onCompleteMessage: 'you can move ' }
+                    socket.emit('PayInvoice', { cost: pendingInvoce.cost, invoiceId: pendingInvoce.id })
+
                 }
             });
 
             socket.on('ComunityCard', data => {
-                log('ComunityCard: ' + data)
+                log('ComunityCard: ' + JSON.stringify(data))
                 alert('cmunity card\n ' + data.description)
             });
 
             socket.on('CanBuy', data => {
-                log('CanBuy: ' + data)
+                log('CanBuy: ' + JSON.stringify(data))
                 const result = confirm('do yo want to buy ' + data.property.property.name)
 
                 if (result) {
                     pendingInvoce = {
-                        id: crypto.randomUUID(), cost: data.property.property.cost, name: 'buy property', onCompleteMessage: 'you have bought ' + data.property.property, function: () => {
+                        id: crypto.randomUUID(), cost: data.property.property.price, name: 'buy property', onCompleteMessage: 'you have bought ' + data.property.property.name, function: () => {
                             socket.emit("BuyProperty", { peopertyId: data.property.id });
                         }
                     }
+                    console.log({ cost: pendingInvoce.cost, invoiceId: pendingInvoce.id })
+                    socket.emit('PayInvoice', { cost: pendingInvoce.cost, invoiceId: pendingInvoce.id })
+
                 }
 
             });
 
             socket.on('InvoiceComplete', data => {
-                log('InvoiceComplete: ' + data)
+                log('InvoiceComplete: ' + JSON.stringify(data))
+                console.log('is pending invoce')
 
-                if (data.id === pendingInvoce) {
-                    pendingInvoce = null;
-                    alert(pendingInvoce.onCompleteMessage + '\n cost ' + pendingInvoce.cost)
-
-                    if (pendingInvoce.function) {
-                        pendingInvoce.function();
+                console.log(data.id);
+                console.log(pendingInvoce)
+                if(pendingInvoce){
+                    if (data.id === pendingInvoce.id) {
+    
+                        alert(pendingInvoce.onCompleteMessage + '\n cost ' + pendingInvoce.cost)
+    
+                        if (pendingInvoce.function) {
+                            pendingInvoce.function();
+                        }
+                        pendingInvoce = null;
                     }
                 }
+
 
 
                 invoices = invoices.filter((invoice) => invoice.id !== data.id);
@@ -755,18 +815,23 @@
             });
 
             socket.on('PropertyBought', data => {
-                log('PropertyBought: ' + data)
-                alert('you bought ' + data.property.property.name)
+                log('PropertyBought: ' + JSON.stringify(data))
+                alert('bought ' + data.property.property.name)
+                socket.emit('me')
+
             });
 
             socket.on('propertyUpgraded', data => {
-                log('propertyUpgraded: ' + data)
-                alert('you upgraded ' + data.property.property.name)
+                log('propertyUpgraded: ' + JSON.stringify(data))
+                alert('upgraded ' + data.property.property.name)
+                socket.emit('me')
             });
 
             socket.on('userLost', data => {
-                log('userLost: ' + data)
+                log('userLost: ' + JSON.stringify(data))
                 alert('user lost:  ' + data.user.username)
+                socket.emit('me')
+
             });
 
 

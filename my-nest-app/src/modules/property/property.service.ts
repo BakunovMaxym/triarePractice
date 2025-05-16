@@ -52,6 +52,7 @@ export class PropertyService {
       },
       relations:{
         property: true,
+        owner: true
       }
     }).then((property) => {
       if(!property) {
@@ -77,8 +78,5 @@ export class PropertyService {
   async save(property: PropertyDto){
     this.propertyRepository.save(property);
   }
-
-  
-
 
 }

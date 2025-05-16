@@ -28,6 +28,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ComunityChestModule } from './modules/comunity-chest/comunity-chest.module';
 import { ChanceCardsModule } from './modules/chance-cards/chance-cards.module';
 import { TurnsModule } from './modules/turns/turns.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
 
@@ -105,6 +106,8 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     ComunityChestModule,
     ChanceCardsModule,
     TurnsModule,
+    EventEmitterModule.forRoot(),
+    
 
   ],
   providers: [],
