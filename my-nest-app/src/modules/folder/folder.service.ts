@@ -91,6 +91,21 @@ export class FolderService {
   }
 
   async remove(id: Uuid): Promise<void> {
+    // Видалити всі дочірні папки рекурсивно
+    const folder = await this.folderRepository.findOne({
+      where: { id },
+      relations: { childFolders: true },
+    });
+    if (!folder) {
+      throw new NotFoundException(`Folder with id ${id} not found`);
+    }
+    // Рекурсивно видалити дочірні папки
+    if (folder.childFolders && folder.childFolders.length > 0) {
+      for (const child of folder.childFolders) {
+        await this.remove(child.id);
+      }
+    }
+    // Видалити саму папку
     const result = await this.folderRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Folder with id ${id} not found`);
@@ -108,7 +123,10 @@ export class FolderService {
   }
 
   async addChild(parentId: Uuid, childName?: string, childCourseId?: Uuid): Promise<FolderDto> {
-    const folder = await this.folderRepository.findOne({ where: { id: parentId } });
+    const folder = await this.folderRepository.findOne({
+      where: { id: parentId },
+      relations: { owner: true },
+    });
     if (!folder) throw new NotFoundException(`Folder with id ${parentId} not found`);
 
     if (childCourseId) {
@@ -119,11 +137,14 @@ export class FolderService {
     }
 
     if (childName) {
-      const child = this.folderRepository.create({ name: childName, parentFolder: folder });
+      const child = this.folderRepository.create({
+        name: childName,
+        parentFolder: folder,
+        owner: folder.owner,
+      });
       await this.folderRepository.save(child);
     }
 
-    // Always fetch with all required relations before returning
     const updatedFolder = await this.folderRepository.findOneOrFail({
       where: { id: parentId },
       relations: ['owner', 'childCourses', 'childFolders', 'parentFolder'],

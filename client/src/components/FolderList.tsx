@@ -6,6 +6,9 @@ export function FolderList({ folders, onViewFolder, onDeleteFolder, moving }: {
   onDeleteFolder: (folderId: string) => void;
   moving: boolean;
 }) {
+  // Фільтруємо тільки кореневі папки (без parentFolder)
+  const rootFolders = folders.filter(f => !f.parentFolder);
+
   return (
     <div style={{ marginBottom: 16 }}>
       <b>Папки:</b>
@@ -15,8 +18,8 @@ export function FolderList({ folders, onViewFolder, onDeleteFolder, moving }: {
         gap: 16,
         marginTop: 12,
       }}>
-        {folders.length === 0 && <div>Папок не знайдено.</div>}
-        {folders.map(folder => (
+        {rootFolders.length === 0 && <div>Папок не знайдено.</div>}
+        {rootFolders.map(folder => (
           <div
             key={folder.id}
             style={{
