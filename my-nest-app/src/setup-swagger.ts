@@ -10,7 +10,6 @@ export function setupSwagger(app: INestApplication): void {
 Routes is following REST standard (Richardson level 3)
 
 <details><summary>Detailed specification</summary>
-<p>
 
 **List:**
   - \`GET /<resources>/\`
@@ -24,7 +23,7 @@ Routes is following REST standard (Richardson level 3)
     - Get the detail for **<resources>** of id **<resource_id>**
     - Output a **404** if not found
   - \`GET /user/<user_id>/<resources>/<resource_id>\`
-    - Get the list of **<resources>** for a given **user_id**
+    - Get the detail for **<resources>** of id **<resource_id>** for a given **user_id**
     - Output a **404** if not found
     - Output a **403** if:
       - Logged user is not **<user_id>**
@@ -45,8 +44,13 @@ Routes is following REST standard (Richardson level 3)
     - Output a **403** if:
       - Logged user is not **<user_id>**
       - The **<user_id>** have no access to **<resource_id>**
-</p>
-</details>`,
+
+### ER-diagram of db
+
+- **Link to diagram:** [ERD in Google Drive](https://drive.google.com/file/d/1fA4crOTK3H47EVIlsaDRx8qBe9clvEKf/view)
+
+The diagrams show the relationships between tables: users, categories, courses, comments, courses_students, courses_teachers, folders, migrations, subcategories, task_files, tasks, user_task_files, user_tasks.
+`,
     )
     .addBearerAuth();
 

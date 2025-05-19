@@ -126,7 +126,6 @@ function AppContent() {
               <CourseDetailPage
                 token={token}
                 isTeacher={isTeacher}
-                onBack={() => navigate('/courses')}
                 userId={userId}
               />
             </React.Suspense>
@@ -140,7 +139,6 @@ function AppContent() {
               <FolderPage
                 token={token}
                 isTeacher={isTeacher}
-                onBack={() => navigate('/courses')}
               />
             </React.Suspense>
           ) : (
@@ -153,8 +151,6 @@ function AppContent() {
               <TaskDetailPage
                 token={token}
                 userId={userId}
-                isTeacher={isTeacher}
-                onBack={() => navigate('/courses')}
               />
             </React.Suspense>
           ) : (
@@ -163,21 +159,28 @@ function AppContent() {
         } />
         <Route path="/user-tasks/task/:taskId" element={
           token ? (
-            <TaskUserTasksPage token={token} onBack={() => navigate('/courses')} />
+            <TaskUserTasksPage token={token} />
           ) : (
             <Navigate to="/login" />
           )
         } />
         <Route path="/user-tasks/course/:courseId/user/:studentId" element={
           token ? (
-            <StudentTasksPage token={token} onBack={() => navigate('/courses')} />
+            <StudentTasksPage token={token} />
           ) : (
             <Navigate to="/login" />
           )
         } />
         <Route path="/user-task/:taskId/:userId" element={
           token ? (
-            <UserTaskDetailPage token={token} isTeacher={isTeacher} onBack={() => navigate('/courses')} />
+            <UserTaskDetailPage token={token} isTeacher={isTeacher}/>
+          ) : (
+            <Navigate to="/login" />
+          )
+        } />
+        <Route path="/user-task/:userTaskId" element={
+          token ? (
+            <UserTaskDetailPage token={token} isTeacher={isTeacher} />
           ) : (
             <Navigate to="/login" />
           )

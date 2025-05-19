@@ -22,11 +22,9 @@ type Folder = {
 export function FolderPage({
   token,
   isTeacher,
-  onBack
 }: {
   token: string;
   isTeacher?: boolean;
-  onBack: () => void;
 }) {
   const { folderId } = useParams<{ folderId: string }>();
   const [folder, setFolder] = useState<Folder | null>(null);
@@ -136,7 +134,7 @@ export function FolderPage({
 
   return (
     <div>
-      <button onClick={onBack} style={{ marginBottom: 16 }}>Назад</button>
+      <button onClick={() => navigate(-1)} style={{ marginBottom: 16 }}>← Назад</button>
       <h2>Папка: {folder.name}</h2>
       <p>
         Власник:{" "}

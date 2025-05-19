@@ -8,13 +8,11 @@ import { formatTime } from '../utils/formatTime';
 export function CourseDetail({
   token,
   courseId,
-  onBack,
   isTeacher,
   userId,
 }: {
   token: string;
   courseId: string;
-  onBack: () => void;
   isTeacher?: boolean;
   userId: string;
 }) {
@@ -39,7 +37,7 @@ export function CourseDetail({
   return (
     <div>
       <div style={{ flex: 2 }}>
-        <button onClick={onBack} style={{ marginBottom: 16 }}>Назад</button>
+        <button onClick={() => navigate(-1)} style={{ marginBottom: 16 }}>← Назад</button>
         <h2>{course.name}</h2>
         <div><strong>Категорія:</strong> {course.categoryName}</div>
         <div><strong>Підкатегорія:</strong> {course.subCategoryName}</div>

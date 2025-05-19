@@ -5,12 +5,10 @@ import { CourseDetail } from '../components/CourseDetail';
 export function CourseDetailPage({
   token,
   isTeacher,
-  onBack,
   userId,
 }: {
   token: string;
   isTeacher?: boolean;
-  onBack: () => void;
   userId: string,
 }) {
   const { courseId } = useParams<{ courseId: string }>();
@@ -24,7 +22,6 @@ export function CourseDetailPage({
       token={token}
       courseId={courseId}
       isTeacher={isTeacher}
-      onBack={onBack}
       userId={userId}
     />
   );

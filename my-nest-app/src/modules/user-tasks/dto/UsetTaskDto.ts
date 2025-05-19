@@ -25,6 +25,8 @@ export class UserTaskDto {
   @NumberFieldOptional({ nullable: true, minimum: 0, maximum: 100 })
   grade?: number | null;
 
+  createdAt!: Date;
+
   constructor(userTask: UserTask) {
     this.id = userTask.id;
     this.status = userTask.status;
@@ -33,5 +35,6 @@ export class UserTaskDto {
     this.student = new UserNameDto(userTask.student);
     this.task = new TaskNameDto(userTask.task);
     this.grade = userTask.grade ?? null;
+    this.createdAt = userTask.createdAt
   }
 }

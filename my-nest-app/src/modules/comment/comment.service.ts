@@ -12,8 +12,8 @@ import type { Cache } from 'cache-manager';
 @Injectable()
 export class CommentService {
   constructor(
-        @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+
     @InjectRepository(Comment)
     private readonly commentsRepo: Repository<Comment>,
 
@@ -51,15 +51,16 @@ export class CommentService {
     console.log(`tasks:single:${savedUser.task.id}`);
     this.deleteCache(`tasks:single:${savedUser.task.id}`)
     this.deleteCache(`comments:${savedUser.task.id}`)
-
+    this.deleteCache(`user-tasks:single:*:${savedUser.task.id}:*`)
+    this.deleteCache(`user-tasks:byId:*:*:*`)
     return new CommentDto(savedUser)
   }
 
   async findByTask(taskId: Uuid): Promise<CommentDto[]> {
     const cacheKey = `comments:${taskId}`;
-    
-            const cached: CommentDto[] | undefined = await this.cacheManager.get(cacheKey);
-            if (cached) return cached;
+
+    const cached: CommentDto[] | undefined = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
 
     const comments = await this.commentsRepo.find({
       where: { task: { id: taskId as any } },
@@ -68,28 +69,30 @@ export class CommentService {
     });
 
     const finalComments = comments.map(com => new CommentDto(com))
-    
+
     await this.cacheManager.set(cacheKey, finalComments);
     return finalComments;
   }
 
-async delete(id: Uuid): Promise<void> {
-  const comment = await this.commentsRepo.findOne({
-    where: { id },
-    relations: ['task'],
-  });
+  async delete(id: Uuid): Promise<void> {
+    const comment = await this.commentsRepo.findOne({
+      where: { id },
+      relations: ['task'],
+    });
 
-  if (!comment) {
-    throw new NotFoundException(`Comment ${id} not found`);
+    if (!comment) {
+      throw new NotFoundException(`Comment ${id} not found`);
+    }
+
+    const res = await this.commentsRepo.delete({ id });
+    if (res.affected === 0) {
+      throw new NotFoundException(`Comment ${id} not found`);
+    }
+
+    this.deleteCache(`tasks:single:${comment.task.id}`);
+    this.deleteCache(`comments:${comment.task.id}`);
+    this.deleteCache(`user-tasks:single:*:${comment.task.id}:*`)
+    this.deleteCache(`user-tasks:byId:*:*:*`)
   }
-
-  const res = await this.commentsRepo.delete({ id });
-  if (res.affected === 0) {
-    throw new NotFoundException(`Comment ${id} not found`);
-  }
-
-  this.deleteCache(`tasks:single:${comment.task.id}`);
-  this.deleteCache(`comments:${comment.task.id}`);
-}
 
 }

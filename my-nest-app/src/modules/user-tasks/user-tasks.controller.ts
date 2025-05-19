@@ -8,6 +8,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   BadRequestException,
+  Post,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UserTasksService } from './user-tasks.service';
@@ -20,46 +21,72 @@ import { SingleUserTaskDto } from './dto/SingleUserTaskDto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import multer from 'multer';
 import type { CompleteTaskDto } from '../../modules/user-task-file/dto/CompleteTaskDto';
+import { CreateUserTaskDto } from './dto/create-user-task.dto';
+import { TaskStatus } from '../../constants/status-type';
 
 @ApiTags('user-tasks')
 @Controller()
 export class UserTasksController {
   constructor(private readonly userTasksService: UserTasksService) { }
 
+  
+    @Post("task/:taskId/user-tasks")
+    @ApiParam({ name: "taskId", description: 'Унікальне айді завдання', type: String })
+    @ApiOperation({ summary: 'Створити завдання студента' })
+    @Auth([])
+    @ApiResponse({
+      status: 201,
+      description: 'Завдання створено.',
+      type: UserTaskDto,
+    })
+    async create(
+      @Param('taskId') taskId: Uuid,
+      @AuthUser() user: UserEntity,
+    ): Promise<UserTaskDto> {
+      var dto: CreateUserTaskDto = new CreateUserTaskDto()
+      dto.status = TaskStatus.ACCEPTED;
+      dto.student = user;
+      const created = await this.userTasksService.create(dto, taskId);
+      return new UserTaskDto(created)
+    }
+
   @Get("/task/:id/user-tasks")
   @ApiParam({ name: "id", description: 'Унікальне айді завдання', type: String })
   @ApiOperation({ summary: 'Отримати всі UserTasks завдання' })
   @Auth([RoleType.TEACHER])
-  @ApiResponse({ status: 200, description: 'List of user tasks', type: [UserTaskDto] })
+  @ApiResponse({ status: 200, description: 'Завдання згруповані по студенту', type: Object })
   async findAllToTask(
     @Param('id') id: Uuid,
-
   ) {
-    const userTasks = await this.userTasksService.findAllToTask(id);
-    if (!userTasks) {
-      throw new NotFoundException
-    }
-    return userTasks?.map(ut => new UserTaskDto(ut))
+    const groupedByStudent = await this.userTasksService.findAllToTask(id);
+    if (!groupedByStudent) throw new NotFoundException();
+
+    return Object.entries(groupedByStudent).reduce((acc, [studentId, tasks]) => {
+      acc[studentId] = tasks.map(task => new UserTaskDto(task));
+      return acc;
+    }, {} as Record<string, UserTaskDto[]>);
   }
 
   @Get("course/:cId/user-task/student/:id")
   @ApiParam({ name: "id", description: 'Унікальне айді студента', type: String })
   @ApiParam({ name: "cId", description: 'Унікальне айді курса', type: String })
   @ApiOperation({ summary: 'Отримати всі UserTasks студента' })
-  @Auth([])
-  @ApiResponse({ status: 200, description: 'List of user tasks', type: [UserTaskDto] })
+  @Auth([]) 
+  @ApiResponse({ status: 200, description: 'Завдання згруповані по завданням', type: Object })
   async findAllToStudent(
     @Param('id') id: Uuid,
     @Param('cId') cId: Uuid,
     @AuthUser() user: UserEntity
   ) {
-    const userTasks = await this.userTasksService.findAllToStudent(id, user, cId);
-    if (!userTasks) {
-      throw new NotFoundException
-    }
-    console.log(userTasks);
-    return userTasks?.map(ut => new UserTaskDto(ut))
+    const groupedByTask = await this.userTasksService.findAllToStudent(id, user, cId);
+    if (!groupedByTask) throw new NotFoundException();
+
+    return Object.entries(groupedByTask).reduce((acc, [taskId, tasks]) => {
+      acc[taskId] = tasks.map(task => new UserTaskDto(task));
+      return acc;
+    }, {} as Record<string, UserTaskDto[]>);
   }
+
 
   @Get("/user-task/:taskid/:userid")
   @ApiParam({ name: "taskid", description: 'Унікальне айді завдання', type: String })
@@ -73,6 +100,22 @@ export class UserTasksController {
     @AuthUser() user: UserEntity
   ) {
     const userTask = await this.userTasksService.findOne(taskid, userid, user.role);
+    if (!userTask) {
+      throw new NotFoundException
+    }
+    return userTask
+  }
+
+  @Get("/user-task/:utaskid")
+  @ApiParam({ name: "utaskid", description: 'Унікальне айді завдання користувача', type: String })
+  @ApiOperation({ summary: 'Отримати один UserTask' })
+  @Auth([])
+  @ApiResponse({ status: 200, description: 'Single user tasks', type: [SingleUserTaskDto] })
+  async findOneById(
+    @Param('utaskid') utaskid: Uuid,
+    @AuthUser() user: UserEntity
+  ) {
+    const userTask = await this.userTasksService.findById(utaskid, user.id, user.role);
     if (!userTask) {
       throw new NotFoundException
     }

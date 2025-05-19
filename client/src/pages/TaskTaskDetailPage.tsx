@@ -33,13 +33,9 @@ type Task = {
 export function TaskDetailPage({
   token,
   userId,
-  isTeacher,
-  onBack,
 }: {
   token: string;
   userId: string,
-  isTeacher: boolean;
-  onBack: () => void;
 }) {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();

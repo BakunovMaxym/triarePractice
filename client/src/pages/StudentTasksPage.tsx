@@ -40,15 +40,18 @@ interface UserTask {
     grade: number | null;
     student: Student;
     task: Task;
+    createdAt: Date
 }
 
-export function StudentTasksPage({ token, onBack }: { token: string, onBack: () => void, }) {
+export function StudentTasksPage({ token }: { token: string; }) {
     const { courseId, studentId } = useParams<{ courseId: string; studentId: string }>();
-    const [tasks, setTasks] = useState<UserTask[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-
     const navigate = useNavigate();
+
+    // групуємо UserTask по task.id
+    const [groups, setGroups] = useState<{ task: Task; tasks: UserTask[] }[]>([]);
+    const [expanded, setExpanded] = useState<Set<string>>(new Set());
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!courseId || !studentId) return;
@@ -56,41 +59,48 @@ export function StudentTasksPage({ token, onBack }: { token: string, onBack: () 
         fetch(`http://localhost:3000/course/${courseId}/user-task/student/${studentId}`, {
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
+                'Authorization': `Bearer ${token}`,
             },
         })
-            .then((res) => {
+            .then(res => {
                 if (!res.ok) throw new Error(`Помилка ${res.status}`);
-                return res.json();
+                return res.json() as Promise<Record<string, UserTask[]>>;
             })
-            .then((data: UserTask[]) => {
-                setTasks(data);
-                console.log(data);
+            .then(data => {
+                const arr = Object.values(data).map(tasks => ({
+                    task: tasks[0].task,
+                    tasks,
+                }));
+                setGroups(arr);
                 setLoading(false);
             })
-            .catch((err) => {
+            .catch(err => {
                 setError(err.message);
                 setLoading(false);
             });
     }, [courseId, studentId, token]);
 
+    const toggle = (taskId: string) => {
+        setExpanded(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(taskId)) newSet.delete(taskId);
+            else newSet.add(taskId);
+            return newSet;
+        });
+    };
+
     if (loading) return <div style={{ padding: '1rem', textAlign: 'center' }}>Завантаження…</div>;
     if (error) return <div style={{ padding: '1rem', color: '#dc2626' }}>Помилка: {error}</div>;
-    if (tasks.length === 0) return <div style={{ padding: '1rem' }}>Завдання відсутні</div>;
-
-    const student = tasks[0]?.student;
+    if (groups.length === 0) return <div style={{ padding: '1rem' }}>Завдання відсутні</div>;
 
     return (
         <div style={{ maxWidth: '64rem', margin: '0 auto', padding: '1rem' }}>
+            <button onClick={() => navigate(-1)} style={{ marginBottom: '1rem' }}>← Назад</button>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
-                Завдання студента: {student?.lastName} {student?.firstName}
+                Завдання студента
             </h1>
 
-            <div style={{
-                overflow: 'hidden',
-                borderRadius: '0.5rem',
-                border: '1px solid #d1d5db',
-            }}>
+            <div style={{ overflow: 'hidden', borderRadius: '0.5rem', border: '1px solid #d1d5db' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ backgroundColor: '#f9fafb' }}>
                         <tr>
@@ -100,35 +110,69 @@ export function StudentTasksPage({ token, onBack }: { token: string, onBack: () 
                         </tr>
                     </thead>
                     <tbody>
-                        {tasks.map((ut) => (
-                            <tr
-                                key={ut.id}
-                                onClick={() => navigate(`/user-task/${ut.task.id}/${ut.student.id}`)}
-                                style={{
-                                    cursor: 'pointer',
-                                    transition: 'background-color 0.2s',
-                                }}
-                                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-                                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
-                            >
-                                <td style={tdStyle}>{ut.task.name}</td>
-                                <td style={tdStyle}>
-                                    <span
-                                        style={{
-                                            ...statusStyles[ut.status],
-                                            display: 'inline-block',
-                                            padding: '0.25rem 0.5rem',
-                                            borderRadius: '9999px',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 600,
-                                        }}
+                        {groups.map(({ task, tasks }) => {
+                            const first = tasks[0];
+                            const isOpen = expanded.has(task.id);
+                            return (
+                                <React.Fragment key={task.id}>
+                                    <tr
+                                        onClick={() => toggle(task.id)}
+                                        style={{ cursor: 'pointer', fontWeight: 500, borderTop: "solid", borderWidth: 1  }}
+                                        onMouseOver={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                                        onMouseOut={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
                                     >
-                                        {ut.status}
-                                    </span>
-                                </td>
-                                <td style={tdStyle}>{ut.grade !== null ? ut.grade : '–'}</td>
-                            </tr>
-                        ))}
+                                        <td style={tdStyle}>
+                                            {task.name}
+                                            {tasks.length > 1 && (
+                                                <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
+                                                    ({tasks.length})
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <span style={{
+                                                ...statusStyles[first.status],
+                                                display: 'inline-block',
+                                                padding: '0.25rem 0.5rem',
+                                                borderRadius: '9999px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                            }}>
+                                                {first.status}
+                                            </span>
+                                        </td>
+                                        <td style={tdStyle}>{first.grade !== null ? first.grade : '–'}</td>
+                                    </tr>
+
+                                    {isOpen && tasks.map(ut => (
+                                        <tr
+                                            key={ut.id}
+                                            onClick={() => navigate(`/user-task/${ut.id}`)}
+                                            style={{ cursor: 'pointer', backgroundColor: '#fafafa' }}
+                                            onMouseOver={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                                            onMouseOut={e => (e.currentTarget.style.backgroundColor = '#fafafa')}
+                                        >
+                                            <td style={{ padding: '0.5rem 1rem 0.5rem 2rem', fontSize: '0.875rem' }}>
+                                                {new Date(ut.createdAt).toLocaleString('uk-UA')}
+
+                                            </td>
+                                            <td style={{
+                                                ...statusStyles[ut.status],
+                                                display: 'inline-block',
+                                                padding: '0.25rem 0.5rem',
+                                                borderRadius: '9999px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                marginLeft: 30,
+                                            }}>
+                                                {ut.status}
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem' }}>{ut.grade !== null ? ut.grade : '–'}</td>
+                                        </tr>
+                                    ))}
+                                </React.Fragment>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
