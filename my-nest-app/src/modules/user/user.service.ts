@@ -42,7 +42,8 @@ export class UserService {
       relations: {
         game: {
           propertys: {
-            property: true
+            property: true,
+            owner: true
           },
           users: true,
           colection: {

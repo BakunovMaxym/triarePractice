@@ -301,6 +301,12 @@
                         let name = document.createElement('p')
                         name.textContent = "name: " + property.property.name
                         div.appendChild(name)
+                        
+                        if (property.owner) {
+                            let owner = document.createElement('p')
+                            owner.textContent = "owner: " + property.owner.username
+                            div.appendChild(owner)
+                        }
 
                         let type = document.createElement('p')
                         type.textContent = "type: " + property.property.type
@@ -310,11 +316,6 @@
                         propertyType.textContent = "status: " + property.propertyType
                         div.appendChild(propertyType)
 
-                        if (property.owner) {
-                            let owner = document.createElement('p')
-                            owner.textContent = "owner: " + property.owner.name
-                            div.appendChild(owner)
-                        }
 
 
                         let upgradeCount = document.createElement('p')
@@ -394,11 +395,7 @@
                         propertyType.textContent = "status: " + property.propertyType
                         div.appendChild(propertyType)
 
-                        if (property.owner) {
-                            let owner = document.createElement('p')
-                            owner.textContent = "owner: " + property.owner.name
-                            div.appendChild(owner)
-                        }
+                       
 
 
                         let upgradeCount = document.createElement('p')
@@ -534,7 +531,7 @@
         function UpgradeProperty(property) {
             pendingInvoce = {
                 id: crypto.randomUUID(),
-                cost: property.property.upgradePrice,
+                cost: -1 * property.property.upgradePrice,
                 name: 'upgrade property',
                 onCompleteMessage: 'you have upgraded ' + property.property.name,
                 function: () => {
@@ -646,8 +643,6 @@
                 game = null;
                 curentUser = null;
                 updateTexts()
-
-
             });
             socket.on('error', data => {
                 log('Error: ' + JSON.stringify(data))
@@ -706,6 +701,7 @@
             socket.on('JailTime', data => {
                 log('JailTime: ' + JSON.stringify(data))
                 socket.emit('me')
+
             });
 
             socket.on('diceRolled', data => {
@@ -733,6 +729,8 @@
             socket.on('Invoice', data => {
                 log('Invoice: ' + JSON.stringify(data))
                 invoices.push({ id: crypto.randomUUID(), cost: data.cost, name: data.type })
+                socket.emit('me')
+
             });
 
             socket.on('ChanceCard', data => {
@@ -779,7 +777,7 @@
 
                 if (result) {
                     pendingInvoce = {
-                        id: crypto.randomUUID(), cost: data.property.property.price, name: 'buy property', onCompleteMessage: 'you have bought ' + data.property.property.name, function: () => {
+                        id: crypto.randomUUID(), cost: -1 * data.property.property.price, name: 'buy property', onCompleteMessage: 'you have bought ' + data.property.property.name, function: () => {
                             socket.emit("BuyProperty", { peopertyId: data.property.id });
                         }
                     }

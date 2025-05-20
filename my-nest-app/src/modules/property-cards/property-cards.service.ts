@@ -78,7 +78,7 @@ export class PropertyCardsService{
 
     return queryBuilder.getMany().then((propertyCards) => {
       if (!propertyCards || propertyCards.length === 0) {
-        throw new NotFoundException('Property cards not found');
+        return [];
       }
       
       const result: PropertyCardDto[] = propertyCards.map((propertyCard) => propertyCard.toDto())
@@ -99,12 +99,10 @@ export class PropertyCardsService{
     propertyCards.forEach(async card => {
         let cloned: CreatePropertyCardDto & {id?: Uuid} = {...card, colection_id: to};
         delete cloned.id;
-        await this.create(cloned);;
+        await this.create(cloned);
     })
 
-    const savedCards = await this.findByColectionId(to);
-
-    return savedCards;
+    
 }
   
   

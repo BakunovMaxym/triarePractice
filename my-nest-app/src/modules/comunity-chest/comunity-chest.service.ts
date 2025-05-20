@@ -62,7 +62,6 @@ export class ComunityChestService {
     })
 
     const savedCards = await this.findAllFromColection(to);
-    console.log('cumChestu', savedCards)
     return savedCards;
 }
   

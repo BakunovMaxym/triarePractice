@@ -245,6 +245,4 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameService.GiveUp(game, user);
   }
 
-
-
 }

@@ -8,7 +8,7 @@ import { ApiParam,  ApiTags } from '@nestjs/swagger';
 export class PropertyCardsController {
   constructor(private readonly propertyCardsService: PropertyCardsService) {}
 
-  @Post()  
+  @Post()
   create(@Body() createPropertyCardDto: CreatePropertyCardDto) {
     return this.propertyCardsService.create(createPropertyCardDto);
   }

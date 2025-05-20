@@ -3,7 +3,6 @@ import { JwtModule} from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { UserModule } from '../user/user.module.ts';
-import { AuthController } from './auth.controller.ts';
 import { AuthService } from './auth.service.ts';
 import { JwtStrategy } from './jwt.strategy.ts';
 import { PublicStrategy } from './public.strategy.ts';
@@ -33,7 +32,7 @@ import { ApiConfigService } from '../../shared/services/api-config.service.ts';
           inject: [ApiConfigService],
         })
   ],
-  controllers: [AuthController],
+  controllers: [],
   providers: [AuthService, JwtStrategy, PublicStrategy,WsJwtService],
   exports: [ AuthService, WsJwtService, JwtModule],
 })

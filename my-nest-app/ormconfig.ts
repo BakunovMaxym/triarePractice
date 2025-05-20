@@ -21,6 +21,5 @@ export const dataSource = new DataSource({
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
   
-  logging: ['query', 'error', 'info'],
-  logger: 'advanced-console',
+  logging: false,
 });
