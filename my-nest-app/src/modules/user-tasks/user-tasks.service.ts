@@ -81,6 +81,7 @@ export class UserTasksService {
     await this.deleteCache(`user-tasks:single:*:${savedUserTask.task.id}:*`)
     await this.deleteCache(`user-tasks:byId:${savedUserTask.id}:*:*`)
     await this.deleteCache(`user-tasks:task:${savedUserTask.task.id}`)
+    await this.deleteCache(`user-tasks:student:${savedUserTask.student.id}:accepted`)
 
     return savedUserTask;
   }
@@ -256,6 +257,7 @@ async findById(userTaskId: Uuid, userId: Uuid, userRole: RoleType): Promise<Sing
     await this.deleteCache(`user-tasks:single:${saved.student.id}:*:*`)
     await this.deleteCache(`user-tasks:single:*:${saved.task.id}:*`)
     await this.deleteCache(`user-tasks:byId:${saved.id}:*:*`)
+    await this.deleteCache(`user-tasks:student:${saved.student.id}:accepted`)
 
     return new SingleUserTaskDto(saved);
   }
@@ -286,7 +288,7 @@ async findById(userTaskId: Uuid, userId: Uuid, userRole: RoleType): Promise<Sing
     await this.deleteCache(`user-tasks:single:*:${saved.task.id}:*`)
     await this.deleteCache(`user-tasks:single:${saved.task.id}:*:*`)
     await this.deleteCache(`user-tasks:byId:${saved.id}:*:*`)
-
+    await this.deleteCache(`user-tasks:student:${saved.student.id}:accepted`)
 
     return new SingleUserTaskDto(saved);
   }
@@ -314,6 +316,7 @@ async findById(userTaskId: Uuid, userId: Uuid, userRole: RoleType): Promise<Sing
     await this.deleteCache(`user-tasks:single:${saved.student.id}:*:*`)
     await this.deleteCache(`user-tasks:single:*:${saved.task.id}:*`)
     await this.deleteCache(`user-tasks:byId:${saved.id}:*:*`)
+    await this.deleteCache(`user-tasks:student:${saved.student.id}:accepted`)
 
 
     return new SingleUserTaskDto(saved);
@@ -391,6 +394,7 @@ async findById(userTaskId: Uuid, userId: Uuid, userRole: RoleType): Promise<Sing
     await this.deleteCache(`user-tasks:single:${updatedUserTask.student.id}:*:*`)
     await this.deleteCache(`user-tasks:single:*:${updatedUserTask.task.id}:*`)
     await this.deleteCache(`user-tasks:byId:${updatedUserTask.id}:*:*`)
+    await this.deleteCache(`user-tasks:student:${updatedUserTask.student.id}:accepted`)
 
 
     return new SingleUserTaskDto(updatedUserTask)
@@ -415,6 +419,7 @@ async findById(userTaskId: Uuid, userId: Uuid, userRole: RoleType): Promise<Sing
     await this.deleteCache(`user-tasks:single:${userTask.student.id}:*:*`)
     await this.deleteCache(`user-tasks:single:*:${userTask.task.id}:*`)
     await this.deleteCache(`user-tasks:byId:${userTask.id}:*:*`)
+    await this.deleteCache(`user-tasks:student:${userTask.student.id}:accepted`)
 
 
     return delres;

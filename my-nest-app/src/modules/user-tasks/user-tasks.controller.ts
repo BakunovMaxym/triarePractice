@@ -23,6 +23,7 @@ import multer from 'multer';
 import type { CompleteTaskDto } from '../../modules/user-task-file/dto/CompleteTaskDto';
 import { CreateUserTaskDto } from './dto/create-user-task.dto';
 import { TaskStatus } from '../../constants/status-type';
+import { UserTaskDtoWithCourse } from './dto/UsetTaskDtoWithCourse';
 
 @ApiTags('user-tasks')
 @Controller()
@@ -100,9 +101,9 @@ export class UserTasksController {
     if (!groupedByTask) throw new NotFoundException();
 
     return Object.entries(groupedByTask).reduce((acc, [taskId, tasks]) => {
-      acc[taskId] = tasks.map(task => new UserTaskDto(task));
+      acc[taskId] = tasks.map(task => new UserTaskDtoWithCourse(task));
       return acc;
-    }, {} as Record<string, UserTaskDto[]>);
+    }, {} as Record<string, UserTaskDtoWithCourse[]>);
   }
 
   @Get("/user-task/:taskid/:userid")
