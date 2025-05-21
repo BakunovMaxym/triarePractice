@@ -125,16 +125,20 @@ export class TaskService {
     const cached: TaskEntity | undefined = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
 
-    const task = await this.taskRepository.findOne({
-      where: { id },
-      relations: {
-        userTasks: true,
-        owner: true,
-        comments: { owner: true },
-        fileContent: { task: true },
-        course: { teachers: true },
-      },
-    });
+    const task = await this.taskRepository
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.userTasks', 'userTasks')
+      .leftJoinAndSelect('task.owner', 'owner')
+      .leftJoinAndSelect('task.comments', 'comments')
+      .leftJoinAndSelect('comments.owner', 'commentOwner')
+      .leftJoinAndSelect('task.fileContent', 'fileContent')
+      .leftJoinAndSelect('fileContent.task', 'fileContentTask')
+      .leftJoinAndSelect('task.course', 'course')
+      .leftJoinAndSelect('course.teachers', 'teachers')
+      .where('task.id = :id', { id })
+      .orderBy('comments.createdAt', 'DESC')
+      .getOne();
+
     if (!task) {
       throw new NotFoundException(`Task with name ${id} not found`);
     }

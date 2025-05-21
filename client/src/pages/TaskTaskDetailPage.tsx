@@ -173,7 +173,7 @@ export function TaskDetailPage({
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const created: Comment = await res.json();
       setTask((t) =>
-        t ? { ...t, comments: [...t.comments, created] } : t
+        t ? { ...t, comments: [created, ...t.comments] } : t
       );
       setNewComment('');
     } catch (err: any) {

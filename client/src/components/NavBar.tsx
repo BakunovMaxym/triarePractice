@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export function NavBar({
   token,
+  userId,
   onLogout,
   onJoinCourseAsStudent,
   onJoinCourseAsTeacher,
   isTeacher,
 }: {
   token: string | null;
+  userId: string | null,
   onLogout: () => void;
   onJoinCourseAsStudent?: (courseId: string) => Promise<void>;
   onJoinCourseAsTeacher?: (courseId: string) => Promise<void>;
@@ -96,7 +98,7 @@ export function NavBar({
             <Link to="/courses">
               <button>Курси</button>
             </Link>
-            <Link to="/userTasks">
+            <Link to={`/user-task/student/${userId}/accepted`}>
               <button>Мої завдання</button>
             </Link>
             <button onClick={handleLogout}>Вийти</button>

@@ -12,6 +12,7 @@ import { TaskDetailPage } from './pages/TaskTaskDetailPage';
 import { StudentTasksPage } from './pages/StudentTasksPage';
 import { UserTaskDetailPage } from './pages/UserTaskDetailPage';
 import { joinCourseAsStudent } from './api';
+import { AcceptedUserTasksPage } from './pages/AcceptedUserTasksPage';
 
 function AppContent() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
@@ -91,6 +92,7 @@ function AppContent() {
     <div className="app-container">
       <NavBar
         token={token}
+        userId={userId}
         onLogout={handleLogout}
         onJoinCourseAsStudent={handleJoinCourseAsStudent}
         onJoinCourseAsTeacher={handleJoinCourseAsTeacher}
@@ -171,9 +173,16 @@ function AppContent() {
             <Navigate to="/login" />
           )
         } />
+        <Route path="/user-task/student/:studentId/accepted" element={
+          token ? (
+            <AcceptedUserTasksPage token={token} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        } />
         <Route path="/user-task/:taskId/:userId" element={
           token ? (
-            <UserTaskDetailPage token={token} isTeacher={isTeacher}/>
+            <UserTaskDetailPage token={token} isTeacher={isTeacher} />
           ) : (
             <Navigate to="/login" />
           )

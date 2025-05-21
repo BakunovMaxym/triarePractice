@@ -87,6 +87,23 @@ export class UserTasksController {
     }, {} as Record<string, UserTaskDto[]>);
   }
 
+  @Get("/user-task/student/:id/accepted")
+  @ApiParam({ name: "id", description: 'Унікальне айді студента', type: String })
+  @ApiOperation({ summary: 'Отримати всі прийняті UserTasks студента' })
+  @Auth([]) 
+  @ApiResponse({ status: 200, description: 'Завдання згруповані за курсами', type: Object })
+  async findAllAcceptedToStudent(
+    @Param('id') id: Uuid,
+    @AuthUser() user: UserEntity
+  ) {
+    const groupedByTask = await this.userTasksService.findAllAcceptedToStudent(id, user);
+    if (!groupedByTask) throw new NotFoundException();
+
+    return Object.entries(groupedByTask).reduce((acc, [taskId, tasks]) => {
+      acc[taskId] = tasks.map(task => new UserTaskDto(task));
+      return acc;
+    }, {} as Record<string, UserTaskDto[]>);
+  }
 
   @Get("/user-task/:taskid/:userid")
   @ApiParam({ name: "taskid", description: 'Унікальне айді завдання', type: String })

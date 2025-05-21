@@ -43,8 +43,8 @@ export async function register(data: { firstName: string; lastName: string; emai
   return res.json();
 }
 
-export async function getCourses(token: string) {
-  const res = await fetch(`${API_URL}/course?nocache=${Date.now()}`, {
+export async function getCourses(token: string, url: string) {
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch courses');

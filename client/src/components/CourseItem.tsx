@@ -20,20 +20,6 @@ export function CourseItem({
 }: any) {
   return (
     <>
-      <button onClick={() => onSelectCourse(course.id)}>
-        Переглянути
-      </button>
-      <button
-        style={{ marginTop: 8 }}
-        onClick={() => {
-          setShowFolderPopup(course.id);
-          setFolderError(null);
-          setNewFolderName('');
-          fetchFolders();
-        }}
-      >
-        Перемістити у папку
-      </button>
       {showFolderPopup === course.id && (
         <FolderPopup
           course={course}

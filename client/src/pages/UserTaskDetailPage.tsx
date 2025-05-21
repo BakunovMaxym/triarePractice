@@ -247,7 +247,7 @@ export function UserTaskDetailPage({
                         ...t,
                         task: {
                             ...t.task,
-                            comments: [...t.task.comments, created],
+                            comments: [created, ...t.task.comments],
                         },
                     }
                     : t
