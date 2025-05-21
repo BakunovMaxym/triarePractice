@@ -565,6 +565,8 @@
         function GiveUp() {
 
             socket.emit('GiveUp')
+                socket.emit('me')
+
 
         }
 
@@ -689,7 +691,8 @@
                     myTyrn = false;
                 }
 
-                updateTexts()
+                socket.emit('me')
+
             });
 
             socket.on('GoToJail', data => {
