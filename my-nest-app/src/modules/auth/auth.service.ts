@@ -5,7 +5,7 @@ import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { TokenPayloadDto } from './dto/token-payload.dto.ts';
 import type { UserDto } from 'modules/user/dtos/user.dto.ts';
 
-@Injectable()
+@Injectable() 
 export class AuthService {
   constructor(
     private jwtService: JwtService,
@@ -18,7 +18,7 @@ export class AuthService {
     return new TokenPayloadDto({
       expiresIn: this.configService.authConfig.jwtExpirationTime,
       accessToken: await this.jwtService.signAsync({
-        user: data.user,
+        user: data.user, 
       }),
     });
   }

@@ -193,12 +193,7 @@
 
         let myTyrn = false;
 
-        function copyGameId() {
-            navigator.clipboard.writeText(game.id)
-        }
-        function copyUserId() {
-            navigator.clipboard.writeText(curentUser.id)
-        }
+
 
         function updateTexts() {
             document.getElementById('gameId').textContent = '';
@@ -301,7 +296,7 @@
                         let name = document.createElement('p')
                         name.textContent = "name: " + property.property.name
                         div.appendChild(name)
-                        
+
                         if (property.owner) {
                             let owner = document.createElement('p')
                             owner.textContent = "owner: " + property.owner.username
@@ -395,7 +390,7 @@
                         propertyType.textContent = "status: " + property.propertyType
                         div.appendChild(propertyType)
 
-                       
+
 
 
                         let upgradeCount = document.createElement('p')
@@ -464,7 +459,7 @@
                 document.getElementById('Game').style.display = 'block';
             }
             let invocesDiv = document.getElementById('invoices');
-            if (invocesDiv ) {
+            if (invocesDiv) {
                 invocesDiv.innerHTML = '';
                 invoices.forEach(invoice => {
                     if (invoice) {
@@ -513,16 +508,22 @@
             }
 
 
-            if(game.turnOrder[game.currentTurn % game.turnOrder.length] === curentUser.id){
+            if (game.turnOrder[game.currentTurn % game.turnOrder.length] === curentUser.id) {
                 myTyrn = true
             }
-            else{
+            else {
                 myTyrn = false
             }
             let turnDiv = document.getElementById('YourTurn')
             turnDiv.style.display = myTyrn ? 'block' : 'none'
         }
 
+        function copyGameId() {
+            navigator.clipboard.writeText(game.id)
+        }
+        function copyUserId() {
+            navigator.clipboard.writeText(curentUser.id)
+        }
 
         function UseGetOutofJailCard() {
             socket.emit('UseGetOutofJailCard');
@@ -565,7 +566,7 @@
         function GiveUp() {
 
             socket.emit('GiveUp')
-                socket.emit('me')
+            socket.emit('me')
 
 
         }
@@ -683,11 +684,11 @@
 
             socket.on('YourTurn', data => {
                 log('YourTurn: ' + JSON.stringify(data))
-                if(data.user.id === curentUser.id){
+                if (data.user.id === curentUser.id) {
                     myTyrn = true;
                     alert('yourTurn')
                 }
-                else{
+                else {
                     myTyrn = false;
                 }
 
@@ -797,11 +798,11 @@
 
                 console.log(data.id);
                 console.log(pendingInvoce)
-                if(pendingInvoce){
+                if (pendingInvoce) {
                     if (data.id === pendingInvoce.id) {
-    
+
                         alert(pendingInvoce.onCompleteMessage + '\n cost ' + pendingInvoce.cost)
-    
+
                         if (pendingInvoce.function) {
                             pendingInvoce.function();
                         }
