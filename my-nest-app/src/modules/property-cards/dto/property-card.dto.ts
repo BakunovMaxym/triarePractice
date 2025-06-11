@@ -18,6 +18,9 @@ export class PropertyCardDto extends AbstractDto {
     @StringField()
     street!: string;
 
+    @StringField()
+    color!: string;
+
     @NumberFieldOptional()
     upgradePrice!: number;
 

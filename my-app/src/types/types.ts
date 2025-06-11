@@ -70,6 +70,8 @@ export class PropertyCardDto extends AbstractDto {
   type!: PropertyType;
   price!: number;
   street!: string;
+  color!: string;
+
   upgradePrice!: number;
   rent!: number;
   rentAllStreet!: number;
@@ -126,5 +128,8 @@ export class chanceCardDto extends AbstractDto {
 }
 
 // Якщо RoleType і ColectionEntity в тебе визначені десь окремо, імпортуй їх сюди або оголоси тут
-export type RoleType = 'player' | 'admin' | 'guest'; // приклад, заміни на свій тип
+export enum RoleType {
+  USER = 'USER',
+  HOST = 'HOST',
+} // приклад, заміни на свій тип
 export type ColectionEntity = any; // заміни на реальний тип

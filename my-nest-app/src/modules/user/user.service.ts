@@ -22,7 +22,6 @@ export class UserService {
   async createUser(
     userRegisterDto: UserRegisterDto,
   ): Promise<UserEntity> {
-    console.log('userRegisterDto', userRegisterDto);
     const user = this.userRepository.create(userRegisterDto);
     await this.userRepository.save(user);
     return user;
@@ -60,7 +59,6 @@ export class UserService {
     if (!userEntity) {
       throw new UserNotFoundException();
     }
-    console.log("userentity", userEntity)
 
     return userEntity.toDto();
   }

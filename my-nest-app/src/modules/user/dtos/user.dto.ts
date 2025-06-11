@@ -39,6 +39,9 @@ export class UserDto extends AbstractDto {
   @NumberField()
   JailTime!: number;
 
+  @BooleanField()
+  isDouble!: Boolean;
+
   constructor(user: UserEntity) {
     super(user);
     this.username = user.username;
@@ -52,5 +55,6 @@ export class UserDto extends AbstractDto {
     this.doublesCount = user.doublesCount;
     this.getOutOfJailCard = user.getOutOfJailCard;
     this.JailTime = user.JailTime;
+    this.isDouble = user.isDouble;
   }
 }

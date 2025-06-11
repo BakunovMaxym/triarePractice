@@ -33,6 +33,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @OnEvent('gameService')
   handleUserAdded({ room, event, data }) {
     this.server.to(room).emit(event, data); 
+    console.log(`Event ${event} emitted to room ${room} with data:`, data);
   }
 
   handleConnection(client: Socket) {
@@ -75,7 +76,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.server.to(game.id).emit('gameCreated', curentGame);
     socket.emit('roomJoined', loginPayload);
-    console.log();
+
 
     return false;
   }
@@ -87,7 +88,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     await this.gameService.addUserToGame(joinGameDto.gameId, user);
 
-    console.log("user", user)
 
     const inGameUser = await this.userService.getUser(user.id);
     const curentGame: GameDto = await this.gameService.findOne(joinGameDto.gameId)
@@ -180,7 +180,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('me')
   async GetMe(@ConnectedSocket() socket: Socket, @AuthUser() user: UserDto) {
     const userDto: UserDto = await this.userService.getUser(user.id);
-    console.log(user)
     socket.emit('you', userDto);
     return true;
   }
@@ -223,6 +222,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     user = await this.userService.getUser(user.id)
     this.gameService.UseGetOutofJailCard(user);
   }
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('GetOutofJail')
+  async GetOutofJailCard(@AuthUser() user: UserDto) {
+    user = await this.userService.getUser(user.id)
+    this.gameService.GetOutofJailCard(user);
+  }
 
   @UseGuards(WsAuthGuard)
   @SubscribeMessage('UpgradeProperty')
@@ -233,6 +238,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(WsAuthGuard)
   @SubscribeMessage('EndTurn')
   async EndTurn(@AuthUser() user: UserDto) {
+    
     user = await this.userService.getUser(user.id)
     this.gameService.EndTurn(user);
   }
@@ -243,6 +249,34 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     user = await this.userService.getUser(user.id)
     const game: GameDto = await this.gameService.findOne(user.game.id);
     this.gameService.GiveUp(game, user);
+  }
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('sendMoney')
+  async sendMoney(@MessageBody() dto: { id: Uuid , cost:number }) {
+    console.log('sendMoney', dto);
+    this.gameService.sendMoney(dto.id, dto.cost);
+  }
+
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('DowngradeProperty')
+  async DowngradeProperty(@MessageBody() dto: { id: Uuid}, @AuthUser() user: UserDto) {
+    user = await this.userService.getUser(user.id)
+    console.log('consolelog')
+    this.gameService.DowngradeProperty(dto.id, user);
+  }
+
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('Mortage')
+  async Mortage(@MessageBody() dto: { id: Uuid}, @AuthUser() user: UserDto) {
+    user = await this.userService.getUser(user.id)
+    this.gameService.Mortage(dto.id, user);
+  }
+
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('BuyOut')
+  async BuyOut(@MessageBody() dto: { id: Uuid}, @AuthUser() user: UserDto) {
+    user = await this.userService.getUser(user.id)
+    this.gameService.BuyOut(dto.id, user);
   }
 
 }

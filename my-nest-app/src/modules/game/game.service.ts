@@ -25,6 +25,95 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class GameService {
+  BuyOut(id: Uuid, user: UserDto) {
+    const mortgagetProperty = user.properties.filter((property: PropertyDto) =>  property.id === id )[0];
+    if (!mortgagetProperty) {
+      throw new NotFoundException()
+    }
+
+    mortgagetProperty.propertyType = PropertyStatyses.NORMAL;
+    
+    this.propertyService.save(mortgagetProperty);
+    
+    this.eventEmitter.emit('gameService', {
+      room: user.game.id,
+      event: 'MortgageChange'
+    })
+
+  }
+  async Mortage(id: Uuid, user: UserDto) {
+    console.log(id)
+    console.log(user.properties)
+
+    const mortgagetProperty = user.properties.filter((property: PropertyDto) =>  property.id === id )[0];
+    if (!mortgagetProperty) {
+      throw new NotFoundException()
+    }
+
+    mortgagetProperty.propertyType = PropertyStatyses.MORTGAGE;
+    this.propertyService.save(mortgagetProperty);
+
+    this.eventEmitter.emit('gameService', {
+      room: user.id,
+      event: 'Invoice',
+      data: { type: "Morgage", cost: mortgagetProperty.property.price / 2 }
+    })
+
+     this.eventEmitter.emit('gameService', {
+      room: user.game.id,
+      event: 'MortgageChange'
+    })
+
+  }
+  DowngradeProperty(id: Uuid, user: UserDto) {
+    const Property = user.properties.filter((property: PropertyDto) =>  property.id === id )[0];
+    if (!Property) {
+      throw new NotFoundException()
+    }
+    if (Property.upgradeCount > 0){
+      Property.upgradeCount-=1
+    }
+    this.propertyService.save(Property);
+    
+    this.eventEmitter.emit('gameService', {
+      room: user.id,
+      event: 'Invoice',
+      data: { type: "sell update", cost: Property.property.upgradePrice / 2 }
+    })
+
+    this.eventEmitter.emit('gameService', {
+      room: user.id,
+      event: 'UpgradeChange'
+    })
+  }
+
+  async GetOutofJailCard(user: UserDto) {
+    const curentUser = await this.userService.getUser(user.id);
+
+    curentUser.getOutOfJailCard = false;
+    curentUser.JailTime = 0;
+    curentUser.inJail = false;
+    this.eventEmitter.emit('gameService', {
+      room: curentUser.id,
+      event: 'JailTime',
+      data: { JailTime: curentUser.JailTime }
+    })
+
+    this.userService.save(curentUser)
+
+    this.eventEmitter.emit('gameService', {
+      room: curentUser.game.id,
+      event: 'jailChange'
+    })
+
+  }
+  sendMoney(id: Uuid, cost: number) {
+    this.eventEmitter.emit('gameService', {
+      room: id,
+      event: 'Invoice',
+      data: { type: "rent", cost: -cost }
+    })
+  }
 
   async deleteGame(gameId: Uuid) {
     const game = await this.findOne(gameId);
@@ -46,7 +135,6 @@ export class GameService {
     private readonly eventEmitter: EventEmitter2,
 
   ) {
-    console.log('EventEmitter2 injected:', !!eventEmitter);
   }
 
   getGame(id: Uuid) {
@@ -138,7 +226,7 @@ export class GameService {
       relations: {
         propertys: {
           owner: true,
-          property:true
+          property: true
         },
         users: true,
         colection: {
@@ -181,9 +269,12 @@ export class GameService {
   async GetDiceRoll(gameId: Uuid) {
     const firstCube = Math.floor(Math.random() * 6) + 1
     const secondCube = Math.floor(Math.random() * 6) + 1
+    // const secondCube = 1
+
 
     const game: GameDto = await this.findOne(gameId);
 
+    
     if (game.colection.setings.bostercube) {
       const boosterCube = Math.floor(Math.random() * 6) + 1
       return { firstCube, secondCube, boosterCube }
@@ -217,7 +308,6 @@ export class GameService {
     game.propertys = propertys;
 
     await this.gameRepository.save(game);
-    console.log("game", game)
     return game;
   }
 
@@ -231,7 +321,9 @@ export class GameService {
       event: 'YourTurn',
       data: { user: user }
     })
-    user.doublesCount = 0;
+    user.isDouble = false;
+    console.log("start turn", user.username, " ", game.currentTurn, " ", user.isDouble)
+
     this.userService.save(user);
   }
 
@@ -246,45 +338,72 @@ export class GameService {
     const dable = diceRoll.firstCube === diceRoll.secondCube;
     if (dable) {
       user.doublesCount++;
+      user.isDouble = true;
+    }
+    else {
+      user.isDouble = false;
     }
 
     if (user.doublesCount === 3) {
+      user.doublesCount = 0;
       user.JailTime = 3;
+      user.inJail = true;
       this.eventEmitter.emit('gameService', {
         room: user.id,
         event: 'GoToJail',
       })
-    }else{
-      if(user.JailTime !== 0 ){
-        if(dable){
+      this.eventEmitter.emit('gameService', {
+        room: game.id,
+        event: 'jailChange'
+      })
+    } else {
+      if (user.inJail) {
+        if (dable) {
 
           user.JailTime = 0;
+          user.isDouble = false;
+          user.inJail = false;
           this.eventEmitter.emit('gameService', {
             room: game.id,
             event: 'JailTime',
             data: { JailTime: 0 }
           })
-        }else{
+          this.eventEmitter.emit('gameService', {
+            room: game.id,
+            event: 'jailChange'
+          })
+        } else {
           user.JailTime -= 1;
+          if (user.JailTime <= 0) {
+            user.inJail = false;
+          }
           this.eventEmitter.emit('gameService', {
             room: game.id,
             event: 'JailTime',
             data: { JailTime: user.JailTime }
           })
+          this.eventEmitter.emit('gameService', {
+            room: game.id,
+            event: 'jailChange'
+          })
+
         }
       }
     }
-    console.log('dice rool', game.id, { diceRoll, user: user, dable })
+    await this.gameRepository.save(game);
+    this.userService.save(user);
+
+
+
     this.eventEmitter.emit('gameService', {
       room: game.id,
       event: 'diceRolled',
       data: { diceRoll, user: user, dable }
     })
-
-
-
-    await this.gameRepository.save(game);
-    this.userService.save(user);
+    this.eventEmitter.emit('gameService', {
+      room: game.id,
+      event: 'jailChange'
+    })
   }
 
   async LandOnProperty(game: GameDto, propertyId: Uuid, player: UserDto) {
@@ -316,14 +435,10 @@ export class GameService {
                   this.eventEmitter.emit('gameService', {
                     room: user.id,
                     event: 'Invoice',
-                    data: { type: 'chanceCard', cost: chanceCard.money }
+                    data: { type: 'chanceCard', cost: chanceCard.money },
+                    propertyOwnwerId: player.id
                   })
                 }
-              })
-              this.eventEmitter.emit('gameService', {
-                room: player.id,
-                event: 'Invoice',
-                data: { type: 'chanceCard', cost: -1 * chanceCard.money * (game.users.length - 1) }
               })
               break;
             case ChanceCardTypes.PAY_SINGLE:
@@ -335,9 +450,14 @@ export class GameService {
               break;
             case ChanceCardTypes.GO_TO_JAIL:
               player.JailTime = 3;
+              player.inJail = true;
               this.eventEmitter.emit('gameService', {
                 room: player.id,
                 event: 'GoToJail',
+              })
+              this.eventEmitter.emit('gameService', {
+                room: player.game.id,
+                event: 'jailChange'
               })
               break;
 
@@ -389,10 +509,10 @@ export class GameService {
 
           switch (comunityChestCard?.type) {
             case ComunityChestTypes.MONEY_BY_PROPERTY:
-              console.log(comunityChestCard.propertys)
+
               game.propertys.forEach((property) => {
                 if (property.owner && comunityChestCard.propertys.includes(property.property.name)) {
-                  console.log('masha☻masha☻masha☻masha☻masha☻masha☻masha☻masha☻')
+
                   const userMoney = usersMoney.get(property.owner.id);
                   if (userMoney) {
                     usersMoney.set(property.owner.id, userMoney + comunityChestCard.moneyForProperty)
@@ -403,7 +523,7 @@ export class GameService {
                 }
               })
 
-              
+
               break;
 
             case ComunityChestTypes.MONEY_BY_HOUSE:
@@ -447,24 +567,28 @@ export class GameService {
                 }
               })
 
-             
+
               break;
 
           }
-          console.log(usersMoney)
           usersMoney.forEach((value, key) => {
-                this.eventEmitter.emit('gameService', {
-                  room: key,
-                  event: 'Invoice',
-                  data: { type: "comunityChest", cost: value }
-                })
-              })
+            this.eventEmitter.emit('gameService', {
+              room: key,
+              event: 'Invoice',
+              data: { type: "comunityChest", cost: value }
+            })
+          })
           break;
         case PropertyType.GO_TO_PRISON:
           player.JailTime = 3;
+          player.inJail = true;
           this.eventEmitter.emit('gameService', {
             room: player.id,
             event: 'GoToJail',
+          })
+          this.eventEmitter.emit('gameService', {
+            room: player.game.id,
+            event: 'jailChange'
           })
           break;
         case PropertyType.PRISON:
@@ -554,20 +678,18 @@ export class GameService {
 
 
         }
-        this.eventEmitter.emit('gameService', {
-          room: property.owner.id,
-          event: 'Invoice',
-          data: { type: "rent", cost: sum, propertyType: property.property.type }
-        })
+        if (property.owner.id !== player.id) {
 
-        this.eventEmitter.emit('gameService', {
-          room: player.id,
-          event: 'Invoice',
-          data: { type: "rent", cost: -sum, propertyType: property.property.type }
-        })
+
+
+          this.eventEmitter.emit('gameService', {
+            room: player.id,
+            event: 'Invoice',
+            data: { type: "rent", cost: -sum, propertyOwnwerId: property.owner.id, propertyType: property.property.type }
+          })
+        }
       }
       else {
-        console.log(property)
 
         this.eventEmitter.emit('gameService', {
           room: player.id,
@@ -589,11 +711,10 @@ export class GameService {
       })
     }
     else {
-      console.log('start usr\n', user)
-      console.log(cost)
+
 
       user.money += cost;
-
+      console.log('invoiceComplete')
       this.eventEmitter.emit('gameService', {
         room: user.id,
         event: 'InvoiceComplete',
@@ -606,6 +727,16 @@ export class GameService {
   async BuyProperty(user: UserDto, propertyId: Uuid) {
     const property = await this.propertyService.findOne(propertyId);
     property.owner = user;
+    if(property.property.type == PropertyType.FOURTYPE){
+      const upgrades = user.properties.filter((properti)  => properti.property.type === PropertyType.FOURTYPE).length + 1
+      property.upgradeCount = upgrades;
+      user.properties.forEach((propety) => {
+        if(property.property.type === PropertyType.FOURTYPE){
+          propety.upgradeCount = upgrades;
+          this.propertyService.save(propety);
+        }
+      })
+    }
 
     this.propertyService.save(property);
     this.eventEmitter.emit('gameService', {
@@ -621,10 +752,15 @@ export class GameService {
     if (curentUser.getOutOfJailCard) {
       curentUser.getOutOfJailCard = false;
       curentUser.JailTime = 0;
+      curentUser.inJail = false;
       this.eventEmitter.emit('gameService', {
         room: curentUser.id,
         event: 'JailTime',
         data: { JailTime: curentUser.JailTime }
+      })
+      this.eventEmitter.emit('gameService', {
+        room: curentUser.game.id,
+        event: 'jailChange'
       })
     }
     else {
@@ -646,7 +782,6 @@ export class GameService {
         event: 'error',
         data: { desription: 'you can not upgrade this property' }
       })
-
       return;
     }
 
@@ -664,32 +799,61 @@ export class GameService {
 
   async EndTurn(user: UserDto) {
     let game: GameDto = await this.findOne(user.game.id)
+    console.log("end turn", user.username, " ", game.currentTurn)
     const curentUser = game.users.filter((user) => user.id === game.turnOrder[(game.currentTurn % game.turnOrder.length)])[0];
     if (!curentUser) {
       throw new NotFoundException('user in there')
     }
 
-    if (user.JailTime !== 0) {
+    if (user.inJail) {
       game.currentTurn++;
     }
     else {
-      if (user.doublesCount === 0) {
+      if (!user.isDouble) {
         game.currentTurn++;
+        user.doublesCount = 0;
       }
     }
     await this.gameRepository.save(game)
-    this.StartTurn(user.game)
+    console.log("after end turn ", game.currentTurn)
+    this.userService.save(curentUser);
+    this.userService.save(user);
+
+    this.StartTurn(game)
   }
 
   async GiveUp(game: GameDto, user: UserDto) {
-    game.turnOrder.filter(filteredUser => user.id !== filteredUser);
-    game.currentTurn--;
-    this.eventEmitter.emit('gameService', {
-      room: game.id,
-      event: 'userLost',
-      data: { user }
-    })
+      game.currentTurn = (game.currentTurn % game.turnOrder.length) % (game.turnOrder.length - 1);
+       game.turnOrder = game.turnOrder.filter(filteredUser => user.id !== filteredUser);
+    
+      user.properties.forEach((properti) =>{
+        properti.owner = null;
+        properti.upgradeCount = 0;
+        this.propertyService.save(properti);
+      })
+      this.eventEmitter.emit('gameService', {
+        room: game.id,
+        event: 'userLost',
+        data: { user }
+      })
+      await this.gameRepository.save(game);
+      
+      if(game.turnOrder.length === 1){
+        game.status = GameStatuses.FINISHED;
+        this.eventEmitter.emit('gameService', {
+        room: game.id,
+        event: 'GameFinished'
+      })
 
-    await this.gameRepository.save(game);
+      await this.gameRepository.save(game);
+
+      }
+      else{
+        this.StartTurn(game)
+      }
+
+
+
+    
   }
 }

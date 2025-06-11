@@ -19,43 +19,6 @@ const socketRef = useRef<Socket | null>(null);
 
 
 
-  useEffect(() => {
-  const token = sessionStorage.getItem('token');
-  if (token) {
-    setLatestToken(token);
-  }
-
-  const socket = io('http://localhost:3000', {
-    auth: {
-      token: token || '',
-    },
-  });
-
-  socketRef.current = socket;
-
-  socket.on('connect', () => {
-    console.log('✅ Підключено до сервера');
-    if (!hasReconnectedWithToken.current && token) {
-      // 👇 виконуємо дію один раз після відновлення
-      hasReconnectedWithToken.current = true;
-      // socket.emit('auth_with_token', token) // приклад
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Відключено від сервера');
-  });
-
-  return () => {
-    socket.disconnect();
-  };
-}, []);
-
-
-  const copyText = (id: string) => {
-    const text = document.getElementById(id)?.textContent || '';
-    navigator.clipboard.writeText(text);
-  };
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', margin: '20px' }}>

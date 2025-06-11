@@ -37,6 +37,9 @@ export class PropertyCardEntity extends AbstractEntity<PropertyCardDto>{
     @Column({nullable:false , type: 'varchar'})
     street!: string;
 
+    @Column({nullable:true , type: 'varchar'})
+    color!: string;
+
     @Column({nullable: true , type: 'integer'})
     upgradePrice!: number;
 

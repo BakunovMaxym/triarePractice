@@ -31,6 +31,9 @@ export class UserEntity extends AbstractEntity<UserDto> {
   doublesCount!: number
 
   @Column({nullable:false, type:'boolean', default: false})
+  isDouble!: Boolean;
+
+  @Column({nullable:false, type:'boolean', default: false})
   getOutOfJailCard!: Boolean;
 
   @Column({nullable:false, type:'integer', default: 0})
