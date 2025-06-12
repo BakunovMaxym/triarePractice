@@ -341,19 +341,19 @@ export default function GameUI({ game, currentUser, invoices, setInvoices, socke
                     <div className='your-properties'>
                       <ul>
                         {currentUser.properties.map((propety: PropertyDto) => (
-                          <li key={propety.id} className={ (satesOfYourProperty.get(propety.id) ? ('up') : ('down'))+ (propety.property.type === PropertyType.FOURTYPE ? "four" : '') } onClick={(e) => (ChangeState(propety.id, e))} >
+                          <li key={propety.id} className={(satesOfYourProperty.get(propety.id) ? ('up') : ('down')) + (propety.property.type === PropertyType.FOURTYPE ? "four" : '')} onClick={(e) => (ChangeState(propety.id, e))} >
                             {propety.property.type === PropertyType.FOURTYPE ?
-                            <div className='header' style={{ backgroundColor: propety.property.color }}>
-                              <p>{propety.property.name}</p>
-                              {propety.propertyType === PropertyStatyses.MORTGAGE && <img className='jailPng' src='src/assets/chains.png'></img>}
-                            </div>
-                          :
-                          <div className='header' style={{ backgroundColor: propety.property.color }}>
-                              <p>{propety.property.name}</p>
-                              <p>{propety.property.street}</p>
-                              {propety.propertyType === PropertyStatyses.MORTGAGE && <img className='jailPng' src='src/assets/chains.png'></img>}
-                            </div>
-                          }
+                              <div className='header' style={{ backgroundColor: propety.property.color }}>
+                                <p>{propety.property.name}</p>
+                                {propety.propertyType === PropertyStatyses.MORTGAGE && <img className='jailPng' src='src/assets/chains.png'></img>}
+                              </div>
+                              :
+                              <div className='header' style={{ backgroundColor: propety.property.color }}>
+                                <p>{propety.property.name}</p>
+                                <p>{propety.property.street}</p>
+                                {propety.propertyType === PropertyStatyses.MORTGAGE && <img className='jailPng' src='src/assets/chains.png'></img>}
+                              </div>
+                            }
                             <p>Curent rent: {getCurrentRent(propety)}</p>
                             <p>Upgrade count: {propety.upgradeCount}</p>
                             {propety.property.type === PropertyType.STANDART && <>
@@ -385,7 +385,29 @@ export default function GameUI({ game, currentUser, invoices, setInvoices, socke
             )
             // 
             : (
-              <p> sdajsadj</p>
+              game.turnOrder[0] === currentUser.id ? (
+                <div className='winner'>
+                  <img className='hosticon' src='src/assets/stitch-licks.gif'></img>
+                  <p>прикладай</p>
+                  <img className='hosticon' src='src/assets/capoo-bugcat.gif'></img>
+                  <p>ніжку</p>
+                  
+                  <img className='hosticon' src='src/assets/3f316c2475527b9c9cd264c0d900bc9b.gif'></img>
+                </div>
+
+              ) : (
+                <div className='Winner'>
+                  <img className='hosticon' src='src/assets/crown1.png'></img>
+                  {game.users.map((user) => (
+                    (user.id === game.turnOrder[0] &&
+                      <div className='WinnerCenter'><p>{user.username}</p> <p>${user.money}</p></div>)
+                  ))}
+                  <p></p>
+                </div>
+
+              )
+
+
             )
         )
     )

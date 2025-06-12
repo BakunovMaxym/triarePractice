@@ -26,15 +26,15 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 @Injectable()
 export class GameService {
   BuyOut(id: Uuid, user: UserDto) {
-    const mortgagetProperty = user.properties.filter((property: PropertyDto) =>  property.id === id )[0];
+    const mortgagetProperty = user.properties.filter((property: PropertyDto) => property.id === id)[0];
     if (!mortgagetProperty) {
       throw new NotFoundException()
     }
 
     mortgagetProperty.propertyType = PropertyStatyses.NORMAL;
-    
+
     this.propertyService.save(mortgagetProperty);
-    
+
     this.eventEmitter.emit('gameService', {
       room: user.game.id,
       event: 'MortgageChange'
@@ -45,7 +45,7 @@ export class GameService {
     console.log(id)
     console.log(user.properties)
 
-    const mortgagetProperty = user.properties.filter((property: PropertyDto) =>  property.id === id )[0];
+    const mortgagetProperty = user.properties.filter((property: PropertyDto) => property.id === id)[0];
     if (!mortgagetProperty) {
       throw new NotFoundException()
     }
@@ -59,22 +59,22 @@ export class GameService {
       data: { type: "Morgage", cost: mortgagetProperty.property.price / 2 }
     })
 
-     this.eventEmitter.emit('gameService', {
+    this.eventEmitter.emit('gameService', {
       room: user.game.id,
       event: 'MortgageChange'
     })
 
   }
   DowngradeProperty(id: Uuid, user: UserDto) {
-    const Property = user.properties.filter((property: PropertyDto) =>  property.id === id )[0];
+    const Property = user.properties.filter((property: PropertyDto) => property.id === id)[0];
     if (!Property) {
       throw new NotFoundException()
     }
-    if (Property.upgradeCount > 0){
-      Property.upgradeCount-=1
+    if (Property.upgradeCount > 0) {
+      Property.upgradeCount -= 1
     }
     this.propertyService.save(Property);
-    
+
     this.eventEmitter.emit('gameService', {
       room: user.id,
       event: 'Invoice',
@@ -274,7 +274,7 @@ export class GameService {
 
     const game: GameDto = await this.findOne(gameId);
 
-    
+
     if (game.colection.setings.bostercube) {
       const boosterCube = Math.floor(Math.random() * 6) + 1
       return { firstCube, secondCube, boosterCube }
@@ -604,6 +604,7 @@ export class GameService {
 
         switch (property.property.type) {
           case PropertyType.STANDART:
+          case PropertyType.FOURTYPE:
             switch (property.upgradeCount) {
               case 1:
                 sum = property.property.rentWithOneHouse
@@ -625,35 +626,7 @@ export class GameService {
                 break;
             }
             break;
-          case PropertyType.FOURTYPE:
-            const propertiesForFourType = await this.propertyService.getUserProperties(property.owner.id);
-            propertiesForFourType.forEach((properti) => {
-              if (properti.property.type === PropertyType.FOURTYPE) {
-                sameTypeCount++;
-              }
-            })
 
-            switch (sameTypeCount) {
-              case 1:
-                sum = property.property.rent
-                break;
-              case 2:
-                sum = property.property.rentWithOneHouse
-                break;
-              case 3:
-                sum = property.property.rentWithTwoHouse
-                break;
-              case 4:
-                sum = property.property.rentWithThreeHouse
-                break;
-              default:
-                sum = property.property.rent
-                break;
-            }
-
-
-
-            break;
 
           case PropertyType.DiCETYPE:
             const propertiesForDiceType = await this.propertyService.getUserProperties(property.owner.id);
@@ -727,11 +700,11 @@ export class GameService {
   async BuyProperty(user: UserDto, propertyId: Uuid) {
     const property = await this.propertyService.findOne(propertyId);
     property.owner = user;
-    if(property.property.type == PropertyType.FOURTYPE){
-      const upgrades = user.properties.filter((properti)  => properti.property.type === PropertyType.FOURTYPE).length + 1
+    if (property.property.type == PropertyType.FOURTYPE) {
+      const upgrades = user.properties.filter((properti) => properti.property.type === PropertyType.FOURTYPE).length + 1
       property.upgradeCount = upgrades;
       user.properties.forEach((propety) => {
-        if(property.property.type === PropertyType.FOURTYPE){
+        if (property.property.type === PropertyType.FOURTYPE) {
           propety.upgradeCount = upgrades;
           this.propertyService.save(propety);
         }
@@ -823,37 +796,37 @@ export class GameService {
   }
 
   async GiveUp(game: GameDto, user: UserDto) {
-      game.currentTurn = (game.currentTurn % game.turnOrder.length) % (game.turnOrder.length - 1);
-       game.turnOrder = game.turnOrder.filter(filteredUser => user.id !== filteredUser);
-    
-      user.properties.forEach((properti) =>{
-        properti.owner = null;
-        properti.upgradeCount = 0;
-        this.propertyService.save(properti);
-      })
+    game.currentTurn = (game.currentTurn % game.turnOrder.length) % (game.turnOrder.length - 1);
+    game.turnOrder = game.turnOrder.filter(filteredUser => user.id !== filteredUser);
+
+    user.properties.forEach((properti) => {
+      properti.owner = null;
+      properti.upgradeCount = 0;
+      this.propertyService.save(properti);
+    })
+    this.eventEmitter.emit('gameService', {
+      room: game.id,
+      event: 'userLost',
+      data: { user }
+    })
+    await this.gameRepository.save(game);
+
+    if (game.turnOrder.length === 1) {
+      game.status = GameStatuses.FINISHED;
       this.eventEmitter.emit('gameService', {
-        room: game.id,
-        event: 'userLost',
-        data: { user }
-      })
-      await this.gameRepository.save(game);
-      
-      if(game.turnOrder.length === 1){
-        game.status = GameStatuses.FINISHED;
-        this.eventEmitter.emit('gameService', {
         room: game.id,
         event: 'GameFinished'
       })
 
       await this.gameRepository.save(game);
 
-      }
-      else{
-        this.StartTurn(game)
-      }
+    }
+    else {
+      this.StartTurn(game)
+    }
 
 
 
-    
+
   }
 }

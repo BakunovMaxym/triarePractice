@@ -75,15 +75,18 @@ const App: React.FC = () => {
     }
     console.log('GameId', GameId);
 
-    if (GameId && !latestToken.current) {
-      const username = prompt('Enter your username:');
-      newSocket.emit('joinGame', { username, gameId: GameId });
-      GameId = null; // Clear GameId to prevent re-joining
-      window.removeEventListener('popstate', handleLocationChange);
 
-    }
 
-    newSocket.on('connect', () => log('Підключено до сервера'));
+    newSocket.on('connect', () => {
+      if (GameId && !latestToken.current) {
+        const username = prompt('Enter your username:');
+        newSocket.emit('joinGame', { username, gameId: GameId });
+        console.log("kjnasjkndkjnas")
+        GameId = null; // Clear GameId to prevent re-joining
+        window.removeEventListener('popstate', handleLocationChange);
+        log('Підключено від сервера')
+      }
+    });
     newSocket.on('disconnect', () => log('Відключено від сервера'));
 
     newSocket.on('roomJoined', async (data) => {
