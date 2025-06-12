@@ -338,10 +338,12 @@ export default function GameUI({ game, currentUser, invoices, setInvoices, socke
                       }
                     </>
 
-                    <div className='your-properties'>
+                    
+                  </div>
+                  <div className='your-properties'>
                       <ul>
                         {currentUser.properties.map((propety: PropertyDto) => (
-                          <li key={propety.id} className={(satesOfYourProperty.get(propety.id) ? ('up') : ('down')) + (propety.property.type === PropertyType.FOURTYPE ? "four" : '')} onClick={(e) => (ChangeState(propety.id, e))} >
+                          <div className='listContainel'><li key={propety.id} className={(satesOfYourProperty.get(propety.id) ? ('up') : ('down')) + (propety.property.type === PropertyType.FOURTYPE ? "four" : '')} onClick={(e) => (ChangeState(propety.id, e))} >
                             {propety.property.type === PropertyType.FOURTYPE ?
                               <div className='header' style={{ backgroundColor: propety.property.color }}>
                                 <p>{propety.property.name}</p>
@@ -362,10 +364,10 @@ export default function GameUI({ game, currentUser, invoices, setInvoices, socke
                             </>}
                             <button onClick={() => (MortGage(propety))} disabled={!satesOfYourProperty.get(propety.id)} >{propety.propertyType === PropertyStatyses.NORMAL ? ("Mortgage $" + Math.round(propety.property.price * 0.5)) : ("Buy out $" + Math.round(propety.property.price * 0.55))}</button>
                           </li>
+                          </div>
                         ))}
                       </ul>
                     </div>
-                  </div>
                 </>}
                 {(choosingProperty && !currentUser.inJail) &&
                   <div className='chooseProperty'>
@@ -400,8 +402,13 @@ export default function GameUI({ game, currentUser, invoices, setInvoices, socke
                   <img className='hosticon' src='src/assets/crown1.png'></img>
                   {game.users.map((user) => (
                     (user.id === game.turnOrder[0] &&
-                      <div className='WinnerCenter'><p>{user.username}</p> <p>${user.money}</p></div>)
-                  ))}
+                      <div className='WinnerCenter'><p>{user.username}</p> <p>${user.money}</p>
+                      <button onClick={() =>{
+                        sessionStorage.clear()
+                        window.location.reload();
+                      }}>До меню</button>
+                      </div>)
+              ))}
                   <p></p>
                 </div>
 

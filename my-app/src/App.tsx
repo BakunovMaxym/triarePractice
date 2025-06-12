@@ -54,7 +54,8 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-    console.log("env", import.meta.env.VITE_IP);
+    
+
     latestToken.current = sessionStorage.getItem('token');
     const handleLocationChange = () => {
       setLocationInfo({
@@ -460,6 +461,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // console.log('Game updated:', game);
+
   }, [game]);
 
 
