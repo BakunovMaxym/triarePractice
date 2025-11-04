@@ -9,6 +9,8 @@ import { TaskFilesSection } from '../components/Task/TaskFilesSection';
 import { TaskCommentsSection } from '../components/Task/TaskCommentsSection';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 export function UserTaskDetailPage({ token, isTeacher }: { token: string; isTeacher: boolean }) {
     const { taskId, userId, userTaskId } = useParams<{ taskId?: string; userId?: string; userTaskId?: string }>();
     const navigate = useNavigate();
@@ -24,9 +26,9 @@ export function UserTaskDetailPage({ token, isTeacher }: { token: string; isTeac
         try {
             let url = '';
             if (userTaskId) {
-                url = `http://localhost:3000/user-task/${userTaskId}`;
+                url = `${API_URL}/user-task/${userTaskId}`;
             } else if (taskId && userId) {
-                url = `http://localhost:3000/user-task/${taskId}/${userId}`;
+                url = `${API_URL}/user-task/${taskId}/${userId}`;
             } else {
                 throw new Error('Хибний маршрут');
             }

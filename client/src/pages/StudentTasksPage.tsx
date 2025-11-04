@@ -24,6 +24,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 export enum TaskStatus {
     ASSIGNED = 'Призначено',
     ACCEPTED = 'Прийнято',
@@ -80,7 +82,7 @@ export function StudentTasksPage({ token }: { token: string }) {
     useEffect(() => {
         if (!courseId || !studentId) return;
 
-        fetch(`http://localhost:3000/course/${courseId}/user-task/student/${studentId}`, {
+        fetch(`${API_URL}/course/${courseId}/user-task/student/${studentId}`, {
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,

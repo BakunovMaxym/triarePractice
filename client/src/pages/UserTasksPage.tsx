@@ -21,6 +21,8 @@ import { ExpandMore, ExpandLess, ArrowBack } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 export enum TaskStatus {
     ASSIGNED = 'Призначено',
     ACCEPTED = 'Прийнято',
@@ -76,7 +78,7 @@ export function TaskUserTasksPage({ token }: { token: string }) {
 
     useEffect(() => {
         if (!taskId) return;
-        fetch(`http://localhost:3000/task/${taskId}/user-tasks`, {
+        fetch(`${API_URL}/task/${taskId}/user-tasks`, {
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,

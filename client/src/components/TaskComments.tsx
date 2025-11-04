@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+const API_URL = process.env.REACT_APP_API_URL;
 
 type Comment = {
   id: string;
@@ -26,7 +27,7 @@ export function TaskComments({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:3000/comments/task/${taskId}`, {
+      const res = await fetch(`${API_URL}/comments/task/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
@@ -54,7 +55,7 @@ export function TaskComments({
     setError(null);
     try {
       const res = await fetch(
-        `http://localhost:3000/comments/comment/${taskId}`,
+        `${API_URL}/comments/comment/${taskId}`,
         {
           method: 'POST',
           headers: {
@@ -126,4 +127,4 @@ export function TaskComments({
   );
 }
 
-export {}
+export { }

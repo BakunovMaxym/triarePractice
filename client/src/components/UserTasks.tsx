@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getUserTasks, createUserTask, getTasks } from '../api';
+const API_URL = process.env.REACT_APP_API_URL;
 
 type UserTask = {
   id: string;
@@ -46,7 +47,7 @@ export function UserTasks({ token, userId }: { token: string; userId: string }) 
       // Assign the task to the user
       await createUserTask(token, { userId, taskId });
       // Fetch the full task details (single task endpoint)
-      const res = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+      const res = await fetch(`${API_URL}/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Не вдалося отримати деталі завдання');
@@ -110,4 +111,4 @@ export function UserTasks({ token, userId }: { token: string; userId: string }) 
   );
 }
 
-export {}
+export { }

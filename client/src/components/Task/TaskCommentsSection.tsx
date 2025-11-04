@@ -2,6 +2,8 @@ import { Box, Paper, Stack, Typography, IconButton, TextField, Button } from '@m
 import { Delete } from '@mui/icons-material';
 import { useState, FormEvent } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 export function TaskCommentsSection({ comments, token, taskId, userId, refresh }: any) {
     const [newComment, setNewComment] = useState('');
     const [posting, setPosting] = useState(false);
@@ -9,7 +11,7 @@ export function TaskCommentsSection({ comments, token, taskId, userId, refresh }
     const handleCommentSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setPosting(true);
-        await fetch(`http://localhost:3000/comments/comment/${taskId}`, {
+        await fetch(`${API_URL}/comments/comment/${taskId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ content: newComment }),

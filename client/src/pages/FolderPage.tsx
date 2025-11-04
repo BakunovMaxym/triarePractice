@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { deleteFolder } from '../api';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 type Course = {
   id: string;
   name: string;
@@ -39,7 +41,7 @@ export function FolderPage({
   useEffect(() => {
     const fetchFolder = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/folder/${folderId}`, {
+        const res = await fetch(`${API_URL}/folder/${folderId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -66,7 +68,7 @@ export function FolderPage({
     setCreating(true);
     setCreateError(null);
     try {
-      const res = await fetch(`http://localhost:3000/folder/${folderId}/add-child`, {
+      const res = await fetch(`${API_URL}/folder/${folderId}/add-child`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +96,7 @@ export function FolderPage({
     setMovingCourseId(courseId);
     setMoveError(null);
     try {
-      const res = await fetch(`http://localhost:3000/folder/${targetFolderId}/add-child`, {
+      const res = await fetch(`${API_URL}/folder/${targetFolderId}/add-child`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +121,7 @@ export function FolderPage({
       await deleteFolder(token, childFolderId);
       // Оновити поточну папку після видалення
       if (folderId) {
-        const res = await fetch(`http://localhost:3000/folder/${folderId}`, {
+        const res = await fetch(`${API_URL}/folder/${folderId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

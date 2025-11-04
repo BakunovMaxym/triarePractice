@@ -10,6 +10,8 @@ import {
 } from '@mui/material';
 import { Grade, Block } from '@mui/icons-material';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 interface Props {
     token: string;
     userTaskId: string;
@@ -29,7 +31,7 @@ export function TaskActionsTeacher({ token, userTaskId, onUpdated }: Props) {
         setGrading(true);
         try {
             const res = await fetch(
-                `http://localhost:3000/user-task/${userTaskId}/grade`,
+                `${API_URL}/user-task/${userTaskId}/grade`,
                 {
                     method: 'PATCH',
                     headers: {
@@ -53,7 +55,7 @@ export function TaskActionsTeacher({ token, userTaskId, onUpdated }: Props) {
         setRejecting(true);
         try {
             const res = await fetch(
-                `http://localhost:3000/user-task/${userTaskId}/reject`,
+                `${API_URL}/user-task/${userTaskId}/reject`,
                 { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }
             );
             if (!res.ok) throw new Error(`Сервер ${res.status}`);

@@ -9,6 +9,8 @@ import {
 import { Upload, Replay } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 type Props = {
     token: string;
     userTaskId: string;
@@ -16,7 +18,6 @@ type Props = {
     accepted: boolean;
     completed: boolean;
     onUpdated: () => void;
-    /** опційно: якщо передано — викликаємо його з newId; інакше робимо navigate усередині */
     onReaccept?: (newId: string) => void;
 };
 
@@ -42,7 +43,7 @@ export function TaskActionsStudent({
     const handleAccept = async () => {
         setError(null);
         try {
-            const res = await fetch(`http://localhost:3000/user-task/${userTaskId}/accept`, {
+            const res = await fetch(`${API_URL}/user-task/${userTaskId}/accept`, {
                 method: 'PATCH',
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -56,7 +57,7 @@ export function TaskActionsStudent({
     const handleReaccept = async () => {
         setError(null);
         try {
-            const res = await fetch(`http://localhost:3000/task/${taskId}/user-tasks`, {
+            const res = await fetch(`${API_URL}/task/${taskId}/user-tasks`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -77,7 +78,7 @@ export function TaskActionsStudent({
         try {
             const fd = new FormData();
             Array.from(newFiles).forEach(f => fd.append('file', f));
-            const res = await fetch(`http://localhost:3000/user-task/${userTaskId}/complete`, {
+            const res = await fetch(`${API_URL}/user-task/${userTaskId}/complete`, {
                 method: 'PATCH',
                 headers: { Authorization: `Bearer ${token}` },
                 body: fd,

@@ -27,7 +27,8 @@ import { StudentTasksPage } from './pages/StudentTasksPage';
 import { UserTaskDetailPage } from './pages/UserTaskDetailPage';
 import { AcceptedUserTasksPage } from './pages/AcceptedUserTasksPage';
 
-// ---------- AnimatedRoutes ----------
+const API_URL = process.env.REACT_APP_API_URL;
+
 function AnimatedRoutes({
     token,
     userId,
@@ -110,7 +111,6 @@ function AnimatedRoutes({
     );
 }
 
-// ---------- AppContent ----------
 function AppContent() {
     const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
     const [userId, setUserId] = useState<string | null>(() => localStorage.getItem('userId'));
@@ -142,7 +142,7 @@ function AppContent() {
 
     const handleJoinCourseAsStudent = async (courseId: string) => {
         if (!token) throw new Error('Не авторизовано');
-        const res = await fetch(`http://localhost:3000/course/${courseId}/as`, {
+        const res = await fetch(`${API_URL}/course/${courseId}/as`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -152,7 +152,7 @@ function AppContent() {
 
     const handleJoinCourseAsTeacher = async (courseId: string) => {
         if (!token) throw new Error('Не авторизовано');
-        const res = await fetch(`http://localhost:3000/course/${courseId}/at/`, {
+        const res = await fetch(`${API_URL}/course/${courseId}/at/`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -195,7 +195,7 @@ function AppContent() {
                     onJoinCourseAsStudent={handleJoinCourseAsStudent}
                     onJoinCourseAsTeacher={handleJoinCourseAsTeacher}
                     isTeacher={isTeacher}
-                    scrollContainerRef={scrollRef} // ← додаємо
+                    scrollContainerRef={scrollRef}
                 />
 
                 <Box

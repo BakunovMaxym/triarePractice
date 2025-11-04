@@ -14,6 +14,8 @@ import { FolderSection } from './FolderSection';
 import { CourseGrid } from './CourseGrid';
 import { FolderPopup } from '../FolderPopup';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 interface Filters {
     ownerId: string;
     name: string;
@@ -81,7 +83,7 @@ export function CourseList({ token, onSelectCourse, isTeacher, userId }: any) {
 
     const fetchCourses = useCallback(() => {
         const query = buildQuery(filters);
-        const url = `http://localhost:3000/course${query ? '?' + query : ''}`;
+        const url = `${API_URL}/course${query ? '?' + query : ''}`;
 
         Promise.all([getCourses(token, url), getFolders(token)])
             .then(([data, foldersFromApi]) => {

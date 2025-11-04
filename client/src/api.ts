@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = process.env.REACT_APP_API_URL;
 
 export interface CreatedTask {
   id: string;
@@ -173,12 +173,10 @@ export async function getFolders(token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch folders');
-  // Просто повертаємо всі папки, які приходять з бекенду
   return await res.json();
 }
 
 export async function createFolder(token: string, name: string, ownerId: string, /*parentFolderId?: string,*/ courseIds?: string[]) {
-  // Ensure all required fields are present and types are correct
   const body: any = { name, ownerId, courseIds };
 
   console.log('Request Body:', body);
@@ -195,7 +193,6 @@ export async function createFolder(token: string, name: string, ownerId: string,
   });
   console.log(res)
   if (!res.ok) {
-    // Try to extract error details for debugging
     let errorMsg = 'Failed to create folder';
     try {
       const err = await res.json();
@@ -246,12 +243,11 @@ export async function deleteFolder(token: string, folderId: string) {
     },
   });
   if (!res.ok) throw new Error('Failed to delete folder');
-  // Повертаємо пустий об'єкт, бо бекенд повертає 204 No Content
   return {};
 }
 
 export async function joinCourseAsStudent(token: string, courseId: string) {
-  const res = await fetch(`http://localhost:3000/course/${courseId}/join`, {
+  const res = await fetch(`${API_URL}/course/${courseId}/join`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -260,7 +256,7 @@ export async function joinCourseAsStudent(token: string, courseId: string) {
 }
 
 export async function joinCourseAsTeacher(token: string, courseId: string) {
-  const res = await fetch(`http://localhost:3000/course/${courseId}/at/`, {
+  const res = await fetch(`${API_URL}/course/${courseId}/at/`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });

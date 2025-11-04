@@ -89,9 +89,17 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
   const port = configService.appConfig.port;
 
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://твій-домен-на-рендері.onrender.com',
+    ],
+    credentials: true,
+  });
+
   // if ((<any>import.meta).env.PROD) {
-    await app.listen(port);
-    console.info(`server running on ${await app.getUrl()}`);
+  await app.listen(port);
+  console.info(`server running on ${await app.getUrl()}`);
   // }
 
   return app;

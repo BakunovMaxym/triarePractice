@@ -12,6 +12,8 @@ import {
 import { Delete, Edit, Save, Cancel } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 interface Props {
     token: string;
     task: any;
@@ -24,7 +26,6 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
     const [name, setName] = useState(task.name);
     const [textContent, setTextContent] = useState(task.textContent);
 
-    // 🧩 Тепер зберігаємо масив File[] для гнучкості
     const [newFiles, setNewFiles] = useState<File[]>([]);
     const [existingFiles, setExistingFiles] = useState(task.fileContent || []);
     const [toRemove, setToRemove] = useState<Set<string>>(new Set());
@@ -32,7 +33,6 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // 🔁 Синхронізація при оновленні task
     useEffect(() => {
         setExistingFiles(task.fileContent || []);
         setName(task.name);
@@ -40,23 +40,19 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
         setNewFiles([]);
     }, [task]);
 
-    // 📂 Додати нові файли
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files ? Array.from(e.target.files) : [];
         if (files.length === 0) return;
 
-        // об'єднуємо без дублікатів
         const unique = Array.from(new Map([...newFiles, ...files].map(f => [f.name, f])).values());
         setNewFiles(unique);
-        e.target.value = ''; // дозволяє вибирати ті самі файли повторно
+        e.target.value = '';
     };
 
-    // ❌ Видалити (відкріпити) новий файл
     const handleRemoveNewFile = (index: number) => {
         setNewFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    // 🗑️ Позначити існуючий файл на видалення
     const toggleRemove = (fileId: string) => {
         setToRemove((prev) => {
             const newSet = new Set(prev);
@@ -65,7 +61,6 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
         });
     };
 
-    // 💾 Зберегти зміни
     const handleSave = async (e: FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -79,10 +74,9 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
             const remain = existingFiles.filter((f: any) => !toRemove.has(f.fileId));
             formData.append('fileContents', JSON.stringify(remain));
 
-            // додаємо нові файли
             newFiles.forEach((file) => formData.append('file', file));
 
-            const res = await fetch(`http://localhost:3000/tasks/${task.id}`, {
+            const res = await fetch(`${API_URL}/tasks/${task.id}`, {
                 method: 'PATCH',
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
@@ -105,11 +99,10 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
         }
     };
 
-    // 🗑️ Видалити завдання
     const handleDelete = async () => {
         if (!window.confirm('Ви справді хочете видалити це завдання?')) return;
         try {
-            const res = await fetch(`http://localhost:3000/tasks/${task.id}`, {
+            const res = await fetch(`${API_URL}/tasks/${task.id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -169,7 +162,6 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
                             onChange={(e) => setTextContent(e.target.value)}
                         />
 
-                        {/* Існуючі файли */}
                         <Box>
                             <Typography variant="subtitle2">Прикріплені файли:</Typography>
                             {existingFiles.length ? (
@@ -205,7 +197,6 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
                             )}
                         </Box>
 
-                        {/* Нові файли */}
                         <Box>
                             <Button component="label" variant="outlined">
                                 Додати файли
@@ -242,7 +233,6 @@ export function TaskManageActions({ token, task, onUpdated, onDeleted }: Props) 
                             )}
                         </Box>
 
-                        {/* Кнопки дій */}
                         <Stack direction="row" spacing={2}>
                             <Button
                                 variant="contained"

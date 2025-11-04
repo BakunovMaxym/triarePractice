@@ -6,6 +6,8 @@ import { FolderList } from './FolderList';
 import { CourseItem } from './CourseItem';
 import { useTheme } from '@emotion/react';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 interface UserOption { id: string; label: string; }
 
 type Course = any;
@@ -87,7 +89,7 @@ export function CourseList({
 
   const fetchCourses = useCallback(() => {
     const query = buildQuery(filters);
-    const url = `http://localhost:3000/course${query ? '?' + query : ''}`;
+    const url = `${API_URL}/course${query ? '?' + query : ''}`;
     console.log(url);
     Promise.all([getCourses(token, url), getFolders(token)]).then(([data, foldersFromApi]) => {
       setFolders(foldersFromApi);

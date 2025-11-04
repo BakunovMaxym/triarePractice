@@ -8,6 +8,7 @@ import { TaskCommentsSection } from '../components/Task/TaskCommentsSection';
 import { TaskManageActions } from '../components/Task/TaskManageActions';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+const API_URL = process.env.REACT_APP_API_URL;
 
 export function TaskDetailPage({ token, userId, isTeacher }: any) {
   const { taskId } = useParams();
@@ -18,7 +19,7 @@ export function TaskDetailPage({ token, userId, isTeacher }: any) {
   const theme = useTheme();
 
   const fetchTask = async () => {
-    const res = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+    const res = await fetch(`${API_URL}/tasks/${taskId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
