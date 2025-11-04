@@ -92,7 +92,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'https://твій-домен-на-рендері.onrender.com',
+      'https://triare-practice-hs1tnr2s9-bakunovmaxyms-projects.vercel.app',
     ],
     credentials: true,
   });
