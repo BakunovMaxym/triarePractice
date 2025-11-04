@@ -204,7 +204,6 @@ export function FolderPage({
 
       {folder.childCourses.length > 0 && (
         <div>
-          <h3>Курси:</h3>
           {moveError && <div style={{ color: 'red', marginBottom: 8 }}>{moveError}</div>}
           <div style={{
             display: 'grid',

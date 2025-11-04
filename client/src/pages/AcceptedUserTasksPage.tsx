@@ -1,24 +1,47 @@
 import React, { useEffect, useState } from 'react';
+import {
+    Box,
+    Typography,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
+    Paper,
+    Collapse,
+    IconButton,
+    CircularProgress,
+    useTheme,
+    Button,
+    TableContainer,
+    Stack,
+    Chip,
+    useMediaQuery,
+} from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 export enum TaskStatus {
-    ASSIGNED = "Призначено",
-    ACCEPTED = "Прийнято",
-    SUBMITED = "Здано",
-    EXPIRED = "Протерміновано",
-    SUBMITED_LATE = "Здано з запізненням",
-    GRADED = "Оцінено",
-    REJECTED = "Відхилено"
+    ASSIGNED = 'Призначено',
+    ACCEPTED = 'Прийнято',
+    SUBMITED = 'Здано',
+    EXPIRED = 'Протерміновано',
+    SUBMITED_LATE = 'Здано з запізненням',
+    GRADED = 'Оцінено',
+    REJECTED = 'Відхилено',
 }
 
-const statusStyles: Record<TaskStatus, React.CSSProperties> = {
-    [TaskStatus.ASSIGNED]: { color: '#2563eb', backgroundColor: '#dbeafe' },
-    [TaskStatus.ACCEPTED]: { color: '#16a34a', backgroundColor: '#dcfce7' },
-    [TaskStatus.SUBMITED]: { color: '#4f46e5', backgroundColor: '#e0e7ff' },
-    [TaskStatus.EXPIRED]: { color: '#dc2626', backgroundColor: '#fee2e2' },
-    [TaskStatus.SUBMITED_LATE]: { color: '#ca8a04', backgroundColor: '#fef9c3' },
-    [TaskStatus.GRADED]: { color: '#0d9488', backgroundColor: '#ccfbf1' },
-    [TaskStatus.REJECTED]: { color: '#52525b', backgroundColor: '#e5e7eb' },
+const statusStyles: Record<TaskStatus, { color: string; bg: string }> = {
+    [TaskStatus.ASSIGNED]: { color: '#2563eb', bg: '#dbeafe' },
+    [TaskStatus.ACCEPTED]: { color: '#16a34a', bg: '#dcfce7' },
+    [TaskStatus.SUBMITED]: { color: '#4f46e5', bg: '#e0e7ff' },
+    [TaskStatus.EXPIRED]: { color: '#dc2626', bg: '#fee2e2' },
+    [TaskStatus.SUBMITED_LATE]: { color: '#ca8a04', bg: '#fef9c3' },
+    [TaskStatus.GRADED]: { color: '#0d9488', bg: '#ccfbf1' },
+    [TaskStatus.REJECTED]: { color: '#52525b', bg: '#e5e7eb' },
 };
 
 interface Student {
@@ -47,6 +70,8 @@ interface UserTask {
 export function AcceptedUserTasksPage({ token }: { token: string }) {
     const { studentId } = useParams<{ studentId: string }>();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [groups, setGroups] = useState<Record<string, UserTask[]>>({});
     const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
@@ -58,35 +83,32 @@ export function AcceptedUserTasksPage({ token }: { token: string }) {
         fetch(`http://localhost:3000/user-task/student/${studentId}/accepted`, {
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
             },
         })
-            .then(res => {
+            .then((res) => {
                 if (!res.ok) throw new Error(`Помилка ${res.status}`);
                 return res.json() as Promise<UserTask[]>;
             })
-            .then(tasksObj => {
-    const grouped: Record<string, UserTask[]> = {};
-    const allTasks = Object.values(tasksObj).flat();
-
-    for (const task of allTasks) {
-        const courseName = task.task.courseName;
-        if (!grouped[courseName]) grouped[courseName] = [];
-        grouped[courseName].push(task);
-    }
-
-    setGroups(grouped);
-    setLoading(false);
-})
-
-            .catch(err => {
+            .then((tasksObj) => {
+                const grouped: Record<string, UserTask[]> = {};
+                const allTasks = Object.values(tasksObj).flat();
+                for (const task of allTasks) {
+                    const courseName = task.task.courseName;
+                    if (!grouped[courseName]) grouped[courseName] = [];
+                    grouped[courseName].push(task);
+                }
+                setGroups(grouped);
+                setLoading(false);
+            })
+            .catch((err) => {
                 setError(err.message);
                 setLoading(false);
             });
     }, [studentId, token]);
 
     const toggleCourse = (courseName: string) => {
-        setExpandedCourses(prev => {
+        setExpandedCourses((prev) => {
             const newSet = new Set(prev);
             if (newSet.has(courseName)) newSet.delete(courseName);
             else newSet.add(courseName);
@@ -94,107 +116,287 @@ export function AcceptedUserTasksPage({ token }: { token: string }) {
         });
     };
 
-    if (loading) return <div style={{ padding: '1rem', textAlign: 'center' }}>Завантаження…</div>;
-    if (error) return <div style={{ padding: '1rem', color: '#dc2626' }}>Помилка: {error}</div>;
-    if (Object.keys(groups).length === 0) return <div style={{ padding: '1rem' }}>Завдання відсутні</div>;
+    if (loading)
+        return (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+                <CircularProgress color="primary" />
+            </Box>
+        );
+
+    if (error)
+        return (
+            <Typography color="error" sx={{ p: 4 }}>
+                Помилка: {error}
+            </Typography>
+        );
+
+    if (Object.keys(groups).length === 0)
+        return (
+            <Typography sx={{ p: 4 }} color="text.secondary">
+                Завдання відсутні
+            </Typography>
+        );
 
     return (
-        <div style={{ maxWidth: '64rem', margin: '0 auto', padding: '1rem' }}>
-            <button onClick={() => navigate(-1)} style={{ marginBottom: '1rem' }}>← Назад</button>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
-                Завдання студента
-            </h1>
+        <Box
+            component={motion.div}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            sx={{
+                maxWidth: 1000,
+                mx: 'auto',
+                my: 4,
+                px: { xs: 0, sm: 3 },
+            }}
+        >
+            <Button
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate(-1)}
+                sx={{
+                    mb: 2,
+                    color: theme.palette.text.primary,
+                    '&:hover': {
+                        color: theme.palette.primary.main,
+                    },
+                }}
+            >
+                Назад
+            </Button>
 
-            <div style={{ overflow: 'hidden', borderRadius: '0.5rem', border: '1px solid #d1d5db' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ backgroundColor: '#f9fafb' }}>
-                        <tr>
-                            <th style={thStyle}>Курс</th>
-                            <th style={{ padding: '0.5rem 2rem 0.5rem 4rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 500, color: '#374151', }}>Дедлайн</th>
-                            <th style={thStyle}>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Object.entries(groups).map(([courseName, tasks]) => {
-                            const first = tasks[0];
-                            const isOpen = expandedCourses.has(courseName);
-                            return (
-                                <React.Fragment key={courseName}>
-                                    <tr
-                                        onClick={() => toggleCourse(courseName)}
-                                        style={{ cursor: 'pointer', fontWeight: 500, borderTop: "solid", borderWidth: 1 }}
-                                        onMouseOver={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-                                        onMouseOut={e => (e.currentTarget.style.backgroundColor = '#ffffff')}
-                                    >
-                                        <td style={tdStyle}>
-                                            {courseName}
-                                            <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
-                                                ({tasks.length})
-                                            </span>
-                                        </td>
-                                        <td style={tdStyle}></td>
-                                        <td style={tdStyle}>
-                                            <span style={{
-                                                ...statusStyles[first.status],
-                                                display: 'inline-block',
-                                                padding: '0.25rem 0.5rem',
-                                                borderRadius: '9999px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 600,
-                                            }}>
-                                                {first.status}
-                                            </span>
-                                        </td>
-                                    </tr>
+            <Typography
+                variant="h5"
+                fontWeight={700}
+                sx={{
+                    mb: 3,
+                    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                }}
+            >
+                Прийняті завдання студента
+            </Typography>
 
-                                    {isOpen && tasks.map(ut => (
-                                        <tr
-                                            key={ut.id}
-                                            onClick={() => navigate(`/user-task/${ut.id}`)}
-                                            style={{ cursor: 'pointer', backgroundColor: '#fafafa' }}
-                                            onMouseOver={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-                                            onMouseOut={e => (e.currentTarget.style.backgroundColor = '#fafafa')}
+            {!isMobile ? (
+                // 💻 DESKTOP: TABLE VIEW
+                <TableContainer
+                    component={Paper}
+                    elevation={3}
+                    sx={{
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        background:
+                            theme.palette.mode === 'light'
+                                ? 'rgba(255,255,255,0.9)'
+                                : 'rgba(25,25,28,0.9)',
+                        backdropFilter: 'blur(6px)',
+                    }}
+                >
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 600 }}>Курс</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Дедлайн</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Статус</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {Object.entries(groups).map(([courseName, tasks]) => {
+                                const first = tasks[0];
+                                const isOpen = expandedCourses.has(courseName);
+                                return (
+                                    <React.Fragment key={courseName}>
+                                        <TableRow
+                                            hover
+                                            onClick={() => toggleCourse(courseName)}
+                                            sx={{
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.3s',
+                                                '&:hover': { backgroundColor: theme.palette.action.hover },
+                                            }}
                                         >
-                                            <td style={{ padding: '0.5rem 0.1rem 0.5rem 1.5rem', fontSize: '0.875rem' }}>
-                                                <b>Завдання:</b> {ut.task.name}
-                                            </td>
-                                            <td style={{ padding: '0.5rem 0rem 0.5rem 4rem', fontSize: '0.875rem' }}>
-                                                {ut.deadline ? new Date(ut.deadline).toLocaleString('uk-UA') : '—'}
-                                            </td>
-                                            <td style={{
-                                                ...statusStyles[ut.status],
-                                                display: 'inline-block',
-                                                padding: '0.25rem 0.5rem',
-                                                borderRadius: '9999px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 600,
-                                                marginLeft: 30,
-                                            }}>
-                                                {ut.status}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </React.Fragment>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Typography fontWeight={600}>{courseName}</Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        ({tasks.length})
+                                                    </Typography>
+                                                    <IconButton size="small" sx={{ ml: 'auto' }}>
+                                                        {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                                    </IconButton>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell />
+                                            <TableCell>
+                                                <Chip
+                                                    label={first.status}
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        fontSize: '0.75rem',
+                                                        bgcolor: statusStyles[first.status].bg,
+                                                        color: statusStyles[first.status].color,
+                                                    }}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+
+                                        <AnimatePresence>
+                                            {isOpen && (
+                                                <TableRow
+                                                    component={motion.tr}
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                >
+                                                    <TableCell colSpan={3} sx={{ p: 0 }}>
+                                                        <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                                                            {tasks.map((ut) => (
+                                                                <Box
+                                                                    key={ut.id}
+                                                                    sx={{
+                                                                        px: 4,
+                                                                        py: 1.5,
+                                                                        borderTop: `1px solid ${theme.palette.divider}`,
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between',
+                                                                        '&:hover': { backgroundColor: theme.palette.action.hover },
+                                                                    }}
+                                                                    onClick={() => navigate(`/user-task/${ut.id}`)}
+                                                                >
+                                                                    <Box>
+                                                                        <Typography fontWeight={600}>
+                                                                            {ut.task.name}
+                                                                        </Typography>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            Дедлайн:{' '}
+                                                                            {ut.deadline
+                                                                                ? new Date(ut.deadline).toLocaleString('uk-UA')
+                                                                                : '—'}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                    <Chip
+                                                                        label={ut.status}
+                                                                        sx={{
+                                                                            fontWeight: 600,
+                                                                            fontSize: '0.75rem',
+                                                                            bgcolor: statusStyles[ut.status].bg,
+                                                                            color: statusStyles[ut.status].color,
+                                                                        }}
+                                                                    />
+                                                                </Box>
+                                                            ))}
+                                                        </Collapse>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </AnimatePresence>
+                                    </React.Fragment>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            ) : (
+                // 📱 MOBILE: CARD VIEW
+                <Stack spacing={2}>
+                    {Object.entries(groups).map(([courseName, tasks]) => {
+                        const first = tasks[0];
+                        const isOpen = expandedCourses.has(courseName);
+                        return (
+                            <Paper
+                                key={courseName}
+                                sx={{
+                                    p: 2,
+                                    borderRadius: 3,
+                                    background:
+                                        theme.palette.mode === 'light'
+                                            ? 'rgba(255,255,255,0.95)'
+                                            : 'rgba(25,25,28,0.95)',
+                                }}
+                            >
+                                <Stack
+                                    direction="row"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                    onClick={() => toggleCourse(courseName)}
+                                    sx={{ cursor: 'pointer' }}
+                                >
+                                    <Typography fontWeight={600}>{courseName}</Typography>
+                                    <IconButton size="small" color="inherit">
+                                        {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                    </IconButton>
+                                </Stack>
+
+                                <Stack direction="row" spacing={1} mt={1} alignItems="center">
+                                    <Chip
+                                        label={first.status}
+                                        size="small"
+                                        sx={{
+                                            fontSize: '0.7rem',
+                                            fontWeight: 600,
+                                            bgcolor: statusStyles[first.status].bg,
+                                            color: statusStyles[first.status].color,
+                                        }}
+                                    />
+                                    <Typography variant="body2" color="text.secondary">
+                                        Завдань: {tasks.length}
+                                    </Typography>
+                                </Stack>
+
+                                <AnimatePresence>
+                                    {isOpen && (
+                                        <Box
+                                            component={motion.div}
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            mt={1}
+                                        >
+                                            {tasks.map((ut) => (
+                                                <Box
+                                                    key={ut.id}
+                                                    onClick={() => navigate(`/user-task/${ut.id}`)}
+                                                    sx={{
+                                                        p: 1.2,
+                                                        mt: 0.7,
+                                                        borderRadius: 2,
+                                                        bgcolor:
+                                                            theme.palette.mode === 'light'
+                                                                ? 'rgba(240,247,255,0.6)'
+                                                                : 'rgba(255,255,255,0.06)',
+                                                        '&:hover': {
+                                                            bgcolor:
+                                                                theme.palette.mode === 'light'
+                                                                    ? 'rgba(66,165,245,0.15)'
+                                                                    : 'rgba(255,255,255,0.1)',
+                                                        },
+                                                    }}
+                                                >
+                                                    <Typography variant="body2" fontWeight={600}>
+                                                        {ut.task.name}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Дедлайн:{' '}
+                                                        {ut.deadline
+                                                            ? new Date(ut.deadline).toLocaleString('uk-UA')
+                                                            : '—'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Статус: {ut.status}
+                                                    </Typography>
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    )}
+                                </AnimatePresence>
+                            </Paper>
+                        );
+                    })}
+                </Stack>
+            )}
+        </Box>
     );
 }
-
-
-const thStyle: React.CSSProperties = {
-    padding: '0.5rem 1rem',
-    textAlign: 'left',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    color: '#374151',
-};
-
-const tdStyle: React.CSSProperties = {
-    padding: '0.75rem 1rem',
-    fontSize: '0.875rem',
-    color: '#111827',
-};

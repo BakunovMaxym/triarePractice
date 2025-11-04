@@ -4,6 +4,7 @@ import { getCourses, getFolders, createFolder, moveCourseToFolder, deleteFolder 
 import { CreateCourseForm } from './CreateCourseForm';
 import { FolderList } from './FolderList';
 import { CourseItem } from './CourseItem';
+import { useTheme } from '@emotion/react';
 
 interface UserOption { id: string; label: string; }
 
@@ -59,6 +60,7 @@ export function CourseList({
 
   const navigate = useNavigate();
   const { courseId, folderId } = useParams();
+  const theme = useTheme();
 
   const fetchFolders = useCallback(() => {
     getFolders(token)
@@ -67,6 +69,7 @@ export function CourseList({
       })
       .catch(() => setFolders([]));
   }, [token]);
+
 
 
   const getCourseIdsInFolders = (foldersList: any[]) => {
@@ -223,7 +226,6 @@ export function CourseList({
 
   return (
     <div>
-      <h2>Курси</h2>
       {isTeacher && <CreateCourseForm token={token} onCreated={fetchCourses} />}
       {error && <div style={{ color: 'red' }}>{error}</div>}
 
@@ -256,7 +258,6 @@ export function CourseList({
             alignItems: 'flex-end',
           }}
         >
-          {/* Власник */}
           <div style={{ flex: '1 1 200px' }}>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
               Власник
@@ -281,7 +282,6 @@ export function CourseList({
             </datalist>
           </div>
 
-          {/* Викладач */}
           <div style={{ flex: '1 1 200px' }}>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
               Викладач
@@ -306,7 +306,6 @@ export function CourseList({
             </datalist>
           </div>
 
-          {/* Категорія */}
           <div style={{ flex: '1 1 200px' }}>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
               Категорія
@@ -331,7 +330,6 @@ export function CourseList({
             </datalist>
           </div>
 
-          {/* Підкатегорія */}
           <div style={{ flex: '1 1 200px' }}>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
               Підкатегорія
@@ -356,7 +354,6 @@ export function CourseList({
             </datalist>
           </div>
 
-          {/* Кнопки */}
           <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
             <button
               onClick={applyFilters}
@@ -395,24 +392,6 @@ export function CourseList({
           </div>
         </div>
       </div>
-
-
-      {/* <div style={{ margin: '1rem 0', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {Object.entries(filters).map(([key, value]) => (
-          <div key={key}>
-            <label style={{ marginRight: 4 }}>{key}:</label>
-            <input
-              type="text"
-              value={value}
-              onChange={e => setFilters(f => ({ ...f, [key]: e.target.value }))}
-              style={{ padding: '4px 8px' }}
-            />
-          </div>
-        ))}
-        <button onClick={fetchCourses} style={{ padding: '4px 12px' }}>
-          Використати фільтри
-        </button>
-      </div> */}
 
       <div style={{ maxWidth: '64rem', margin: '0 auto', padding: '1rem' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>

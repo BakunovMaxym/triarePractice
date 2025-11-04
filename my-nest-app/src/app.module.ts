@@ -33,6 +33,7 @@ import { UserTaskFileModule } from './modules/user-task-file/user-task-file.modu
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CroneTaskModule } from './modules/crone-task/crone-task.module.ts';
+import { upstashStore } from './cache/upstash-cache-store';
 
 // @ts-ignore
 const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
@@ -117,13 +118,10 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
       inject: [ApiConfigService],
     }),
     CacheModule.registerAsync({
-      isGlobal: true,
       useFactory: async () => ({
-        store: redisStore,
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
-        prefix: 'fefefe:',
+        store: await upstashStore(),
       }),
+      isGlobal: true,
     }),
     CourseModule,
     CategoryModule,

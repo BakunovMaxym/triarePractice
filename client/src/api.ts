@@ -49,7 +49,6 @@ export async function getCourses(token: string, url: string) {
   });
   if (!res.ok) throw new Error('Failed to fetch courses');
   const data = await res.json();
-  // Expect flat structure: { ownerCourses, teacherCourses, studentCourses }
   if (!data) {
     return { ownerCourses: [], teacherCourses: [], studentCourses: [] };
   }
@@ -243,7 +242,8 @@ export async function deleteFolder(token: string, folderId: string) {
   const res = await fetch(`${API_URL}/folder/${folderId}`, {
     method: 'DELETE',
     headers: {
-      Authorization: `Bearer ${token}` },
+      Authorization: `Bearer ${token}`
+    },
   });
   if (!res.ok) throw new Error('Failed to delete folder');
   // Повертаємо пустий об'єкт, бо бекенд повертає 204 No Content
@@ -268,4 +268,4 @@ export async function joinCourseAsTeacher(token: string, courseId: string) {
   return res.json();
 }
 
-export {}
+export { }

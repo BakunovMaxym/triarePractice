@@ -11,7 +11,7 @@ import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
 
 @Injectable()
 export class ApiConfigService {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   get isDevelopment(): boolean {
     return this.nodeEnv === 'development';
@@ -95,11 +95,13 @@ export class ApiConfigService {
       migrations,
       dropSchema: this.isTest,
       type: 'postgres',
-      host: this.getString('DB_HOST'),
-      port: this.getNumber('DB_PORT'),
-      username: this.getString('DB_USERNAME'),
-      password: this.getString('DB_PASSWORD'),
-      database: this.getString('DB_DATABASE'),
+      // host: this.getString('DB_HOST'),
+      // port: this.getNumber('DB_PORT'),
+      // username: this.getString('DB_USERNAME'),
+      // password: this.getString('DB_PASSWORD'),
+      // database: this.getString('DB_DATABASE'),
+      url: this.getString('DB_URL'),
+      synchronize: true,
       subscribers: [UserSubscriber],
       migrationsRun: true,
       logging: this.getBoolean('ENABLE_ORM_LOGS'),
