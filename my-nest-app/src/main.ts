@@ -29,8 +29,14 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(),
-    { cors: true },
   );
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://triare-practice-hs1tnr2s9-bakunovmaxyms-projects.vercel.app',
+    ],
+    credentials: true,
+  });
   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
   app.use(helmet());
   // app.setGlobalPrefix('/api'); use api as global prefix if you don't have subdomain
@@ -89,13 +95,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
   const port = configService.appConfig.port;
 
-  app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'https://triare-practice-hs1tnr2s9-bakunovmaxyms-projects.vercel.app',
-    ],
-    credentials: true,
-  });
+
 
   // if ((<any>import.meta).env.PROD) {
   await app.listen(port);
