@@ -36,6 +36,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     origin: [
       'http://localhost:3000',
       'https://triare-practice-hs1tnr2s9-bakunovmaxyms-projects.vercel.app',
+      'https://triare-practice.vercel.app/'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

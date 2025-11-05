@@ -29,6 +29,7 @@ import { ThemeToggleButton } from '../ThemeToggleButton';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { NavDrawerButton } from './NavDrawerButton';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { JoinCourseForm } from './JoinCourseForm';
 
 interface NavBarProps {
   token: string | null;
@@ -64,7 +65,6 @@ export function NavBar({
 
   const open = Boolean(anchorEl);
 
-  // --- Плавне зникання / поява при скролі ---
   useEffect(() => {
     const el = scrollContainerRef?.current || window;
     const handleScroll = () => {
@@ -77,7 +77,6 @@ export function NavBar({
     return () => el.removeEventListener('scroll', handleScroll);
   }, [scrollContainerRef, visible]);
 
-  // --- Приєднання до курсу ---
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCourseId.trim()) {
@@ -145,7 +144,6 @@ export function NavBar({
             px: { xs: 2, sm: 3, md: 4 },
           }}
         >
-          {/* Ліва частина */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
             <SchoolIcon sx={{ color: theme.palette.primary.main, fontSize: 30 }} />
             <Typography
@@ -162,14 +160,12 @@ export function NavBar({
             </Typography>
           </Box>
 
-          {/* Центральна частина */}
           {!isMobile && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {NavButtons}
             </Box>
           )}
 
-          {/* Права частина */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <ThemeToggleButton />
 
@@ -210,6 +206,13 @@ export function NavBar({
                   variant="contained"
                   color="secondary"
                   size={isMobile ? 'small' : 'medium'}
+                  sx={{
+                    ...(isMobile && {
+                      fontSize: '0.7rem',
+                      padding: '4px 8px',
+                      minWidth: 'unset',
+                    }),
+                  }}
                 >
                   Увійти
                 </Button>
@@ -219,6 +222,13 @@ export function NavBar({
                   variant="outlined"
                   color="secondary"
                   size={isMobile ? 'small' : 'medium'}
+                  sx={{
+                    ...(isMobile && {
+                      fontSize: '0.7rem',
+                      padding: '4px 8px',
+                      minWidth: 'unset',
+                    }),
+                  }}
                 >
                   Реєстрація
                 </Button>
@@ -227,7 +237,6 @@ export function NavBar({
           </Box>
         </Toolbar>
 
-        {/* Меню користувача */}
         <Menu
           anchorEl={anchorEl}
           open={open}
@@ -271,39 +280,15 @@ export function NavBar({
           </MenuItem>
 
           {joinMode && (
-            <Paper
-              component="form"
+            <JoinCourseForm
+              joinCourseId={joinCourseId}
+              error={error}
+              onChange={setJoinCourseId}
               onSubmit={handleJoin}
-              sx={{
-                p: 2,
-                m: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1,
-              }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                Введіть ID курсу
-              </Typography>
-              <TextField
-                size="small"
-                placeholder="ID курсу"
-                value={joinCourseId}
-                onChange={(e) => setJoinCourseId(e.target.value)}
-              />
-              {error && (
-                <Typography color="error" variant="caption">
-                  {error}
-                </Typography>
-              )}
-              <Button type="submit" variant="contained" color="success">
-                Приєднатися
-              </Button>
-            </Paper>
+            />
           )}
         </Menu>
 
-        {/* Drawer (бургер-меню для мобільних) */}
         <Drawer
           anchor="right"
           open={drawerOpen}
@@ -347,6 +332,57 @@ export function NavBar({
 
             <Box sx={{ my: 1, borderBottom: `1px solid ${theme.palette.divider}` }} />
 
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={() => setAnchorEl(null)}
+              sx={{ mt: 3 }}
+              slotProps={{
+                paper: {
+                  sx: (theme) => ({
+                    background:
+                      theme.palette.mode === 'light'
+                        ? 'linear-gradient(30deg, rgba(66,165,245,0.9), rgba(236,108,246,0.55))'
+                        : 'linear-gradient(30deg, rgba(66,165,245,0.1), rgba(236,108,246,0.25))',
+                    backdropFilter: 'blur(12px)',
+                    borderRadius: 3,
+                    boxShadow: theme.shadows[6],
+                  }),
+                },
+              }}
+            >
+              <MenuItem onClick={() => setJoinMode(joinMode === 'student' ? null : 'student')}>
+                Приєднатися як студент
+              </MenuItem>
+              {isTeacher && (
+                <MenuItem onClick={() => setJoinMode(joinMode === 'teacher' ? null : 'teacher')}>
+                  Приєднатися як викладач
+                </MenuItem>
+              )}
+              <Divider sx={{ my: 1 }} />
+              <MenuItem
+                onClick={() => {
+                  onLogout();
+                  setAnchorEl(null);
+                }}
+                sx={{
+                  color: 'error.main',
+                  fontWeight: 600,
+                  justifyContent: 'center',
+                }}
+              >
+                Вийти
+              </MenuItem>
+
+              {joinMode && (
+                <JoinCourseForm
+                  joinCourseId={joinCourseId}
+                  error={error}
+                  onChange={setJoinCourseId}
+                  onSubmit={handleJoin}
+                />
+              )}
+            </Menu>
             <NavDrawerButton
               to="/login"
               label="Вийти"
