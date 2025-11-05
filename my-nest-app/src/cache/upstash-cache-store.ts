@@ -6,6 +6,7 @@ interface ExtendedCacheStore extends CacheStore {
     mget?: (...args: string[]) => Promise<any[]>;
     mset?: (...args: [string, any, number?][]) => Promise<void>;
     mdel?: (...args: string[]) => Promise<void>;
+    keys?: (pattern?: string) => Promise<string[]>;
 }
 
 export async function upstashStore(): Promise<ExtendedCacheStore> {
@@ -13,6 +14,8 @@ export async function upstashStore(): Promise<ExtendedCacheStore> {
         url: process.env.UPSTASH_REDIS_REST_URL!,
         token: process.env.UPSTASH_REDIS_REST_TOKEN!,
     });
+
+    const KEY_TRACKER = 'cache:keys';
 
     const store: ExtendedCacheStore = {
         async get<T>(key: string): Promise<T | undefined> {
@@ -30,14 +33,18 @@ export async function upstashStore(): Promise<ExtendedCacheStore> {
             const ttl = options?.ttl ?? 3600;
             const str = typeof value === 'string' ? value : JSON.stringify(value);
             await redis.set(key, str, { ex: ttl });
+            await redis.sadd(KEY_TRACKER, key);
         },
 
         async del(key: string): Promise<void> {
             await redis.del(key);
+            await redis.srem(KEY_TRACKER, key);
         },
 
         async reset(): Promise<void> {
-            await redis.flushdb();
+            const allKeys = await redis.smembers(KEY_TRACKER);
+            if (allKeys.length > 0) await redis.del(...allKeys);
+            await redis.del(KEY_TRACKER);
         },
 
         async mget(...keys: string[]) {
@@ -54,6 +61,15 @@ export async function upstashStore(): Promise<ExtendedCacheStore> {
         async mdel(...keys: string[]) {
             await Promise.all(keys.map(k => redis.del(k)));
         },
+
+        async keys(pattern?: string): Promise<string[]> {
+            const allKeys = await redis.smembers(KEY_TRACKER);
+            if (!pattern) return allKeys;
+
+            const regex = new RegExp('^' + pattern.replace('*', '.*') + '$');
+            return allKeys.filter(k => regex.test(k));
+        },
+
     };
 
     return store;
