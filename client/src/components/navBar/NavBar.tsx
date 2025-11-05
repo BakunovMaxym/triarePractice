@@ -332,57 +332,27 @@ export function NavBar({
 
             <Box sx={{ my: 1, borderBottom: `1px solid ${theme.palette.divider}` }} />
 
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={() => setAnchorEl(null)}
-              sx={{ mt: 3 }}
-              slotProps={{
-                paper: {
-                  sx: (theme) => ({
-                    background:
-                      theme.palette.mode === 'light'
-                        ? 'linear-gradient(30deg, rgba(66,165,245,0.9), rgba(236,108,246,0.55))'
-                        : 'linear-gradient(30deg, rgba(66,165,245,0.1), rgba(236,108,246,0.25))',
-                    backdropFilter: 'blur(12px)',
-                    borderRadius: 3,
-                    boxShadow: theme.shadows[6],
-                  }),
-                },
-              }}
-            >
-              <MenuItem onClick={() => setJoinMode(joinMode === 'student' ? null : 'student')}>
-                Приєднатися як студент
-              </MenuItem>
-              {isTeacher && (
-                <MenuItem onClick={() => setJoinMode(joinMode === 'teacher' ? null : 'teacher')}>
-                  Приєднатися як викладач
-                </MenuItem>
-              )}
-              <Divider sx={{ my: 1 }} />
-              <MenuItem
-                onClick={() => {
-                  onLogout();
-                  setAnchorEl(null);
-                }}
-                sx={{
-                  color: 'error.main',
-                  fontWeight: 600,
-                  justifyContent: 'center',
-                }}
-              >
-                Вийти
-              </MenuItem>
+            {token && (
+              <>
+                <ListItemButton onClick={() => setJoinMode(joinMode === 'student' ? null : 'student')}>
+                  <ListItemText primary="Приєднатися як студент" />
+                </ListItemButton>
 
-              {joinMode && (
-                <JoinCourseForm
-                  joinCourseId={joinCourseId}
-                  error={error}
-                  onChange={setJoinCourseId}
-                  onSubmit={handleJoin}
-                />
-              )}
-            </Menu>
+                {isTeacher && (
+                  <ListItemButton onClick={() => setJoinMode(joinMode === 'teacher' ? null : 'teacher')}>
+                    <ListItemText primary="Приєднатися як викладач" />
+                  </ListItemButton>
+                )}
+              </>
+            )}
+            {joinMode && (
+              <JoinCourseForm
+                joinCourseId={joinCourseId}
+                error={error}
+                onChange={setJoinCourseId}
+                onSubmit={handleJoin}
+              />
+            )}
             <NavDrawerButton
               to="/login"
               label="Вийти"
