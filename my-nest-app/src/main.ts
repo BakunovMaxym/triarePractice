@@ -26,17 +26,24 @@ import { SharedModule } from './shared/shared.module.ts';
 
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();
+
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(),
   );
+
   app.enableCors({
     origin: [
       'http://localhost:3000',
       'https://triare-practice-hs1tnr2s9-bakunovmaxyms-projects.vercel.app',
     ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
+
   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
   app.use(helmet());
   // app.setGlobalPrefix('/api'); use api as global prefix if you don't have subdomain
@@ -98,7 +105,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
 
   // if ((<any>import.meta).env.PROD) {
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.info(`server running on ${await app.getUrl()}`);
   // }
 
