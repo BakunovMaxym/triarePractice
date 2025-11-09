@@ -241,7 +241,6 @@ function AppContent() {
 }
 
 
-// ---------- Root ----------
 export default function App() {
     return (
         <Router>

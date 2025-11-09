@@ -28,7 +28,6 @@ export function TaskInfoBlock({
     grade,
 }: Props) {
 
-    useEffect(() => { console.log(course) }, [])
     return (
         <Stack spacing={1.2}>
             {taskName && (
@@ -75,7 +74,7 @@ export function TaskInfoBlock({
             )}
 
             {status && (
-                <Typography color="text.secondary">
+                <Typography color="text.secondary" component="div">
                     <Box component="span" color="text.primary" fontWeight={600}>
                         Статус:
                     </Box>{' '}
@@ -121,7 +120,7 @@ export function TaskInfoBlock({
             )}
 
             {grade !== undefined && (
-                <Typography color="text.secondary">
+                <Typography color="text.secondary" component="div">
                     <Box component="span" color="text.primary" fontWeight={600}>
                         Оцінка:
                     </Box>{' '}

@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { ThrottlerOptions } from '@nestjs/throttler';
@@ -8,6 +6,7 @@ import parse from 'parse-duration';
 
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
+
 
 @Injectable()
 export class ApiConfigService {
@@ -24,6 +23,7 @@ export class ApiConfigService {
   get isTest(): boolean {
     return this.nodeEnv === 'test';
   }
+
 
   private getNumber(key: string): number {
     const value = this.get(key);
@@ -82,25 +82,26 @@ export class ApiConfigService {
   }
 
   get postgresConfig(): TypeOrmModuleOptions {
-    const entities = [
-      path.join(import.meta.dirname, `../../modules/**/*.entity{.ts,.js}`),
-      path.join(import.meta.dirname, `../../modules/**/*.view-entity{.ts,.js}`),
-    ];
-    const migrations = [
-      path.join(import.meta.dirname, `../../database/migrations/*{.ts,.js}`),
-    ];
-
     return {
-      entities,
-      migrations,
+      // entities,
+      // migrations,
+      entities: [new URL('../../**/*.entity.js', import.meta.url).pathname],
+      migrations: [new URL('../../database/migrations/*.js', import.meta.url).pathname],
+
       dropSchema: this.isTest,
       type: 'postgres',
-      // host: this.getString('DB_HOST'),
-      // port: this.getNumber('DB_PORT'),
-      // username: this.getString('DB_USERNAME'),
-      // password: this.getString('DB_PASSWORD'),
-      // database: this.getString('DB_DATABASE'),
-      url: this.getString('DB_URL'),
+      ...(this.isProduction
+        ? {
+          url: this.getString('DB_URL'),
+          ssl: { rejectUnauthorized: false, },
+        }
+        : {
+          host: this.getString('DB_HOST'),
+          port: this.getNumber('DB_PORT'),
+          username: this.getString('DB_USERNAME'),
+          password: this.getString('DB_PASSWORD'),
+          database: this.getString('DB_DATABASE'),
+        }),
       synchronize: true,
       subscribers: [UserSubscriber],
       migrationsRun: true,

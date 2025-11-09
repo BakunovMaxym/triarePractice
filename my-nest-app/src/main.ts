@@ -34,7 +34,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
   app.enableCors({
     origin: [
-      'http://localhost:3000',
+      'http://localhost:3001',
       'https://triare-practice-hs1tnr2s9-bakunovmaxyms-projects.vercel.app',
       'https://triare-practice.vercel.app'
     ],

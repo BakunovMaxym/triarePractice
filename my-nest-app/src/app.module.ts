@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClsModule } from 'nestjs-cls';
@@ -34,9 +34,12 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CroneTaskModule } from './modules/crone-task/crone-task.module.ts';
 import { upstashStore } from './cache/upstash-cache-store';
+// import { MailModule } from '../../shared/mail/mail.module.js';
+import { MailModule } from './shared/mail/mail.module.ts';
 
-// @ts-ignore
-const redisStore = (await import('cache-manager-ioredis')).default ?? (await import('cache-manager-ioredis'));
+import { redisStore } from 'cache-manager-ioredis-yet';
+
+
 
 @Module({
   imports: [
@@ -51,6 +54,7 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
     CroneTaskModule,
     TaskFileModule,
     UserTaskFileModule,
+    MailModule,
     ClsModule.forRoot({
       global: true,
       middleware: {
@@ -73,8 +77,9 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
       transport: {
         service: 'gmail',
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        port: 587,
+        secure: false,
+        requireTLS: true,
         auth: {
           user: "sometestexampleforspammails@gmail.com",
           pass: "jhcw revd mwgm jaky",
@@ -118,11 +123,25 @@ const redisStore = (await import('cache-manager-ioredis')).default ?? (await imp
       inject: [ApiConfigService],
     }),
     CacheModule.registerAsync({
-      useFactory: async () => ({
-        store: await upstashStore(),
-      }),
+      imports: [SharedModule],
+      inject: [ApiConfigService],
+      useFactory: async (configService: ApiConfigService) => {
+        if (configService.isDevelopment) {
+          console.log('🧠 Trying to connect to Redis...');
+          const store = await redisStore({
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number(process.env.REDIS_PORT ?? 6379),
+          });
+          console.log('✅ Redis connected!');
+          return { store };
+        }
+
+        console.log('🧠 Using Upstash store...');
+        return { store: await upstashStore() };
+      },
       isGlobal: true,
     }),
+
     CourseModule,
     CategoryModule,
     SubCategoryModule,

@@ -11,9 +11,9 @@ import { CroneTaskModule } from '../../modules/crone-task/crone-task.module';
 import { TaskEntity } from '../../modules/tasks/entities/task.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserTask, UserEntity, UserTaskFileEntity, TaskEntity]), GoogleDriveModule, UserTaskFileModule, forwardRef(() => CroneTaskModule) ],
+  imports: [TypeOrmModule.forFeature([UserTask, UserEntity, UserTaskFileEntity, TaskEntity]), GoogleDriveModule, UserTaskFileModule, forwardRef(() => CroneTaskModule)],
   controllers: [UserTasksController],
   providers: [UserTasksService],
   exports: [UserTasksService],
 })
-export class UserTasksModule {}
+export class UserTasksModule { }

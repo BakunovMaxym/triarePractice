@@ -3,9 +3,10 @@ import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { UserTask } from '../user-tasks/entities/user-task.entity';
 import { CronJob } from 'cron';
 import { TaskStatus } from '../../constants/status-type';
-import { MailerService } from '@nestjs-modules/mailer';
+// import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, type Repository } from 'typeorm';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class CroneTaskService {
